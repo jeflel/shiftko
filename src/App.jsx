@@ -7,12 +7,14 @@ import Schedule from './pages/Schedule'
 import More from './pages/More'
 import JoinWorkspace from './pages/JoinWorkspace'
 import Welcome from './pages/Welcome'
+import Onboarding from './components/Onboarding'
 
 function App() {
   const [session, setSession] = useState(null)
   const [role, setRole] = useState(null)
   const [workspaceId, setWorkspaceId] = useState(null)
   const [fullName, setFullName] = useState(null)
+  const [onboardingCompleted, setOnboardingCompleted] = useState(true)
   const [justJoinedWorkspace, setJustJoinedWorkspace] = useState(null)
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('home')
@@ -53,7 +55,7 @@ function App() {
   async function fetchRole(userId) {
     const { data, error } = await supabase
       .from('profiles')
-      .select('role, workspace_id, full_name')
+      .select('role, workspace_id, full_name, onboarding_completed')
       .eq('id', userId)
       .single()
 
@@ -62,6 +64,7 @@ function App() {
       setRole(data.role)
       setWorkspaceId(data.workspace_id)
       setFullName(data.full_name)
+      setOnboardingCompleted(data.onboarding_completed)
     }
     setLoading(false)
   }
@@ -97,6 +100,15 @@ function App() {
         fullName={fullName}
         workspaceName={justJoinedWorkspace.name}
         onContinue={() => setJustJoinedWorkspace(null)}
+      />
+    )
+  }
+
+  if (!onboardingCompleted && workspaceId !== null) {
+    return (
+      <Onboarding
+        user={session.user}
+        onComplete={() => setOnboardingCompleted(true)}
       />
     )
   }
