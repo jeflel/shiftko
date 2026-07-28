@@ -590,8 +590,12 @@ function NurseSummary({
                   <button
                     type="button"
                     onClick={() => onSelectShift(shift)}
-                    className="mt-3 flex items-center"
+                    className="mt-3 flex w-full items-center justify-between"
                   >
+                    <span className="text-[14px] font-medium" style={{ color: '#20748C' }}>
+                      see who's working today →
+                    </span>
+
                     <div className="flex items-center">
                       {coworkers.slice(0, 3).map((coworker, avatarIndex) => (
                         <div
@@ -611,9 +615,6 @@ function NurseSummary({
                         </div>
                       )}
                     </div>
-                    <span className="ml-2.5 text-[14px] font-medium" style={{ color: '#20748C' }}>
-                      see who's working →
-                    </span>
                   </button>
                 )}
               </div>
