@@ -221,7 +221,10 @@ export default function Home({ user, role, onGoToManage }) {
   const unreadCount = notifications.filter((n) => !n.read).length
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-gradient-to-b from-[#EFFDFF] via-[#D2F3FC] to-[#EFFDFF]">
+    <div
+      className="flex min-h-screen w-full flex-col"
+      style={{ background: 'linear-gradient(to bottom, #F6FDFE 0%, #D2F3FC 35%, #EFFDFF 55%, #FFFFFF 100%)' }}
+    >
       <main className="mx-auto flex w-full max-w-md flex-1 flex-col pt-10 pb-12">
         <div className="shrink-0 flex items-center justify-between px-5">
           <Wordmark />
