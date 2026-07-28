@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils'
 
-export function Wordmark({ className, size = 26 }) {
+export function Wordmark({ className, size = 19.5 }) {
   return (
     <p
       className={cn('font-display font-bold text-teal-dark', className)}

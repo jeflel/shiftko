@@ -311,7 +311,7 @@ export default function Home({ user, role, onGoToManage }) {
         )}
 
         {!loading && !error && (
-          <div className="mt-5 flex flex-1 flex-col">
+          <div className="mt-[30px] flex flex-1 flex-col">
             {isCoordinator ? (
               <div className="px-5">
                 <CoordinatorSummary
@@ -408,7 +408,7 @@ function ShiftRow({ shift, workspaceName, onSelectShift }) {
             <span className="text-[13px]"> {endMeridiem}</span>
           </p>
           <p className="mt-0.5 truncate text-xs text-[#6B7280]">
-            {shift.unit}
+            <span className="font-semibold text-[#3A798B]">{shift.unit}</span>
             {workspaceName && `  |  ${workspaceName}`}
           </p>
         </div>
@@ -628,7 +628,7 @@ function NurseSummary({
       )}
       </div>
 
-      <div className="mt-6 flex-1 rounded-t-[28px] bg-white px-6 pt-6 pb-10">
+      <div className="mt-6 flex-1 rounded-t-[40px] bg-white px-6 pt-6 pb-10">
         <section>
           <div className="flex items-center justify-between">
             <h2 className="text-[20px] font-semibold text-[#111111]">Upcoming Shifts</h2>
