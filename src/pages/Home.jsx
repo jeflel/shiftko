@@ -223,7 +223,7 @@ export default function Home({ user, role, onGoToManage }) {
   return (
     <div
       className="flex min-h-screen w-full flex-col"
-      style={{ background: 'linear-gradient(to bottom, #EFFDFF 0%, #D2F3FC 48%, #EFFDFF 68%, #FFFFFF 100%)' }}
+      style={{ background: 'linear-gradient(to top, #EFFDFF 0%, #D2F3FC 48%, #EFFDFF 68%, #FFFFFF 100%)' }}
     >
       <main className="mx-auto flex w-full max-w-md flex-1 flex-col pt-10 pb-12">
         <div className="shrink-0 px-5">
