@@ -221,9 +221,9 @@ export default function Home({ user, role, onGoToManage }) {
   const unreadCount = notifications.filter((n) => !n.read).length
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-b from-[#EFFDFF] via-[#D2F3FC] to-[#EFFDFF]">
-      <main className="mx-auto w-full max-w-md pt-10 pb-12">
-        <div className="flex items-center justify-between px-5">
+    <div className="flex min-h-screen w-full flex-col bg-gradient-to-b from-[#EFFDFF] via-[#D2F3FC] to-[#EFFDFF]">
+      <main className="mx-auto flex w-full max-w-md flex-1 flex-col pt-10 pb-12">
+        <div className="shrink-0 flex items-center justify-between px-5">
           <Wordmark />
 
           {!isCoordinator && (
@@ -311,7 +311,7 @@ export default function Home({ user, role, onGoToManage }) {
         )}
 
         {!loading && !error && (
-          <div className="mt-5">
+          <div className="mt-5 flex flex-1 flex-col">
             {isCoordinator ? (
               <div className="px-5">
                 <CoordinatorSummary
@@ -379,6 +379,9 @@ function NotificationBanner({ notification, onDismiss }) {
 function ShiftRow({ shift, workspaceName, onSelectShift }) {
   const period = getShiftPeriod(shift.starts_at)
   const shiftDate = new Date(shift.starts_at)
+  const [startTime, endTime] = formatShiftTimeRange(shift.starts_at, shift.ends_at).split(' – ')
+  const [startDigits, startMeridiem] = startTime.split(' ')
+  const [endDigits, endMeridiem] = endTime.split(' ')
 
   return (
     <li>
@@ -387,7 +390,7 @@ function ShiftRow({ shift, workspaceName, onSelectShift }) {
         onClick={() => onSelectShift(shift)}
         className="flex w-full items-center gap-3.5 py-3.5 text-left"
       >
-        <div className="flex w-11 shrink-0 flex-col items-center gap-0.5 text-center">
+        <div className="flex w-11 shrink-0 flex-col items-center gap-[0.75px] text-center">
           <span className="text-[10px] font-medium tracking-wide text-[#6B7280] uppercase">
             {weekdayFormatter.format(shiftDate)}
           </span>
@@ -398,8 +401,11 @@ function ShiftRow({ shift, workspaceName, onSelectShift }) {
         </div>
 
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[13px] font-medium text-[#1A1A1A]">
-            {formatShiftTimeRange(shift.starts_at, shift.ends_at)}
+          <p className="truncate font-medium text-[#1A1A1A]">
+            <span className="text-[17px]">{startDigits}</span>
+            <span className="text-[13px]"> {startMeridiem}</span>
+            <span className="text-[17px]"> – {endDigits}</span>
+            <span className="text-[13px]"> {endMeridiem}</span>
           </p>
           <p className="mt-0.5 truncate text-xs text-[#6B7280]">
             {shift.unit}
@@ -526,8 +532,8 @@ function NurseSummary({
   }, [userId])
 
   return (
-    <>
-      <div className="px-5">
+    <div className="flex flex-1 flex-col">
+      <div className="shrink-0 px-5">
       <p className="text-sm font-medium text-teal-dark">{todayLabel}</p>
       <p className="font-display mt-1 text-[23px] leading-snug font-semibold">
         <span style={{ color: '#20748C' }}>{getGreeting()},</span>
@@ -558,10 +564,10 @@ function NurseSummary({
               >
                 <div className="flex items-baseline">
                   <span className="text-[36px] font-medium text-[#111111]">{startDigits}</span>
-                  <span className="ml-1 text-base font-medium text-[#6B7280]">{startMeridiem}</span>
+                  <span className="ml-1 text-base font-medium text-[#3A798B]">{startMeridiem}</span>
                   <span className="mx-2 text-xl text-[#6B7280]">→</span>
                   <span className="text-[36px] font-medium text-[#111111]">{endDigits}</span>
-                  <span className="ml-1 text-base font-medium text-[#6B7280]">{endMeridiem}</span>
+                  <span className="ml-1 text-base font-medium text-[#3A798B]">{endMeridiem}</span>
                 </div>
 
                 <div className="mt-2 flex items-center gap-2">
@@ -582,9 +588,10 @@ function NurseSummary({
                         <div
                           key={coworker.nurseId}
                           className={cn(
-                            'flex size-8 items-center justify-center rounded-full border-2 border-white bg-[#F8F7F5] text-xs font-semibold text-[#6B7280]',
+                            'flex size-8 items-center justify-center rounded-full border-2 border-white text-xs font-semibold',
                             avatarIndex > 0 && '-ml-2.5',
                           )}
+                          style={{ backgroundColor: '#20748C', color: '#DDF7FF' }}
                         >
                           {getInitials(coworker.full_name)}
                         </div>
@@ -595,7 +602,9 @@ function NurseSummary({
                         </div>
                       )}
                     </div>
-                    <span className="ml-2.5 text-[13px] text-teal-mid">see who's working →</span>
+                    <span className="ml-2.5 text-[14px] font-medium" style={{ color: '#20748C' }}>
+                      see who's working →
+                    </span>
                   </button>
                 )}
               </div>
@@ -619,10 +628,10 @@ function NurseSummary({
       )}
       </div>
 
-      <div className="mt-6 rounded-t-[28px] bg-white px-6 pt-6 pb-10">
+      <div className="mt-6 flex-1 rounded-t-[28px] bg-white px-6 pt-6 pb-10">
         <section>
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-[#111111]">Upcoming Shifts</h2>
+            <h2 className="text-[20px] font-semibold text-[#111111]">Upcoming Shifts</h2>
             <span className="text-sm text-[#6B7280]">See All ↓</span>
           </div>
 
@@ -641,12 +650,10 @@ function NurseSummary({
             </ul>
           )}
         </section>
-      </div>
 
-      <div className="px-5">
         <section className="mt-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-[#111111]">Open Shifts</h2>
+            <h2 className="text-[20px] font-semibold text-[#111111]">Open Shifts</h2>
             <span className="text-sm text-[#6B7280]">See All ↓</span>
           </div>
 
@@ -666,7 +673,7 @@ function NurseSummary({
           )}
         </section>
       </div>
-    </>
+    </div>
   )
 }
 
