@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { Button } from '@/components/ui/button'
+import { Wordmark } from '@/components/ui/wordmark'
 import JoinWorkspaceForm from '../components/JoinWorkspaceForm'
 
 function AccountRow({ label, value, last }) {
@@ -89,9 +90,9 @@ export default function More({ user, onWorkspaceLeft }) {
 
   return (
     <main className="mx-auto w-full max-w-md px-5 pt-12 pb-12">
-      <p className="text-center text-2xl font-bold text-[#4F46E5]">Claimo</p>
+      <Wordmark className="text-center" />
       <div className="mt-1 flex justify-center">
-        <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-medium text-[#4F46E5]">Beta</span>
+        <span className="rounded-full bg-[#E0F7FA] px-2 py-0.5 text-xs font-medium text-teal-mid">Beta</span>
       </div>
       <h1 className="mt-10 text-2xl font-semibold text-ink">More</h1>
 

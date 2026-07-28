@@ -2,9 +2,12 @@
 
 @theme {
   --font-sans: 'Geist', sans-serif;
+  --font-display: 'Fraunces', serif;
   --color-ink: #111111;
   --color-surface: #f8f7f5;
   --color-line: #e8e6e3;
+  --color-teal-dark: #0b6e7a;
+  --color-teal-mid: #0b9bad;
   --radius-card: 0.75rem;
 }
 

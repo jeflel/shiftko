@@ -1,16 +1,16 @@
-# CLAUDE.md — Relay Project Context
+# CLAUDE.md — Shiftko Project Context
 
 This file is read at the start of every Claude Code session.
 Do not delete or modify unless instructed.
 
 ---
 
-## What Relay Is
+## What Shiftko Is
 
 A mobile-first scheduling app for small healthcare facilities,
 specifically skilled nursing facilities (SNFs). The core problem:
 when a shift goes uncovered, coordinators call nurses one by one
-for 30-60 minutes. Relay replaces that — coordinators post open
+for 30-60 minutes. Shiftko replaces that — coordinators post open
 shifts, nurses claim in one tap, coordinator approves in one click.
 
 Real-world anchor: Burlingame Skilled Nursing (281-bed SNF, owned
@@ -322,17 +322,17 @@ BottomNav:
 
 ## Current Task
 
-Branding pass. Nothing in the app currently says "Relay" —
-add the name/logo throughout before showing it to anyone at
-the facility.
+Shiftko rebrand + Home screen redesign. The app was renamed from
+Relay/Claimo to Shiftko, with a teal wordmark (Fraunces) added
+across Auth, More, JoinWorkspace, and BottomNav, and a full visual
+redesign of the Home screen (teal gradient background, new shift
+card, Fraunces display font). The teal/gradient look is currently
+scoped to the Home screen only — other screens keep the existing
+ink/white design system.
 
 ---
 
 ## Known Gaps (fix in this order)
-
-1. Branding — IN PROGRESS (current task). Nothing in the app says
-   "Relay" — branding pass needed before showing to anyone at the
-   facility.
 
 Done:
   - Open shifts unit filter (home_unit on profiles, RLS updated,
@@ -340,6 +340,8 @@ Done:
     set it)
   - Denied nurse notification (notifications table, in-app
     notification system for claim approvals and denials)
+  - Shiftko rebrand (wordmark + teal color on all screens) and
+    Home screen redesign (current task)
 
 ---
 

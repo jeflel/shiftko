@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
-import { Calendar, Users, AlertTriangle, CheckCircle2, Bell, X } from 'lucide-react'
+import { Calendar, Users, AlertTriangle, CheckCircle2, Bell, X, ChevronRight } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import ShiftDetail from './ShiftDetail'
-import { ShiftPeriodPill } from '@/components/ui/pill'
+import { Wordmark } from '@/components/ui/wordmark'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -21,6 +21,12 @@ const todayLabelFormatter = new Intl.DateTimeFormat(undefined, {
   month: 'long',
   day: 'numeric',
 })
+
+const HOME_PERIOD_STYLES = {
+  Day: { label: 'Morning', article: 'a', bg: '#FFF1E3', text: '#B57F1A' },
+  Evening: { label: 'Evening', article: 'an', bg: '#E5F7FF', text: '#153884' },
+  Night: { label: 'Night', article: 'a', bg: '#F5DDFF', text: '#2D199A' },
+}
 
 function getGreeting() {
   const hour = new Date().getHours()
@@ -43,6 +49,13 @@ function getFirstName(fullName) {
   return firstName.endsWith('.') ? firstName : `${firstName}.`
 }
 
+function getInitials(fullName) {
+  if (!fullName) return '?'
+  const parts = fullName.trim().split(/\s+/)
+  const initials = parts.length === 1 ? parts[0][0] : parts[0][0] + parts[parts.length - 1][0]
+  return initials.toUpperCase()
+}
+
 function formatRelativeTime(isoString) {
   const diffMinutes = Math.floor((Date.now() - new Date(isoString).getTime()) / 60000)
 
@@ -59,9 +72,22 @@ function formatRelativeTime(isoString) {
   return `${diffWeeks} week${diffWeeks === 1 ? '' : 's'} ago`
 }
 
+function HomePeriodPill({ period }) {
+  const config = HOME_PERIOD_STYLES[period] ?? { label: period, bg: '#F3F4F6', text: '#6B7280' }
+  return (
+    <span
+      className="shrink-0 rounded-[7px] px-3 py-1 text-xs font-medium"
+      style={{ backgroundColor: config.bg, color: config.text }}
+    >
+      {config.label}
+    </span>
+  )
+}
+
 export default function Home({ user, role, onGoToManage }) {
   const [fullName, setFullName] = useState(null)
   const [credential, setCredential] = useState(null)
+  const [workspaceName, setWorkspaceName] = useState(null)
   const [shifts, setShifts] = useState([])
   const [notifications, setNotifications] = useState([])
   const [loading, setLoading] = useState(true)
@@ -103,7 +129,11 @@ export default function Home({ user, role, onGoToManage }) {
             .order('created_at', { ascending: false })
 
       const [profileResult, shiftsResult, notificationsResult] = await Promise.all([
-        supabase.from('profiles').select('full_name, credential').eq('id', user.id).maybeSingle(),
+        supabase
+          .from('profiles')
+          .select('full_name, credential, workspace_id')
+          .eq('id', user.id)
+          .maybeSingle(),
         shiftsQuery,
         notificationsQuery,
       ])
@@ -135,6 +165,17 @@ export default function Home({ user, role, onGoToManage }) {
       setShifts(shiftsResult.data ?? [])
       setNotifications(notificationsResult.error ? [] : (notificationsResult.data ?? []))
       setLoading(false)
+
+      const workspaceId = profileResult.data?.workspace_id
+      if (workspaceId) {
+        const { data: workspaceData } = await supabase
+          .from('workspaces')
+          .select('name')
+          .eq('id', workspaceId)
+          .maybeSingle()
+
+        if (!cancelled) setWorkspaceName(workspaceData?.name ?? null)
+      }
     }
 
     fetchHomeData()
@@ -177,123 +218,128 @@ export default function Home({ user, role, onGoToManage }) {
   const today = new Date()
   const todayLabel = todayLabelFormatter.format(today)
   const firstName = getFirstName(fullName)
-  const hasUnread = notifications.some((n) => !n.read)
+  const unreadCount = notifications.filter((n) => !n.read).length
 
   return (
-    <main className="mx-auto w-full max-w-md px-5 pt-12 pb-12">
-      <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0">
-          {loading ? (
-            <div className="h-9 w-48 animate-pulse rounded-md bg-line/60" />
-          ) : (
-            <h1 className="text-3xl tracking-tight">
-              <span className="font-medium text-[#6B7280]">{getGreeting()}</span>
-              {firstName && <span className="font-bold text-ink">, {firstName}</span>}
-            </h1>
-          )}
+    <div className="min-h-screen w-full bg-gradient-to-b from-[#EFFDFF] via-[#D2F3FC] to-[#EFFDFF]">
+      <main className="mx-auto w-full max-w-md pt-10 pb-12">
+        <div className="flex items-center justify-between px-5">
+          <Wordmark />
 
-          <p className="mt-2 text-base font-normal text-[#4B5563]">{todayLabel}</p>
+          {!isCoordinator && (
+            <div className="relative shrink-0">
+              <button
+                type="button"
+                onClick={handleBellClick}
+                aria-label="Notifications"
+                className="relative"
+              >
+                <Bell className="text-teal-dark" size={26} strokeWidth={2} />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1.5 flex size-[18px] items-center justify-center rounded-full bg-[#F97316] text-[10px] font-bold text-white">
+                    {unreadCount}
+                  </span>
+                )}
+              </button>
+
+              {bellOpen && (
+                <>
+                  <button
+                    type="button"
+                    aria-label="Close notifications"
+                    onClick={() => setBellOpen(false)}
+                    className="fixed inset-0 z-10 cursor-default"
+                  />
+                  <div className="absolute top-full right-0 z-20 mt-2 w-80 max-w-[80vw] rounded-xl border border-[#E8E6E3] bg-white shadow-sm">
+                    <div className="flex items-center justify-between border-b border-[#E8E6E3] p-4">
+                      <p className="text-sm font-semibold text-ink">Notifications</p>
+                      <button
+                        type="button"
+                        onClick={() => setBellOpen(false)}
+                        aria-label="Close notifications"
+                        className="text-[#6B7280]"
+                      >
+                        <X size={16} strokeWidth={2} />
+                      </button>
+                    </div>
+
+                    {notifications.length === 0 ? (
+                      <p className="p-4 text-sm text-[#6B7280]">No notifications yet</p>
+                    ) : (
+                      <ul className="flex max-h-80 flex-col overflow-y-auto">
+                        {notifications.map((notification) => {
+                          const isApproved = notification.type === 'claim_approved'
+
+                          return (
+                            <li
+                              key={notification.id}
+                              className="flex items-start gap-2 border-b border-[#E8E6E3] p-4 last:border-b-0"
+                            >
+                              {isApproved ? (
+                                <CheckCircle2
+                                  className="mt-0.5 shrink-0 text-[#16A34A]"
+                                  size={16}
+                                  strokeWidth={2}
+                                />
+                              ) : (
+                                <AlertTriangle
+                                  className="mt-0.5 shrink-0 text-[#D97706]"
+                                  size={16}
+                                  strokeWidth={2}
+                                />
+                              )}
+                              <div className="min-w-0">
+                                <p className="text-sm text-ink">{notification.message}</p>
+                                <p className="mt-0.5 text-xs text-[#9CA3AF]">
+                                  {formatRelativeTime(notification.created_at)}
+                                </p>
+                              </div>
+                            </li>
+                          )
+                        })}
+                      </ul>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
         </div>
 
-        {!isCoordinator && (
-          <div className="relative shrink-0">
-            <button
-              type="button"
-              onClick={handleBellClick}
-              aria-label="Notifications"
-              className="relative rounded-full bg-[#F3F4F6] p-2"
-            >
-              <Bell className="text-ink" size={20} />
-              {hasUnread && (
-                <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-500" />
-              )}
-            </button>
+        {!loading && error && (
+          <p className="mt-6 px-5 text-sm text-red-700">Could not load home data: {error}</p>
+        )}
 
-            {bellOpen && (
-              <>
-                <button
-                  type="button"
-                  aria-label="Close notifications"
-                  onClick={() => setBellOpen(false)}
-                  className="fixed inset-0 z-10 cursor-default"
+        {!loading && !error && (
+          <div className="mt-5">
+            {isCoordinator ? (
+              <div className="px-5">
+                <CoordinatorSummary
+                  shifts={shifts}
+                  today={today}
+                  todayLabel={todayLabel}
+                  firstName={firstName}
+                  onGoToManage={onGoToManage}
                 />
-                <div className="absolute top-full right-0 z-20 mt-2 w-80 max-w-[80vw] rounded-xl border border-[#E8E6E3] bg-white shadow-sm">
-                  <div className="flex items-center justify-between border-b border-[#E8E6E3] p-4">
-                    <p className="text-sm font-semibold text-ink">Notifications</p>
-                    <button
-                      type="button"
-                      onClick={() => setBellOpen(false)}
-                      aria-label="Close notifications"
-                      className="text-[#6B7280]"
-                    >
-                      <X size={16} strokeWidth={2} />
-                    </button>
-                  </div>
-
-                  {notifications.length === 0 ? (
-                    <p className="p-4 text-sm text-[#6B7280]">No notifications yet</p>
-                  ) : (
-                    <ul className="flex max-h-80 flex-col overflow-y-auto">
-                      {notifications.map((notification) => {
-                        const isApproved = notification.type === 'claim_approved'
-
-                        return (
-                          <li
-                            key={notification.id}
-                            className="flex items-start gap-2 border-b border-[#E8E6E3] p-4 last:border-b-0"
-                          >
-                            {isApproved ? (
-                              <CheckCircle2
-                                className="mt-0.5 shrink-0 text-[#16A34A]"
-                                size={16}
-                                strokeWidth={2}
-                              />
-                            ) : (
-                              <AlertTriangle
-                                className="mt-0.5 shrink-0 text-[#D97706]"
-                                size={16}
-                                strokeWidth={2}
-                              />
-                            )}
-                            <div className="min-w-0">
-                              <p className="text-sm text-ink">{notification.message}</p>
-                              <p className="mt-0.5 text-xs text-[#9CA3AF]">
-                                {formatRelativeTime(notification.created_at)}
-                              </p>
-                            </div>
-                          </li>
-                        )
-                      })}
-                    </ul>
-                  )}
-                </div>
-              </>
+              </div>
+            ) : (
+              <NurseSummary
+                shifts={shifts}
+                today={today}
+                todayLabel={todayLabel}
+                firstName={firstName}
+                credential={credential}
+                workspaceName={workspaceName}
+                userId={user.id}
+                onSelectShift={setSelectedShift}
+                notifications={notifications}
+                onDismissNotification={handleDismissNotification}
+              />
             )}
           </div>
         )}
-      </div>
-
-      {!loading && error && (
-        <p className="mt-6 text-sm text-red-700">Could not load home data: {error}</p>
-      )}
-
-      {!loading && !error && (
-        <div className="mt-8">
-          {isCoordinator ? (
-            <CoordinatorSummary shifts={shifts} today={today} onGoToManage={onGoToManage} />
-          ) : (
-            <NurseSummary
-              shifts={shifts}
-              today={today}
-              credential={credential}
-              onSelectShift={setSelectedShift}
-              notifications={notifications}
-              onDismissNotification={handleDismissNotification}
-            />
-          )}
-        </div>
-      )}
-    </main>
+      </main>
+    </div>
   )
 }
 
@@ -330,68 +376,236 @@ function NotificationBanner({ notification, onDismiss }) {
   )
 }
 
+function ShiftRow({ shift, workspaceName, onSelectShift }) {
+  const period = getShiftPeriod(shift.starts_at)
+  const shiftDate = new Date(shift.starts_at)
+
+  return (
+    <li>
+      <button
+        type="button"
+        onClick={() => onSelectShift(shift)}
+        className="flex w-full items-center gap-3.5 py-3.5 text-left"
+      >
+        <div className="flex w-11 shrink-0 flex-col items-center gap-0.5 text-center">
+          <span className="text-[10px] font-medium tracking-wide text-[#6B7280] uppercase">
+            {weekdayFormatter.format(shiftDate)}
+          </span>
+          <span className="text-[22px] font-bold text-[#111111]">{shiftDate.getDate()}</span>
+          <span className="text-[10px] font-medium tracking-wide text-[#6B7280] uppercase">
+            {monthFormatter.format(shiftDate)}
+          </span>
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-[13px] font-medium text-[#1A1A1A]">
+            {formatShiftTimeRange(shift.starts_at, shift.ends_at)}
+          </p>
+          <p className="mt-0.5 truncate text-xs text-[#6B7280]">
+            {shift.unit}
+            {workspaceName && `  |  ${workspaceName}`}
+          </p>
+        </div>
+
+        <div className="flex shrink-0 items-center gap-2">
+          <HomePeriodPill period={period} />
+          <ChevronRight className="text-[#9CA3AF]" size={18} strokeWidth={2} />
+        </div>
+      </button>
+    </li>
+  )
+}
+
 function NurseSummary({
   shifts,
   today,
+  todayLabel,
+  firstName,
   credential,
+  workspaceName,
+  userId,
   onSelectShift,
   notifications,
   onDismissNotification,
 }) {
+  const [coworkers, setCoworkers] = useState([])
+  const [openShifts, setOpenShifts] = useState([])
+  const [openShiftsLoading, setOpenShiftsLoading] = useState(true)
+
   const todayShifts = shifts.filter((shift) => isSameLocalDay(new Date(shift.starts_at), today))
   const upcomingShifts = shifts.filter((shift) => isWithinNextSevenDays(shift.starts_at))
   const isWorkingToday = todayShifts.length > 0
+  const primaryTodayShift = todayShifts[0]
+  const primaryPeriod = primaryTodayShift ? getShiftPeriod(primaryTodayShift.starts_at) : null
+  const periodConfig = primaryPeriod ? HOME_PERIOD_STYLES[primaryPeriod] : null
+
+  useEffect(() => {
+    if (!primaryTodayShift) {
+      setCoworkers([])
+      return
+    }
+
+    let cancelled = false
+
+    async function fetchCoworkers() {
+      const { data } = await supabase
+        .from('shifts')
+        .select(`
+          id,
+          nurse_id,
+          profiles!nurse_id ( full_name )
+        `)
+        .eq('unit', primaryTodayShift.unit)
+        .neq('nurse_id', userId)
+        .lt('starts_at', primaryTodayShift.ends_at)
+        .gt('ends_at', primaryTodayShift.starts_at)
+
+      if (cancelled) return
+
+      const uniqueCoworkers = []
+      const seenNurseIds = new Set()
+
+      for (const row of data ?? []) {
+        if (seenNurseIds.has(row.nurse_id)) continue
+        seenNurseIds.add(row.nurse_id)
+        const profile = Array.isArray(row.profiles) ? row.profiles[0] : row.profiles
+        uniqueCoworkers.push({ nurseId: row.nurse_id, full_name: profile?.full_name ?? null })
+      }
+
+      setCoworkers(uniqueCoworkers)
+    }
+
+    fetchCoworkers()
+
+    return () => {
+      cancelled = true
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [primaryTodayShift?.id, userId])
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function fetchOpenShifts() {
+      setOpenShiftsLoading(true)
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('home_unit')
+        .eq('id', userId)
+        .maybeSingle()
+
+      if (cancelled) return
+
+      const unit = profile?.home_unit ?? null
+      if (!unit) {
+        setOpenShifts([])
+        setOpenShiftsLoading(false)
+        return
+      }
+
+      const { data } = await supabase
+        .from('shifts')
+        .select('id, unit, starts_at, ends_at')
+        .eq('status', 'open')
+        .eq('unit', unit)
+        .order('starts_at', { ascending: true })
+        .limit(3)
+
+      if (cancelled) return
+
+      setOpenShifts(data ?? [])
+      setOpenShiftsLoading(false)
+    }
+
+    fetchOpenShifts()
+
+    return () => {
+      cancelled = true
+    }
+  }, [userId])
 
   return (
     <>
-      <div className="mb-9">
-        <div
-          className={cn(
-            'border-l-2 pl-3',
-            isWorkingToday ? 'border-[#059669]' : 'border-[#9CA3AF]',
-          )}
-        >
-          <p
-            className={cn(
-              'text-[17px]',
-              isWorkingToday ? 'font-medium text-ink' : 'text-[#6B7280]',
-            )}
-          >
-            {isWorkingToday ? "You're working today." : 'You have the day off.'}
-          </p>
-        </div>
-
-        {isWorkingToday && (
-          <div className="mt-2 flex flex-col gap-3 pl-3">
-            {todayShifts.map((shift) => {
-              const [startTime, endTime] = formatShiftTimeRange(
-                shift.starts_at,
-                shift.ends_at,
-              ).split(' – ')
-              const [startDigits, startMeridiem] = startTime.split(' ')
-              const [endDigits, endMeridiem] = endTime.split(' ')
-
-              return (
-                <div key={shift.id}>
-                  <p>
-                    <span className="text-3xl font-medium text-ink">{startDigits}</span>
-                    <span className="text-base font-medium text-ink"> {startMeridiem}</span>
-                    <span className="text-3xl font-medium text-ink"> – {endDigits}</span>
-                    <span className="text-base font-medium text-ink"> {endMeridiem}</span>
-                  </p>
-                  <p className="text-sm text-[#6B7280]">
-                    {shift.unit}
-                    {credential && ` | ${credential}`}
-                  </p>
-                </div>
-              )
-            })}
-          </div>
+      <div className="px-5">
+      <p className="text-sm font-medium text-teal-dark">{todayLabel}</p>
+      <p className="font-display mt-1 text-[23px] leading-snug font-semibold">
+        <span style={{ color: '#20748C' }}>{getGreeting()},</span>
+        {firstName && <span style={{ color: '#7CB9CA' }}> {firstName}</span>}
+        <br />
+        {isWorkingToday && periodConfig ? (
+          <>
+            <span style={{ color: '#7CB9CA' }}>You have {periodConfig.article}</span>
+            <span style={{ color: '#20748C' }}> {periodConfig.label.toLowerCase()} shift</span>
+            <span style={{ color: '#7CB9CA' }}> today.</span>
+          </>
+        ) : (
+          <span style={{ color: '#7CB9CA' }}>You have the day off.</span>
         )}
-      </div>
+      </p>
+
+      {isWorkingToday && (
+        <div className="mt-5 flex flex-col gap-3">
+          {todayShifts.map((shift, index) => {
+            const [startTime, endTime] = formatShiftTimeRange(shift.starts_at, shift.ends_at).split(' – ')
+            const [startDigits, startMeridiem] = startTime.split(' ')
+            const [endDigits, endMeridiem] = endTime.split(' ')
+
+            return (
+              <div
+                key={shift.id}
+                className="rounded-[30px] bg-white p-5 shadow-[0_4px_12px_rgba(0,0,0,0.08)]"
+              >
+                <div className="flex items-baseline">
+                  <span className="text-[36px] font-medium text-[#111111]">{startDigits}</span>
+                  <span className="ml-1 text-base font-medium text-[#6B7280]">{startMeridiem}</span>
+                  <span className="mx-2 text-xl text-[#6B7280]">→</span>
+                  <span className="text-[36px] font-medium text-[#111111]">{endDigits}</span>
+                  <span className="ml-1 text-base font-medium text-[#6B7280]">{endMeridiem}</span>
+                </div>
+
+                <div className="mt-2 flex items-center gap-2">
+                  <span className="rounded-full bg-[#E0F7FA] px-2.5 py-1 text-xs font-medium text-teal-mid">
+                    {shift.unit}
+                  </span>
+                  {credential && <span className="text-[13px] text-[#1A1A1A]">{credential}</span>}
+                </div>
+
+                {index === 0 && (
+                  <button
+                    type="button"
+                    onClick={() => onSelectShift(shift)}
+                    className="mt-3 flex items-center"
+                  >
+                    <div className="flex items-center">
+                      {coworkers.slice(0, 3).map((coworker, avatarIndex) => (
+                        <div
+                          key={coworker.nurseId}
+                          className={cn(
+                            'flex size-8 items-center justify-center rounded-full border-2 border-white bg-[#F8F7F5] text-xs font-semibold text-[#6B7280]',
+                            avatarIndex > 0 && '-ml-2.5',
+                          )}
+                        >
+                          {getInitials(coworker.full_name)}
+                        </div>
+                      ))}
+                      {coworkers.length > 3 && (
+                        <div className="-ml-2.5 flex size-8 items-center justify-center rounded-full border-2 border-white bg-teal-mid text-xs font-bold text-white">
+                          +{coworkers.length - 3}
+                        </div>
+                      )}
+                    </div>
+                    <span className="ml-2.5 text-[13px] text-teal-mid">see who's working →</span>
+                  </button>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      )}
 
       {notifications.some((n) => !n.read) && (
-        <div className="mb-9 flex flex-col gap-2">
+        <div className="mt-5 flex flex-col gap-2">
           {notifications
             .filter((n) => !n.read)
             .map((notification) => (
@@ -403,68 +617,60 @@ function NurseSummary({
             ))}
         </div>
       )}
+      </div>
 
-      <div className="border-b border-[#E8E6E3] pb-4" />
+      <div className="mt-6 rounded-t-[28px] bg-white px-6 pt-6 pb-10">
+        <section>
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-bold text-[#111111]">Upcoming Shifts</h2>
+            <span className="text-sm text-[#6B7280]">See All ↓</span>
+          </div>
 
-      <section className="pt-4">
-        <h2 className="mb-4 text-lg font-semibold text-ink">Upcoming shifts</h2>
+          {upcomingShifts.length === 0 ? (
+            <p className="mt-3 text-sm text-[#6B7280]">No upcoming shifts</p>
+          ) : (
+            <ul className="mt-1 flex flex-col divide-y divide-[#F3F4F6]">
+              {upcomingShifts.map((shift) => (
+                <ShiftRow
+                  key={shift.id}
+                  shift={shift}
+                  workspaceName={workspaceName}
+                  onSelectShift={onSelectShift}
+                />
+              ))}
+            </ul>
+          )}
+        </section>
+      </div>
 
-        {upcomingShifts.length === 0 ? (
-          <p className="text-[15px] text-[#6B7280]">No upcoming shifts</p>
-        ) : (
-          <ul className="flex flex-col gap-3">
-            {upcomingShifts.map((shift) => {
-              const period = getShiftPeriod(shift.starts_at)
-              const shiftDate = new Date(shift.starts_at)
+      <div className="px-5">
+        <section className="mt-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-bold text-[#111111]">Open Shifts</h2>
+            <span className="text-sm text-[#6B7280]">See All ↓</span>
+          </div>
 
-              return (
-                <li key={shift.id}>
-                  <button
-                    type="button"
-                    onClick={() => onSelectShift(shift)}
-                    className="flex w-full items-center gap-4 rounded-card bg-white p-4 text-left shadow-sm border border-[#E8E6E3] transition-shadow active:shadow-none"
-                  >
-                    <div className="flex w-12 shrink-0 flex-col items-center justify-center gap-0.5 text-center">
-                      <span className="text-xs font-medium tracking-wide text-[#9CA3AF] uppercase">
-                        {weekdayFormatter.format(shiftDate)}
-                      </span>
-                      <span className="text-2xl font-bold text-ink">{shiftDate.getDate()}</span>
-                      <span className="text-xs font-medium tracking-wide text-[#9CA3AF] uppercase">
-                        {monthFormatter.format(shiftDate)}
-                      </span>
-                    </div>
-
-                    <div className="h-12 w-px shrink-0 bg-line" />
-
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center justify-between gap-3">
-                        <p className="truncate text-sm font-semibold text-ink">
-                          {formatShiftTimeRange(shift.starts_at, shift.ends_at)}
-                        </p>
-                        <ShiftPeriodPill period={period} />
-                      </div>
-                      <div className="mt-1 flex items-center gap-1.5">
-                        <p className="truncate text-xs text-[#9CA3AF]">{shift.unit}</p>
-                        {credential && (
-                          <>
-                            <span className="h-3 border-l border-line" />
-                            <p className="text-xs font-medium text-[#6B7280]">{credential}</p>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </button>
-                </li>
-              )
-            })}
-          </ul>
-        )}
-      </section>
+          {!openShiftsLoading && openShifts.length === 0 ? (
+            <p className="mt-3 text-sm text-[#6B7280]">No open shifts right now</p>
+          ) : (
+            <ul className="mt-1 flex flex-col divide-y divide-[#F3F4F6]">
+              {openShifts.map((shift) => (
+                <ShiftRow
+                  key={shift.id}
+                  shift={shift}
+                  workspaceName={workspaceName}
+                  onSelectShift={onSelectShift}
+                />
+              ))}
+            </ul>
+          )}
+        </section>
+      </div>
     </>
   )
 }
 
-function CoordinatorSummary({ shifts, today, onGoToManage }) {
+function CoordinatorSummary({ shifts, today, todayLabel, firstName, onGoToManage }) {
   const todayShifts = shifts.filter((shift) => isSameLocalDay(new Date(shift.starts_at), today))
   const uniqueNursesToday = new Set(todayShifts.map((shift) => shift.nurse_id)).size
 
@@ -485,7 +691,13 @@ function CoordinatorSummary({ shifts, today, onGoToManage }) {
 
   return (
     <section>
-      <div className="grid grid-cols-3 gap-3">
+      <p className="text-sm font-medium text-teal-dark">{todayLabel}</p>
+      <p className="font-display mt-1 text-[23px] leading-snug font-semibold">
+        <span style={{ color: '#20748C' }}>{getGreeting()},</span>
+        {firstName && <span style={{ color: '#7CB9CA' }}> {firstName}</span>}
+      </p>
+
+      <div className="mt-6 grid grid-cols-3 gap-3">
         <Card className="gap-2 rounded-card border-none bg-surface p-5 text-center shadow-none">
           <Calendar className="mx-auto text-[#9CA3AF]" size={20} strokeWidth={2} />
           <p className="text-3xl font-bold text-ink">{todayShifts.length}</p>

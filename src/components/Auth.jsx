@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Wordmark } from '@/components/ui/wordmark'
 
 const fieldClassName =
   'h-auto border-gray-300 bg-white px-3.5 py-3 focus-visible:border-[#111] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#111] focus-visible:ring-0'
@@ -94,7 +95,7 @@ export default function Auth() {
   if (view === 'signup') {
     return (
       <main className="mx-auto w-full max-w-md px-5 pt-16 pb-8">
-        <p className="mb-8 text-center text-2xl font-bold text-[#4F46E5]">Claimo</p>
+        <Wordmark className="mb-8 text-center" />
         <h1 className="mb-2 text-2xl font-semibold">Sign up</h1>
         <p className="mb-8 text-xs text-[#9CA3AF]">{signupStep} of 2</p>
 
@@ -205,7 +206,7 @@ export default function Auth() {
 
   return (
     <main className="mx-auto w-full max-w-md px-5 pt-16 pb-8">
-      <p className="text-center text-2xl font-bold text-[#4F46E5]">Claimo</p>
+      <Wordmark className="text-center" />
       <h1 className="mt-8 text-center text-2xl font-bold tracking-tight text-ink">Your schedule, clear as day.</h1>
       <p className="mx-auto mt-2 max-w-xs text-center text-sm text-[#6B7280]">
         Sign in to view your shifts and stay connected with your team.
