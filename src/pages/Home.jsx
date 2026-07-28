@@ -223,10 +223,11 @@ export default function Home({ user, role, onGoToManage }) {
   return (
     <div
       className="flex min-h-screen w-full flex-col"
-      style={{ background: 'linear-gradient(to bottom, #F6FDFE 0%, #D2F3FC 35%, #EFFDFF 55%, #FFFFFF 100%)' }}
+      style={{ background: 'linear-gradient(to bottom, #EFFDFF 0%, #D2F3FC 35%, #EFFDFF 55%, #FFFFFF 100%)' }}
     >
       <main className="mx-auto flex w-full max-w-md flex-1 flex-col pt-10 pb-12">
-        <div className="shrink-0 flex items-center justify-between px-5">
+        <div className="shrink-0 px-5">
+        <div className="flex items-center justify-between">
           <Wordmark />
 
           {!isCoordinator && (
@@ -309,6 +310,12 @@ export default function Home({ user, role, onGoToManage }) {
           )}
         </div>
 
+        <p className="mt-1 flex items-center gap-1.5 text-sm font-medium text-teal-dark">
+          <span className="size-1.5 shrink-0 rounded-full bg-[#F97316]" />
+          {todayLabel}
+        </p>
+        </div>
+
         {!loading && error && (
           <p className="mt-6 px-5 text-sm text-red-700">Could not load home data: {error}</p>
         )}
@@ -320,7 +327,6 @@ export default function Home({ user, role, onGoToManage }) {
                 <CoordinatorSummary
                   shifts={shifts}
                   today={today}
-                  todayLabel={todayLabel}
                   firstName={firstName}
                   onGoToManage={onGoToManage}
                 />
@@ -329,7 +335,6 @@ export default function Home({ user, role, onGoToManage }) {
               <NurseSummary
                 shifts={shifts}
                 today={today}
-                todayLabel={todayLabel}
                 firstName={firstName}
                 credential={credential}
                 workspaceName={workspaceName}
@@ -428,7 +433,6 @@ function ShiftRow({ shift, workspaceName, onSelectShift }) {
 function NurseSummary({
   shifts,
   today,
-  todayLabel,
   firstName,
   credential,
   workspaceName,
@@ -537,8 +541,10 @@ function NurseSummary({
   return (
     <div className="flex flex-1 flex-col">
       <div className="shrink-0 px-5">
-      <p className="text-sm font-medium text-teal-dark">{todayLabel}</p>
-      <p className="font-display mt-1 text-[23px] leading-snug font-semibold" style={{ letterSpacing: '-0.03em' }}>
+      <p
+        className="font-display text-[26px] font-semibold"
+        style={{ letterSpacing: '-0.03em', lineHeight: '115%' }}
+      >
         <span style={{ color: '#20748C' }}>{getGreeting()},</span>
         {firstName && <span style={{ color: '#7CB9CA' }}> {firstName}</span>}
         <br />
@@ -563,7 +569,7 @@ function NurseSummary({
             return (
               <div
                 key={shift.id}
-                className="rounded-[30px] bg-white p-5 shadow-[0_4px_12px_rgba(0,0,0,0.08)]"
+                className="rounded-[30px] bg-white py-[15px] pr-5 pl-[25px] shadow-[0_4px_12px_rgba(0,0,0,0.08)]"
               >
                 <div className="flex items-baseline">
                   <span className="text-[36px] font-medium text-[#111111]">{startDigits}</span>
@@ -680,7 +686,7 @@ function NurseSummary({
   )
 }
 
-function CoordinatorSummary({ shifts, today, todayLabel, firstName, onGoToManage }) {
+function CoordinatorSummary({ shifts, today, firstName, onGoToManage }) {
   const todayShifts = shifts.filter((shift) => isSameLocalDay(new Date(shift.starts_at), today))
   const uniqueNursesToday = new Set(todayShifts.map((shift) => shift.nurse_id)).size
 
@@ -701,8 +707,10 @@ function CoordinatorSummary({ shifts, today, todayLabel, firstName, onGoToManage
 
   return (
     <section>
-      <p className="text-sm font-medium text-teal-dark">{todayLabel}</p>
-      <p className="font-display mt-1 text-[23px] leading-snug font-semibold" style={{ letterSpacing: '-0.03em' }}>
+      <p
+        className="font-display text-[26px] font-semibold"
+        style={{ letterSpacing: '-0.03em', lineHeight: '115%' }}
+      >
         <span style={{ color: '#20748C' }}>{getGreeting()},</span>
         {firstName && <span style={{ color: '#7CB9CA' }}> {firstName}</span>}
       </p>
