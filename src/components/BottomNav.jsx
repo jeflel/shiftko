@@ -25,11 +25,11 @@ export default function BottomNav({ activeTab, onTabChange }) {
             onClick={() => onTabChange(tab.id)}
             className={cn(
               'flex flex-1 flex-col items-center gap-1 py-2 text-xs text-gray-400',
-              isActive && 'font-semibold text-teal-mid',
+              isActive && 'font-semibold',
             )}
           >
-            <Icon size={22} strokeWidth={isActive ? 2.25 : 2} />
-            {tab.label}
+            <Icon className={isActive ? 'text-teal-mid' : undefined} size={22} strokeWidth={isActive ? 2.25 : 2} />
+            <span className={isActive ? 'text-[#282828]' : undefined}>{tab.label}</span>
           </button>
         )
       })}
