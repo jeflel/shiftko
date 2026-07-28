@@ -538,7 +538,7 @@ function NurseSummary({
     <div className="flex flex-1 flex-col">
       <div className="shrink-0 px-5">
       <p className="text-sm font-medium text-teal-dark">{todayLabel}</p>
-      <p className="font-display mt-1 text-[23px] leading-snug font-semibold">
+      <p className="font-display mt-1 text-[23px] leading-snug font-semibold" style={{ letterSpacing: '-0.03em' }}>
         <span style={{ color: '#20748C' }}>{getGreeting()},</span>
         {firstName && <span style={{ color: '#7CB9CA' }}> {firstName}</span>}
         <br />
@@ -702,7 +702,7 @@ function CoordinatorSummary({ shifts, today, todayLabel, firstName, onGoToManage
   return (
     <section>
       <p className="text-sm font-medium text-teal-dark">{todayLabel}</p>
-      <p className="font-display mt-1 text-[23px] leading-snug font-semibold">
+      <p className="font-display mt-1 text-[23px] leading-snug font-semibold" style={{ letterSpacing: '-0.03em' }}>
         <span style={{ color: '#20748C' }}>{getGreeting()},</span>
         {firstName && <span style={{ color: '#7CB9CA' }}> {firstName}</span>}
       </p>
