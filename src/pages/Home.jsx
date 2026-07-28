@@ -223,7 +223,7 @@ export default function Home({ user, role, onGoToManage }) {
   return (
     <div
       className="flex min-h-screen w-full flex-col"
-      style={{ background: 'linear-gradient(to bottom, #EFFDFF 0%, #D2F3FC 35%, #EFFDFF 55%, #FFFFFF 100%)' }}
+      style={{ background: 'linear-gradient(to bottom, #EFFDFF 0%, #D2F3FC 48%, #EFFDFF 68%, #FFFFFF 100%)' }}
     >
       <main className="mx-auto flex w-full max-w-md flex-1 flex-col pt-10 pb-12">
         <div className="shrink-0 px-5">
@@ -569,7 +569,7 @@ function NurseSummary({
             return (
               <div
                 key={shift.id}
-                className="rounded-[30px] bg-white py-[15px] pr-5 pl-[25px] shadow-[0_4px_12px_rgba(0,0,0,0.08)]"
+                className="rounded-[30px] bg-white pt-[15px] pr-[25px] pb-[15px] pl-[25px] shadow-[0_4px_12px_rgba(0,0,0,0.08)]"
               >
                 <div className="flex items-baseline">
                   <span className="text-[36px] font-medium text-[#111111]">{startDigits}</span>
@@ -579,14 +579,14 @@ function NurseSummary({
                   <span className="ml-1 text-base font-medium text-[#3A798B]">{endMeridiem}</span>
                 </div>
 
-                <div className="mt-2 flex items-center gap-2">
-                  <span className="rounded-full bg-[#E0F7FA] px-2.5 py-1 text-xs font-medium text-teal-mid">
+                <div className="mt-[5px] flex items-center gap-2">
+                  <span className="rounded-[7px] bg-[#E0F7FA] px-2.5 py-1 text-xs font-semibold text-teal-mid">
                     {shift.unit}
                   </span>
-                  {credential && <span className="text-[13px] text-[#1A1A1A]">{credential}</span>}
+                  {credential && <span className="text-[13px] font-medium text-[#1A1A1A]">{credential}</span>}
                 </div>
 
-                {index === 0 && (
+                {index === 0 && coworkers.length > 0 && (
                   <button
                     type="button"
                     onClick={() => onSelectShift(shift)}
@@ -596,7 +596,7 @@ function NurseSummary({
                       see who's working today →
                     </span>
 
-                    <div className="flex items-center">
+                    <div className="flex -translate-y-[5px] items-center">
                       {coworkers.slice(0, 3).map((coworker, avatarIndex) => (
                         <div
                           key={coworker.nurseId}
