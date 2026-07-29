@@ -108,6 +108,44 @@ function DayOffRow({ label, text }) {
   )
 }
 
+function ScheduleViewToggle({ value, onChange }) {
+  const options = [
+    { id: 'mine', label: 'Mine' },
+    { id: 'team', label: 'Team' },
+  ]
+
+  return (
+    <div className="mb-6 inline-flex rounded-full bg-surface p-1" role="tablist" aria-label="Schedule view">
+      {options.map((option) => (
+        <button
+          key={option.id}
+          type="button"
+          role="tab"
+          aria-selected={value === option.id}
+          onClick={() => onChange(option.id)}
+          className={cn(
+            'rounded-full px-4 py-1.5 text-sm font-medium transition-colors',
+            value === option.id ? 'bg-white text-ink shadow-sm' : 'text-[#9CA3AF]',
+          )}
+        >
+          {option.label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+function ScheduleTab({ user }) {
+  const [view, setView] = useState('mine')
+
+  return (
+    <div>
+      <ScheduleViewToggle value={view} onChange={setView} />
+      {view === 'mine' ? <MyShiftsTab user={user} /> : <TeamScheduleTab />}
+    </div>
+  )
+}
+
 function MyShiftsTab({ user }) {
   const [shifts, setShifts] = useState([])
   const [credential, setCredential] = useState(null)
@@ -2020,7 +2058,7 @@ function StaffTab() {
   )
 }
 
-export default function Schedule({ user, role, initialTab = 'my' }) {
+export default function Schedule({ user, role, initialTab = 'schedule' }) {
   const isCoordinator = role === 'coordinator'
 
   const tabs = isCoordinator
@@ -2030,9 +2068,8 @@ export default function Schedule({ user, role, initialTab = 'my' }) {
         { id: 'staff', label: 'Staff' },
       ]
     : [
-        { id: 'my', label: 'My Shifts' },
+        { id: 'schedule', label: 'Schedule' },
         { id: 'open', label: 'Open Shifts' },
-        { id: 'team', label: 'Team Schedule' },
       ]
 
   const [activeTab, setActiveTab] = useState(
@@ -2071,9 +2108,9 @@ export default function Schedule({ user, role, initialTab = 'my' }) {
       </div>
 
       <div role="tabpanel">
-        {activeTab === 'my' && !isCoordinator && <MyShiftsTab user={user} />}
+        {activeTab === 'schedule' && !isCoordinator && <ScheduleTab user={user} />}
         {activeTab === 'open' && !isCoordinator && <OpenShiftsTab user={user} />}
-        {activeTab === 'team' && <TeamScheduleTab />}
+        {activeTab === 'team' && isCoordinator && <TeamScheduleTab />}
         {activeTab === 'manage' && isCoordinator && <ManageTab />}
         {activeTab === 'staff' && isCoordinator && <StaffTab />}
       </div>

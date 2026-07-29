@@ -18,7 +18,7 @@ function App() {
   const [justJoinedWorkspace, setJustJoinedWorkspace] = useState(null)
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('home')
-  const [scheduleInitialTab, setScheduleInitialTab] = useState('my')
+  const [scheduleInitialTab, setScheduleInitialTab] = useState('schedule')
 
   useEffect(() => {
     let active = true
@@ -70,7 +70,7 @@ function App() {
   }
 
   function handleBottomNavChange(tab) {
-    setScheduleInitialTab('my')
+    setScheduleInitialTab('schedule')
     setActiveTab(tab)
   }
 
