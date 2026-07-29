@@ -23,7 +23,7 @@ nurses, facility pays.
 
 - React + Vite (JavaScript, no TypeScript)
 - Supabase (auth, database, RLS)
-- Vercel (deployment) — live at claimo.us
+- Vercel (deployment) — live at shiftko.com
 - Tailwind CSS v4 (no tailwind.config.js — CSS-driven via @theme)
 - shadcn/ui (style: new-york, base color: neutral, CSS variables on)
 - Geist font via Google Fonts CDN (loaded in index.html)
@@ -322,11 +322,11 @@ BottomNav:
 
 ## Current Task
 
-Shiftko rebrand + Home screen redesign. The app was renamed from
-Relay/Claimo to Shiftko, with a teal wordmark (Fraunces) added
-across Auth, More, JoinWorkspace, and BottomNav, and a full visual
-redesign of the Home screen (teal gradient background, new shift
-card, Fraunces display font). The teal/gradient look is currently
+Shiftko rebrand + Home screen redesign — completed. The app was
+renamed from Relay/Claimo to Shiftko, with a teal wordmark
+(Fraunces) added across Auth, More, and JoinWorkspace, and a full
+visual redesign of the Home screen (teal gradient background, new
+shift card, Fraunces display font). The teal/gradient look remains
 scoped to the Home screen only — other screens keep the existing
 ink/white design system.
 
