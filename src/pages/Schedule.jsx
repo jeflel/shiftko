@@ -113,6 +113,9 @@ function MyShiftsTab({ user }) {
   const [credential, setCredential] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [pendingClaimShiftIds, setPendingClaimShiftIds] = useState(new Set())
+  const [offerActionId, setOfferActionId] = useState(null)
+  const [actionError, setActionError] = useState(null)
 
   useEffect(() => {
     let cancelled = false
@@ -124,7 +127,7 @@ function MyShiftsTab({ user }) {
 
       const { data, error: fetchError } = await supabase
         .from('shifts')
-        .select('id, unit, starts_at, ends_at, status')
+        .select('id, unit, starts_at, ends_at, status, is_offered')
         .eq('nurse_id', user.id)
         .gte('starts_at', start.toISOString())
         .lt('starts_at', end.toISOString())
@@ -135,8 +138,27 @@ function MyShiftsTab({ user }) {
       if (fetchError) {
         setError(fetchError.message)
         setShifts([])
+        setPendingClaimShiftIds(new Set())
+        setLoading(false)
+        return
+      }
+
+      setShifts(data ?? [])
+
+      const offeredIds = (data ?? []).filter((s) => s.is_offered).map((s) => s.id)
+
+      if (offeredIds.length > 0) {
+        const { data: claimsData } = await supabase
+          .from('shift_claims')
+          .select('shift_id')
+          .in('shift_id', offeredIds)
+          .eq('status', 'pending')
+
+        if (!cancelled) {
+          setPendingClaimShiftIds(new Set((claimsData ?? []).map((c) => c.shift_id)))
+        }
       } else {
-        setShifts(data ?? [])
+        setPendingClaimShiftIds(new Set())
       }
 
       setLoading(false)
@@ -163,6 +185,27 @@ function MyShiftsTab({ user }) {
     return () => { cancelled = true }
   }, [user.id])
 
+  async function handleToggleOffer(shift, offer) {
+    setActionError(null)
+    setOfferActionId(shift.id)
+
+    const { error: rpcError } = await supabase.rpc('toggle_shift_offer', {
+      p_shift_id: shift.id,
+      p_offer: offer,
+    })
+
+    setOfferActionId(null)
+
+    if (rpcError) {
+      setActionError({ shiftId: shift.id, message: rpcError.message })
+      return
+    }
+
+    setShifts((current) =>
+      current.map((s) => (s.id === shift.id ? { ...s, is_offered: offer } : s)),
+    )
+  }
+
   const shiftsByDay = groupByDayKey(shifts, (shift) => shift.starts_at)
   const days = getFourWeekDays()
 
@@ -181,6 +224,10 @@ function MyShiftsTab({ user }) {
         return dayShifts.map((shift) => {
           const period = getShiftPeriod(shift.starts_at)
           const isPending = shift.status === 'pending'
+          const isOffered = shift.is_offered === true
+          const hasPendingOfferClaim = isOffered && pendingClaimShiftIds.has(shift.id)
+          const canOffer = shift.status === 'scheduled' && !isOffered
+          const isActioning = offerActionId === shift.id
 
           return (
             <li key={shift.id}>
@@ -188,7 +235,13 @@ function MyShiftsTab({ user }) {
                 date={new Date(shift.starts_at)}
                 title={formatShiftTimeRange(shift.starts_at, shift.ends_at)}
                 pill={<ShiftPeriodPill period={period} />}
-                belowPill={isPending ? <StatusPill status="pending" label="Pending" /> : null}
+                belowPill={
+                  isPending ? (
+                    <StatusPill status="pending" label="Pending" />
+                  ) : isOffered ? (
+                    <StatusPill status="open" label="Offered" />
+                  ) : null
+                }
                 subtitle={
                   <div className="mt-1 flex items-center gap-1.5">
                     <p className="truncate text-xs text-[#9CA3AF]">{shift.unit}</p>
@@ -200,7 +253,38 @@ function MyShiftsTab({ user }) {
                     )}
                   </div>
                 }
+                trailing={
+                  canOffer ? (
+                    <Button
+                      type="button"
+                      onClick={() => handleToggleOffer(shift, true)}
+                      disabled={isActioning}
+                      className="h-auto rounded-full bg-[#111111] px-4 py-1.5 text-sm font-medium text-white hover:bg-[#111111]/90 disabled:opacity-60"
+                    >
+                      {isActioning ? 'Offering…' : 'Offer'}
+                    </Button>
+                  ) : isOffered ? (
+                    <button
+                      type="button"
+                      onClick={() => handleToggleOffer(shift, false)}
+                      disabled={isActioning || hasPendingOfferClaim}
+                      className="rounded-full border border-[#E8E6E3] px-4 py-1.5 text-sm text-[#111111] disabled:opacity-60"
+                    >
+                      {isActioning ? 'Withdrawing…' : 'Withdraw'}
+                    </button>
+                  ) : null
+                }
               />
+
+              {hasPendingOfferClaim && (
+                <p className="mt-1.5 pl-1 text-xs text-[#9CA3AF]">
+                  A nurse has requested this shift
+                </p>
+              )}
+
+              {actionError?.shiftId === shift.id && (
+                <p className="mt-1.5 pl-1 text-xs text-red-700">{actionError.message}</p>
+              )}
             </li>
           )
         })
@@ -255,9 +339,11 @@ function OpenShiftsTab({ user }) {
 
       const { data: shiftsData, error: shiftsError } = await supabase
         .from('shifts')
-        .select('id, unit, starts_at, ends_at, status')
-        .eq('status', 'open')
+        .select(
+          'id, unit, starts_at, ends_at, status, is_offered, nurse_id, profiles!nurse_id ( full_name )',
+        )
         .eq('unit', unit)
+        .or('status.eq.open,and(is_offered.eq.true,status.eq.scheduled)')
         .order('starts_at', { ascending: true })
 
       if (cancelled) return
@@ -390,8 +476,16 @@ function OpenShiftsTab({ user }) {
                   title={formatShiftTimeRange(shift.starts_at, shift.ends_at)}
                   pill={<StatusPill status="open" />}
                   subtitle={
-                    <div className="mt-1">
+                    <div className="mt-1 flex items-center gap-1.5">
                       <p className="truncate text-xs text-[#9CA3AF]">{shift.unit}</p>
+                      {shift.nurse_id && (
+                        <>
+                          <span className="h-3 border-l border-[#E8E6E3]" />
+                          <p className="truncate text-xs text-[#9CA3AF]">
+                            Offered by {shift.profiles?.full_name ?? 'a nurse'}
+                          </p>
+                        </>
+                      )}
                     </div>
                   }
                   trailing={
@@ -663,7 +757,7 @@ function ManageTab() {
       .select(`
         id, shift_id, nurse_id, claimed_at, status,
         profiles!nurse_id ( full_name, credential ),
-        shifts!shift_id ( id, unit, starts_at, ends_at, status )
+        shifts!shift_id ( id, unit, starts_at, ends_at, status, is_offered, nurse_id )
       `)
       .eq('status', 'pending')
       .order('claimed_at', { ascending: false })
@@ -678,7 +772,12 @@ function ManageTab() {
     const groups = new Map()
     for (const claim of data ?? []) {
       const shift = claim.shifts
-      if (!shift || (shift.status !== 'open' && shift.status !== 'pending')) continue
+      const isEligible =
+        shift &&
+        (shift.status === 'open' ||
+          shift.status === 'pending' ||
+          (shift.is_offered && shift.status === 'scheduled'))
+      if (!isEligible) continue
 
       if (!groups.has(claim.shift_id)) {
         groups.set(claim.shift_id, { shift, claims: [] })
@@ -883,7 +982,7 @@ function ManageTab() {
 
     const { error: shiftError } = await supabase
       .from('shifts')
-      .update({ status: 'scheduled', nurse_id: claim.nurse_id })
+      .update({ status: 'scheduled', nurse_id: claim.nurse_id, is_offered: false })
       .eq('id', group.shift.id)
 
     if (shiftError) {
@@ -921,7 +1020,10 @@ function ManageTab() {
 
     const shiftDetails = `${group.shift.unit} · ${formatShiftDate(group.shift.starts_at)} · ${formatShiftTimeRange(group.shift.starts_at, group.shift.ends_at)}`
 
-    const { error: notifyError } = await supabase.from('notifications').insert([
+    const wasOffered =
+      group.shift.is_offered && group.shift.nurse_id && group.shift.nurse_id !== claim.nurse_id
+
+    const notificationRows = [
       {
         user_id: claim.nurse_id,
         type: 'claim_approved',
@@ -934,7 +1036,18 @@ function ManageTab() {
         message: 'Sorry, this shift has been filled by another team member.',
         shift_id: group.shift.id,
       })),
-    ])
+    ]
+
+    if (wasOffered) {
+      notificationRows.push({
+        user_id: group.shift.nurse_id,
+        type: 'offer_claimed',
+        message: `Your ${formatShiftDate(group.shift.starts_at)} shift was picked up by ${claim.profiles?.full_name ?? 'another nurse'}.`,
+        shift_id: group.shift.id,
+      })
+    }
+
+    const { error: notifyError } = await supabase.from('notifications').insert(notificationRows)
 
     setActioningShiftId(null)
 

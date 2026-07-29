@@ -272,7 +272,9 @@ export default function Home({ user, role, onGoToManage }) {
                     ) : (
                       <ul className="flex max-h-80 flex-col overflow-y-auto">
                         {notifications.map((notification) => {
-                          const isApproved = notification.type === 'claim_approved'
+                          const isApproved =
+                            notification.type === 'claim_approved' ||
+                            notification.type === 'offer_claimed'
 
                           return (
                             <li
@@ -352,7 +354,8 @@ export default function Home({ user, role, onGoToManage }) {
 }
 
 function NotificationBanner({ notification, onDismiss }) {
-  const isApproved = notification.type === 'claim_approved'
+  const isApproved =
+    notification.type === 'claim_approved' || notification.type === 'offer_claimed'
 
   return (
     <div
