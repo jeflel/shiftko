@@ -1264,7 +1264,7 @@ function ManageTab() {
   return (
     <div className="flex flex-col gap-10">
       <section>
-        <h2 className="mb-4 text-sm font-semibold text-[#111111]">Post a shift</h2>
+        <h2 className="mb-4 text-[20px] font-semibold text-[#111111]">Post a shift</h2>
 
         <div className="flex flex-col gap-4">
           <label className="flex items-center gap-2 text-sm font-medium text-[#111111]">
@@ -1338,7 +1338,7 @@ function ManageTab() {
             type="button"
             onClick={handleSubmit}
             disabled={saving}
-            className="h-auto w-full rounded-full bg-[#111111] py-3 text-base font-semibold text-white hover:bg-[#111111]/90 disabled:opacity-60"
+            className="h-auto w-full rounded-full bg-[#111111] py-4 text-base font-semibold text-white hover:bg-[#111111]/90 disabled:opacity-60"
           >
             {saving ? 'Posting…' : 'Post shift'}
           </Button>
@@ -1346,7 +1346,7 @@ function ManageTab() {
       </section>
 
       <section>
-        <h2 className="mb-4 text-sm font-semibold text-[#111111]">Recent shifts</h2>
+        <h2 className="mb-4 text-[20px] font-semibold text-[#111111]">Recent shifts</h2>
 
         {recentActionMessage && (
           <p className="mb-3 text-sm text-[#16A34A]">{recentActionMessage}</p>
@@ -1533,7 +1533,7 @@ function ManageTab() {
       </section>
 
       <section>
-        <h2 className="mb-4 text-sm font-semibold text-[#111111]">Pending claims</h2>
+        <h2 className="mb-4 text-[20px] font-semibold text-[#111111]">Pending claims</h2>
 
         {pendingLoading && <p className="text-sm text-[#6B7280]">Loading pending claims…</p>}
         {pendingError && (
@@ -1635,7 +1635,7 @@ function ManageTab() {
       </section>
 
       <section>
-        <h2 className="mb-4 text-sm font-semibold text-[#111111]">Duplicate a week</h2>
+        <h2 className="mb-4 text-[20px] font-semibold text-[#111111]">Duplicate a week</h2>
 
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
@@ -1701,7 +1701,7 @@ function ManageTab() {
                   type="button"
                   onClick={handleConfirmCopy}
                   disabled={dupSaving}
-                  className="h-auto flex-1 rounded-full bg-[#111111] py-2.5 text-sm font-semibold text-white hover:bg-[#111111]/90 disabled:opacity-60"
+                  className="h-auto flex-1 rounded-full bg-[#111111] py-4 text-sm font-semibold text-white hover:bg-[#111111]/90 disabled:opacity-60"
                 >
                   {dupSaving
                     ? 'Copying…'
@@ -1714,7 +1714,7 @@ function ManageTab() {
                   variant="outline"
                   onClick={handleCancelCopy}
                   disabled={dupSaving}
-                  className="h-auto flex-1 rounded-full border-[#E8E6E3] py-2.5 text-sm font-semibold text-[#111111] shadow-none hover:bg-white"
+                  className="h-auto flex-1 rounded-full border-[#E8E6E3] py-4 text-sm font-semibold text-[#111111] shadow-none hover:bg-white"
                 >
                   Cancel
                 </Button>
@@ -1731,7 +1731,7 @@ function ManageTab() {
                 dupChecking ||
                 dupSourceShifts.length === 0
               }
-              className="h-auto w-full rounded-full bg-[#111111] py-3 text-base font-semibold text-white hover:bg-[#111111]/90 disabled:opacity-60"
+              className="h-auto w-full rounded-full bg-[#111111] py-4 text-base font-semibold text-white hover:bg-[#111111]/90 disabled:opacity-60"
             >
               {dupChecking ? 'Checking…' : 'Copy shifts'}
             </Button>
@@ -1740,8 +1740,8 @@ function ManageTab() {
       </section>
 
       <section>
-        <h2 className="mb-4 flex items-center gap-1.5 text-sm font-semibold text-[#111111]">
-          <Users size={14} />
+        <h2 className="mb-4 flex items-center gap-1.5 text-[20px] font-semibold text-[#111111]">
+          <Users size={16} strokeWidth={2.5} />
           Staff
         </h2>
 
@@ -1932,8 +1932,8 @@ function StaffTab() {
 
   return (
     <div>
-      <h2 className="mb-4 flex items-center gap-1.5 text-sm font-semibold text-[#111111]">
-        <Users size={14} strokeWidth={2} />
+      <h2 className="mb-4 flex items-center gap-1.5 text-[20px] font-semibold text-[#111111]">
+        <Users size={16} strokeWidth={2.5} />
         Staff
       </h2>
 
