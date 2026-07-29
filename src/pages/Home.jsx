@@ -221,12 +221,10 @@ export default function Home({ user, role, onGoToManage }) {
   const unreadCount = notifications.filter((n) => !n.read).length
 
   return (
-    <div className="flex min-h-screen w-full flex-col">
-      <div
-        className="fixed inset-0 -z-10"
-        style={{ background: 'linear-gradient(to top, #D2F3FC 70%, #EFFDFF 80%, #F8FEFF 94%)' }}
-      />
-
+    <div
+      className="flex min-h-screen w-full flex-col"
+      style={{ background: 'linear-gradient(to top, #D2F3FC 70%, #EFFDFF 80%, #F8FEFF 94%)' }}
+    >
       <main className="mx-auto flex w-full max-w-md flex-1 flex-col pt-10 pb-12">
         <div className="shrink-0 px-5">
         <div className="flex items-center justify-between">
