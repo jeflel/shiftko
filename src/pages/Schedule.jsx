@@ -205,13 +205,6 @@ function DateScrollerHeader({ shiftDateKeys }) {
   const [selectedKey, setSelectedKey] = useState(null)
   const [pending, setPending] = useState(null)
   const pointerStartXRef = useRef(null)
-  const animTimeoutRef = useRef(null)
-
-  useEffect(() => {
-    return () => {
-      if (animTimeoutRef.current) clearTimeout(animTimeoutRef.current)
-    }
-  }, [])
 
   const todayKey = formatLocalDateKey(new Date())
 
@@ -228,11 +221,15 @@ function DateScrollerHeader({ shiftDateKeys }) {
         setPending((current) => (current ? { ...current, phase: 'end' } : current))
       })
     })
+  }
 
-    animTimeoutRef.current = setTimeout(() => {
-      setWeekOffset(targetOffset)
-      setPending(null)
-    }, WEEK_TRANSITION_MS)
+  function handleTransitionEnd(event) {
+    if (event.target !== event.currentTarget || event.propertyName !== 'transform') return
+    setPending((current) => {
+      if (!current) return current
+      setWeekOffset(current.targetOffset)
+      return null
+    })
   }
 
   function handlePointerDown(event) {
@@ -273,6 +270,7 @@ function DateScrollerHeader({ shiftDateKeys }) {
         }}
         onPointerDown={handlePointerDown}
         onPointerUp={handlePointerUp}
+        onTransitionEnd={handleTransitionEnd}
       >
         <div className="w-full shrink-0">
           <WeekRow
