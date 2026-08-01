@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { AlertTriangle, Pencil, Trash2, Users } from 'lucide-react'
+import { AlertTriangle, ChevronRight, Pencil, Trash2, Users } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import ShiftDetail from './ShiftDetail'
 import { ShiftPeriodPill, StatusPill } from '@/components/ui/pill'
@@ -106,6 +106,57 @@ function DayOffRow({ label, text }) {
       </span>
       <span>{text}</span>
     </li>
+  )
+}
+
+// Hardcoded mockup data for the week of July 27 - August 2, 2026.
+// Tuesday July 28 is the selected/current day; shift dots on Wed 29, Thu 30, Sat 1, Sun 2.
+const DATE_SCROLLER_DAYS = [
+  { date: 27, weekday: 'M', hasShift: false, isSelected: false },
+  { date: 28, weekday: 'T', hasShift: false, isSelected: true },
+  { date: 29, weekday: 'W', hasShift: true, isSelected: false },
+  { date: 30, weekday: 'T', hasShift: true, isSelected: false },
+  { date: 31, weekday: 'F', hasShift: false, isSelected: false },
+  { date: 1, weekday: 'S', hasShift: true, isSelected: false },
+  { date: 2, weekday: 'S', hasShift: true, isSelected: false },
+]
+
+function MonthNavHeader() {
+  return (
+    <button
+      type="button"
+      className="flex items-center gap-0.5 text-[15px] font-semibold text-[#111111]"
+    >
+      JULY 2026
+      <ChevronRight size={16} strokeWidth={2.5} />
+    </button>
+  )
+}
+
+function DateScrollerHeader() {
+  return (
+    <div className="mb-6 flex justify-between">
+      {DATE_SCROLLER_DAYS.map((day) => {
+        const letterColor = day.isSelected ? '#282828' : day.hasShift ? '#3A798B' : '#A4A4A4'
+
+        return (
+          <div key={day.date} className="flex flex-col items-center gap-1">
+            <div
+              className={cn(
+                'flex flex-col items-center gap-1 rounded-[15px] px-2 py-1.5',
+                day.isSelected && 'border border-[#79C3D8] bg-[#EBFBFF]',
+              )}
+            >
+              <span className="text-[11px] font-semibold" style={{ color: letterColor }}>
+                {day.weekday}
+              </span>
+              <span className="text-[15px] font-semibold text-[#282828]">{day.date}</span>
+            </div>
+            <span className={cn('size-1.5 rounded-full', day.hasShift ? 'bg-[#3A798B]' : 'bg-transparent')} />
+          </div>
+        )
+      })}
+    </div>
   )
 }
 
@@ -1784,7 +1835,12 @@ export default function Schedule({ user, role, initialTab = 'schedule' }) {
 
   return (
     <main className="mx-auto w-full max-w-md px-5 pt-[26px] pb-12">
-      <h1 className="mb-6 font-display text-[26px] font-semibold text-[#111111]">Schedule</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="mb-6 font-display text-[26px] font-semibold text-[#111111]">Schedule</h1>
+        <MonthNavHeader />
+      </div>
+
+      <DateScrollerHeader />
 
       {tabs.length > 1 && (
         <div className="mb-6 flex border-b border-[#E8E6E3]" role="tablist" aria-label="Schedule views">
