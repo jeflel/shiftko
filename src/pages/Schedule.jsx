@@ -2005,8 +2005,8 @@ export default function Schedule({ user, role, initialTab = 'schedule' }) {
 
   return (
     <main className="mx-auto w-full max-w-md px-5 pt-[26px] pb-12">
-      <div className="flex items-center justify-between">
-        <h1 className="mb-6 font-display text-[26px] font-semibold text-[#111111]">Schedule</h1>
+      <div className="mb-4 flex items-end justify-between">
+        <h1 className="font-display text-[26px] font-semibold text-[#111111]">Schedule</h1>
         <MonthNavHeader />
       </div>
 
