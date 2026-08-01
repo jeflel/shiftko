@@ -130,7 +130,7 @@ function MonthNavHeader() {
   return (
     <button
       type="button"
-      className="flex items-center gap-0.5 text-[15px] font-semibold text-[#AAAAAA]"
+      className="relative -top-[3px] flex items-center gap-0.5 text-[15px] font-semibold text-[#AAAAAA]"
     >
       JULY 2026
       <ChevronRight size={16} strokeWidth={2} className="text-[#AAAAAA]" />
