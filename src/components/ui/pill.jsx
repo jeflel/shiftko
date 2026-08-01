@@ -2,9 +2,21 @@ import { Sun, Sunset, Moon, Circle, Clock, CheckCircle2, XCircle } from 'lucide-
 import { cn } from '@/lib/utils'
 
 const PERIOD_CONFIG = {
-  Day: { label: 'Day', icon: Sun, className: 'bg-[#7BD3FB] px-3.5 py-1.5 text-white' },
-  Evening: { label: 'Evening', icon: Sunset, className: 'bg-[#FF5778] px-3.5 py-1.5 text-white' },
-  Night: { label: 'Night', icon: Moon, className: 'bg-[#7978DE] px-3.5 py-1.5 text-white' },
+  Day: {
+    label: 'MORNING',
+    icon: Sun,
+    className: 'rounded-[7px] bg-[#FEF9EC] px-2 py-1 text-[11px] font-bold tracking-[-0.22px] text-[#C96F15]',
+  },
+  Evening: {
+    label: 'EVENING',
+    icon: Sunset,
+    className: 'rounded-[7px] bg-[#EDFBF0] px-2 py-1 text-[11px] font-bold tracking-[-0.22px] text-[#278E8E]',
+  },
+  Night: {
+    label: 'NIGHT',
+    icon: Moon,
+    className: 'rounded-[7px] bg-[#FFF2FE] px-2 py-1 text-[11px] font-bold tracking-[-0.22px] text-[#5132AE]',
+  },
 }
 
 const STATUS_CONFIG = {
@@ -14,7 +26,7 @@ const STATUS_CONFIG = {
   cancelled: { label: 'Cancelled', icon: XCircle, className: 'bg-[#F3F4F6] text-[#6B7280]' },
 }
 
-function PillBase({ icon: Icon, label, className }) {
+function PillBase({ icon: Icon, label, className, iconSize = 12 }) {
   return (
     <span
       className={cn(
@@ -22,7 +34,7 @@ function PillBase({ icon: Icon, label, className }) {
         className,
       )}
     >
-      {Icon && <Icon size={12} strokeWidth={2.5} />}
+      {Icon && <Icon size={iconSize} strokeWidth={2.5} />}
       {label}
     </span>
   )
@@ -30,7 +42,7 @@ function PillBase({ icon: Icon, label, className }) {
 
 export function ShiftPeriodPill({ period }) {
   const config = PERIOD_CONFIG[period] ?? { label: period, icon: null, className: 'bg-gray-100 text-gray-500' }
-  return <PillBase icon={config.icon} label={config.label} className={config.className} />
+  return <PillBase icon={config.icon} label={config.label} className={config.className} iconSize={13} />
 }
 
 export function StatusPill({ status, label }) {

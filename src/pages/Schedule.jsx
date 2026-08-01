@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { AlertTriangle, ChevronRight, Pencil, Trash2, Users } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { AlertTriangle, Calendar, ChevronRight, Pencil, Smile, Trash2, Users } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import ShiftDetail from './ShiftDetail'
 import { ShiftPeriodPill, StatusPill } from '@/components/ui/pill'
@@ -59,6 +59,25 @@ function formatWeekRangeLabel(weekStart) {
   return `${startLabel} – ${endLabel}`
 }
 
+function ShiftTimeLabel({ startsAt, endsAt }) {
+  const [startTime, endTime] = formatShiftTimeRange(startsAt, endsAt).split(' – ')
+  const [startDigits, startMeridiem] = startTime.split(' ')
+  const [endDigits, endMeridiem] = endTime.split(' ')
+
+  return (
+    <p
+      className="truncate font-display text-[18px] font-normal text-[#282828]"
+      style={{ fontVariationSettings: '"SOFT" 0, "WONK" 1' }}
+    >
+      {startDigits}
+      <span className="text-[13px] font-semibold text-[#5B5B5B]"> {startMeridiem}</span>
+      <span className="text-[#A4A4A4]"> – </span>
+      {endDigits}
+      <span className="text-[13px] font-semibold text-[#5B5B5B]"> {endMeridiem}</span>
+    </p>
+  )
+}
+
 function ShiftCard({ date, title, subtitle, pill, belowPill, trailing, onClick }) {
   const isInteractive = typeof onClick === 'function'
   const Comp = isInteractive ? 'button' : 'div'
@@ -68,121 +87,268 @@ function ShiftCard({ date, title, subtitle, pill, belowPill, trailing, onClick }
       type={isInteractive ? 'button' : undefined}
       onClick={onClick}
       className={cn(
-        'flex w-full items-center rounded-xl bg-white p-4 shadow-sm border border-[#E8E6E3]',
+        'flex w-full items-center gap-3.5 rounded-[20px] border border-[#E3E3E3] bg-white p-4 shadow-[0px_7px_20px_2px_rgba(46,73,92,0.06)]',
         isInteractive && 'text-left transition-shadow active:shadow-none',
       )}
     >
       <div className="flex w-12 shrink-0 flex-col items-center justify-center gap-0.5 text-center">
-        <span className="text-xs font-medium tracking-wide text-[#9CA3AF] uppercase">
+        <span className="text-[13px] font-semibold text-[#3A798B]">
           {weekdayFormatter.format(date)}
         </span>
-        <span className="text-2xl font-bold text-[#111111]">{date.getDate()}</span>
-        <span className="text-xs font-medium tracking-wide text-[#9CA3AF] uppercase">
-          {monthFormatter.format(date)}
-        </span>
+        <span className="text-[18px] font-semibold text-[#282828]">{date.getDate()}</span>
       </div>
-
-      <div className="mx-3 h-8 self-center border-l border-[#E8E6E3]" />
 
       <div className="min-w-0 flex-1">
         <div className="flex items-center justify-between gap-3">
-          <p className="truncate text-sm font-semibold text-[#111111]">{title}</p>
+          {title}
           {pill}
         </div>
         {subtitle}
         {belowPill && <div className="mt-2">{belowPill}</div>}
       </div>
 
-      {trailing && <div className="ml-3 shrink-0">{trailing}</div>}
+      {trailing && <div className="ml-1 shrink-0">{trailing}</div>}
     </Comp>
   )
 }
 
-function DayOffRow({ label, text }) {
+function DayOffRow({ date, text }) {
   return (
-    <li className="flex items-center gap-3 py-1 pl-1 text-sm text-[#9CA3AF]">
-      <span className="w-12 shrink-0 text-center text-xs font-medium tracking-wide uppercase">
-        {label}
-      </span>
-      <span>{text}</span>
+    <li className="flex items-center gap-3.5 px-4 py-[18px]">
+      <div className="flex w-12 shrink-0 flex-col items-center justify-center gap-0.5 text-center">
+        <span className="text-[13px] font-semibold text-[#3A798B]">
+          {weekdayFormatter.format(date)}
+        </span>
+        <span className="text-[18px] font-semibold text-[#282828]">{date.getDate()}</span>
+      </div>
+      <p className="text-sm font-medium text-[#ADADAD]">{text}</p>
     </li>
   )
 }
-
-// Hardcoded mockup data for the week of July 27 - August 2, 2026.
-// Tuesday July 28 is the selected/current day; shift dots on Wed 29, Thu 30, Sat 1, Sun 2.
-const DATE_SCROLLER_DAYS = [
-  { date: 27, weekday: 'M', hasShift: false, isSelected: false },
-  { date: 28, weekday: 'T', hasShift: false, isSelected: true },
-  { date: 29, weekday: 'W', hasShift: true, isSelected: false },
-  { date: 30, weekday: 'T', hasShift: true, isSelected: false },
-  { date: 31, weekday: 'F', hasShift: false, isSelected: false },
-  { date: 1, weekday: 'S', hasShift: true, isSelected: false },
-  { date: 2, weekday: 'S', hasShift: true, isSelected: false },
-]
 
 function MonthNavHeader() {
   return (
     <button
       type="button"
-      className="flex items-center gap-0.5 text-[15px] font-semibold text-[#111111]"
+      className="flex items-center gap-0.5 text-[15px] font-semibold text-[#AAAAAA]"
     >
       JULY 2026
-      <ChevronRight size={16} strokeWidth={2.5} />
+      <ChevronRight size={16} strokeWidth={2} className="text-[#AAAAAA]" />
     </button>
   )
 }
 
-function DateScrollerHeader() {
+const MAX_WEEKS_BACK = 8
+const MAX_WEEKS_FORWARD = 8
+const WEEK_TRANSITION_MS = 280
+const SWIPE_THRESHOLD_PX = 40
+
+// No real shift data is wired into this header yet, so shift dots fall back to this
+// deterministic weekday pattern (Wed/Thu/Sat/Sun) for every week until it is.
+const DEFAULT_SHIFT_WEEKDAY_INDEXES = new Set([2, 3, 5, 6])
+
+const weekdayLetterFormatter = new Intl.DateTimeFormat(undefined, { weekday: 'narrow' })
+
+function getWeekDaysForOffset(offset) {
+  const start = getWeekStart(new Date())
+  start.setDate(start.getDate() + offset * 7)
+
+  const days = []
+  for (let i = 0; i < 7; i += 1) {
+    const date = new Date(start)
+    date.setDate(start.getDate() + i)
+    days.push(date)
+  }
+  return days
+}
+
+function WeekRow({ days, selectedKey, todayKey, onSelect, shiftDateKeys }) {
   return (
-    <div className="mb-6 flex justify-between">
-      {DATE_SCROLLER_DAYS.map((day) => {
-        const letterColor = day.isSelected ? '#282828' : day.hasShift ? '#3A798B' : '#A4A4A4'
+    <div className="flex w-full justify-between">
+      {days.map((date) => {
+        const dateKey = formatLocalDateKey(date)
+        const isToday = dateKey === todayKey
+        const isSelected = dateKey === selectedKey
+        const mondayFirstIndex = (date.getDay() + 6) % 7
+        const hasShift = shiftDateKeys
+          ? shiftDateKeys.has(dateKey)
+          : DEFAULT_SHIFT_WEEKDAY_INDEXES.has(mondayFirstIndex)
+        const stateColor = isToday ? '#282828' : hasShift ? '#3A798B' : '#A4A4A4'
 
         return (
-          <div key={day.date} className="flex flex-col items-center gap-1">
+          <button
+            key={dateKey}
+            type="button"
+            onClick={() => onSelect(dateKey)}
+            className="flex flex-col items-center gap-1.5"
+          >
             <div
               className={cn(
                 'flex flex-col items-center gap-1 rounded-[15px] px-2 py-1.5',
-                day.isSelected && 'border border-[#79C3D8] bg-[#EBFBFF]',
+                isSelected && 'border border-[#79C3D8] bg-[#EBFBFF]',
               )}
             >
-              <span className="text-[11px] font-semibold" style={{ color: letterColor }}>
-                {day.weekday}
+              <span className="text-[11px] font-semibold" style={{ color: stateColor }}>
+                {weekdayLetterFormatter.format(date)}
               </span>
-              <span className="text-[15px] font-semibold text-[#282828]">{day.date}</span>
+              <span className="text-[18px] tracking-[-0.36px]" style={{ color: stateColor }}>
+                {date.getDate()}
+              </span>
             </div>
-            <span className={cn('size-1.5 rounded-full', day.hasShift ? 'bg-[#3A798B]' : 'bg-transparent')} />
-          </div>
+            <span className={cn('size-1.5 rounded-full', hasShift ? 'bg-[#3A798B]' : 'bg-transparent')} />
+          </button>
         )
       })}
     </div>
   )
 }
 
+function DateScrollerHeader({ shiftDateKeys }) {
+  const [weekOffset, setWeekOffset] = useState(0)
+  const [selectedKey, setSelectedKey] = useState(null)
+  const [pending, setPending] = useState(null)
+  const pointerStartXRef = useRef(null)
+  const animTimeoutRef = useRef(null)
+
+  useEffect(() => {
+    return () => {
+      if (animTimeoutRef.current) clearTimeout(animTimeoutRef.current)
+    }
+  }, [])
+
+  const todayKey = formatLocalDateKey(new Date())
+
+  function goToWeek(direction) {
+    if (pending) return
+
+    const targetOffset = weekOffset + direction
+    if (targetOffset < -MAX_WEEKS_BACK || targetOffset > MAX_WEEKS_FORWARD) return
+
+    setPending({ direction, targetOffset, phase: 'start' })
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setPending((current) => (current ? { ...current, phase: 'end' } : current))
+      })
+    })
+
+    animTimeoutRef.current = setTimeout(() => {
+      setWeekOffset(targetOffset)
+      setPending(null)
+    }, WEEK_TRANSITION_MS)
+  }
+
+  function handlePointerDown(event) {
+    pointerStartXRef.current = event.clientX
+  }
+
+  function handlePointerUp(event) {
+    if (pointerStartXRef.current === null) return
+    const deltaX = event.clientX - pointerStartXRef.current
+    pointerStartXRef.current = null
+    if (Math.abs(deltaX) < SWIPE_THRESHOLD_PX) return
+    goToWeek(deltaX < 0 ? 1 : -1)
+  }
+
+  let leftOffset = weekOffset
+  let rightOffset = null
+  let transform = '0%'
+
+  if (pending) {
+    if (pending.direction === 1) {
+      leftOffset = weekOffset
+      rightOffset = pending.targetOffset
+      transform = pending.phase === 'end' ? '-100%' : '0%'
+    } else {
+      leftOffset = pending.targetOffset
+      rightOffset = weekOffset
+      transform = pending.phase === 'end' ? '0%' : '-100%'
+    }
+  }
+
+  return (
+    <div className="mb-6 overflow-hidden">
+      <div
+        className="flex"
+        style={{
+          transform: `translateX(${transform})`,
+          transition: pending ? `transform ${WEEK_TRANSITION_MS}ms ease-in-out` : 'none',
+        }}
+        onPointerDown={handlePointerDown}
+        onPointerUp={handlePointerUp}
+      >
+        <div className="w-full shrink-0">
+          <WeekRow
+            days={getWeekDaysForOffset(leftOffset)}
+            selectedKey={selectedKey}
+            todayKey={todayKey}
+            onSelect={setSelectedKey}
+            shiftDateKeys={shiftDateKeys}
+          />
+        </div>
+        {rightOffset !== null && (
+          <div className="w-full shrink-0">
+            <WeekRow
+              days={getWeekDaysForOffset(rightOffset)}
+              selectedKey={selectedKey}
+              todayKey={todayKey}
+              onSelect={setSelectedKey}
+              shiftDateKeys={shiftDateKeys}
+            />
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function CalendarViewButton() {
+  return (
+    <button
+      type="button"
+      className="flex h-[42px] shrink-0 items-center gap-2 rounded-full bg-[#282828] pr-4 pl-3.5 text-sm font-medium text-white"
+    >
+      <Calendar size={18} strokeWidth={2} className="-rotate-6" />
+      Calendar View <span className="text-[#AAAAAA]">→</span>
+    </button>
+  )
+}
+
 function ScheduleViewToggle({ value, onChange }) {
   const options = [
-    { id: 'mine', label: 'Mine' },
-    { id: 'team', label: 'Team' },
+    { id: 'mine', label: 'My Shifts', icon: Smile },
+    { id: 'team', label: 'Team', icon: Users },
   ]
 
   return (
-    <div className="mb-6 inline-flex rounded-full bg-surface p-1" role="tablist" aria-label="Schedule view">
-      {options.map((option) => (
-        <button
-          key={option.id}
-          type="button"
-          role="tab"
-          aria-selected={value === option.id}
-          onClick={() => onChange(option.id)}
-          className={cn(
-            'rounded-full px-4 py-1.5 text-sm font-medium transition-colors',
-            value === option.id ? 'bg-white text-ink shadow-sm' : 'text-[#9CA3AF]',
-          )}
-        >
-          {option.label}
-        </button>
-      ))}
+    <div
+      className="inline-flex shrink-0 items-center rounded-full bg-[#F2F2F2] p-[5px]"
+      role="tablist"
+      aria-label="Schedule view"
+    >
+      {options.map((option) => {
+        const Icon = option.icon
+        const isActive = value === option.id
+
+        return (
+          <button
+            key={option.id}
+            type="button"
+            role="tab"
+            aria-selected={isActive}
+            onClick={() => onChange(option.id)}
+            className={cn(
+              'flex items-center gap-1.5 rounded-full px-3.5 py-2 text-sm font-medium whitespace-nowrap transition-colors',
+              isActive
+                ? 'bg-white text-[#282828] shadow-[0px_5px_10px_0px_rgba(158,158,158,0.1)]'
+                : 'text-[#5B5B5B]',
+            )}
+          >
+            <Icon size={16} strokeWidth={2} />
+            {option.label}
+          </button>
+        )
+      })}
     </div>
   )
 }
@@ -192,7 +358,10 @@ function ScheduleTab({ user }) {
 
   return (
     <div>
-      <ScheduleViewToggle value={view} onChange={setView} />
+      <div className="mb-6 flex items-center justify-between gap-3">
+        <CalendarViewButton />
+        <ScheduleViewToggle value={view} onChange={setView} />
+      </div>
       {view === 'mine' ? <MyShiftsTab user={user} /> : <TeamScheduleTab />}
     </div>
   )
@@ -281,7 +450,7 @@ function MyShiftsTab({ user }) {
         const dayShifts = shiftsByDay[day.key] ?? []
 
         if (dayShifts.length === 0) {
-          return <DayOffRow key={day.key} label={day.label} text="Day off" />
+          return <DayOffRow key={day.key} date={day.date} text="You have the day off." />
         }
 
         return dayShifts.map((shift) => {
@@ -293,7 +462,7 @@ function MyShiftsTab({ user }) {
             <li key={shift.id}>
               <ShiftCard
                 date={new Date(shift.starts_at)}
-                title={formatShiftTimeRange(shift.starts_at, shift.ends_at)}
+                title={<ShiftTimeLabel startsAt={shift.starts_at} endsAt={shift.ends_at} />}
                 pill={<ShiftPeriodPill period={period} />}
                 belowPill={
                   isPending ? (
@@ -303,16 +472,17 @@ function MyShiftsTab({ user }) {
                   ) : null
                 }
                 subtitle={
-                  <div className="mt-1 flex items-center gap-1.5">
-                    <p className="truncate text-xs text-[#9CA3AF]">{shift.unit}</p>
+                  <div className="mt-1.5 flex items-center gap-1.5">
+                    <p className="truncate text-sm font-medium text-[#282828]">{shift.unit}</p>
                     {credential && (
                       <>
-                        <span className="h-3 border-l border-[#E8E6E3]" />
-                        <p className="text-xs text-[#9CA3AF]">{credential}</p>
+                        <span className="h-3.5 w-[3px] shrink-0 rounded-full bg-[#E2E2E2]" />
+                        <p className="text-sm text-[#5B5B5B]">{credential}</p>
                       </>
                     )}
                   </div>
                 }
+                trailing={<ChevronRight size={20} strokeWidth={2} className="text-[#9CA3AF]" />}
                 onClick={() => setSelectedShift(shift)}
               />
             </li>
@@ -374,7 +544,7 @@ function TeamScheduleTab() {
         const dayShifts = shiftsByDay[day.key] ?? []
 
         if (dayShifts.length === 0) {
-          return <DayOffRow key={day.key} label={day.label} text="No shifts" />
+          return <DayOffRow key={day.key} date={day.date} text="No shifts" />
         }
 
         const timeSlots = groupByTimeSlot(dayShifts)
@@ -1118,7 +1288,7 @@ function ManageTab() {
                   <li key={shift.id}>
                     <ShiftCard
                       date={new Date(shift.starts_at)}
-                      title={formatShiftTimeRange(shift.starts_at, shift.ends_at)}
+                      title={<ShiftTimeLabel startsAt={shift.starts_at} endsAt={shift.ends_at} />}
                       pill={<StatusPill status={shift.status} />}
                       subtitle={
                         <div className="mt-1">
