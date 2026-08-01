@@ -184,7 +184,7 @@ function WeekRow({ days, selectedKey, todayKey, onSelect, shiftDateKeys }) {
           >
             <div
               className={cn(
-                'flex w-12 flex-col items-center gap-1 rounded-[15px] py-1.5',
+                'flex w-12 flex-col items-center gap-1 rounded-[15px] py-2.5',
                 isSelected && 'border border-[#79C3D8] bg-[#EBFBFF]',
               )}
             >
