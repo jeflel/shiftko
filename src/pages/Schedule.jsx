@@ -180,7 +180,7 @@ function WeekRow({ days, selectedKey, todayKey, onSelect, shiftDateKeys }) {
             key={dateKey}
             type="button"
             onClick={() => onSelect(dateKey)}
-            className="flex flex-col items-center gap-1.5"
+            className="flex flex-col items-center"
           >
             <div
               className={cn(
@@ -194,8 +194,8 @@ function WeekRow({ days, selectedKey, todayKey, onSelect, shiftDateKeys }) {
               <span className="text-[18px] tracking-[-0.36px]" style={{ color: stateColor }}>
                 {date.getDate()}
               </span>
+              <span className={cn('size-1.5 rounded-full', hasShift ? 'bg-[#3A798B]' : 'bg-transparent')} />
             </div>
-            <span className={cn('size-1.5 rounded-full', hasShift ? 'bg-[#3A798B]' : 'bg-transparent')} />
           </button>
         )
       })}
