@@ -1783,7 +1783,7 @@ export default function Schedule({ user, role, initialTab = 'schedule' }) {
   }, [isCoordinator])
 
   return (
-    <main className="mx-auto w-full max-w-md px-5 pt-12 pb-12">
+    <main className="mx-auto w-full max-w-md px-5 pt-[26px] pb-12">
       <h1 className="mb-6 font-display text-[26px] font-semibold text-[#111111]">Schedule</h1>
 
       {tabs.length > 1 && (

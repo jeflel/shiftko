@@ -89,12 +89,14 @@ export default function More({ user, onWorkspaceLeft }) {
   }
 
   return (
-    <main className="mx-auto w-full max-w-md px-5 pt-12 pb-12">
-      <Wordmark className="text-center" />
-      <div className="mt-1 flex justify-center">
-        <span className="rounded-full bg-[#E0F7FA] px-2 py-0.5 text-xs font-medium text-teal-mid">Beta</span>
+    <main className="mx-auto w-full max-w-md px-5 pt-[26px] pb-12">
+      <div className="flex items-center justify-between">
+        <h1 className="font-display text-[26px] font-semibold text-[#111111]">More</h1>
+        <div className="flex flex-col items-end gap-1">
+          <Wordmark />
+          <span className="rounded-full bg-[#E0F7FA] px-2 py-0.5 text-xs font-medium text-teal-mid">Beta</span>
+        </div>
       </div>
-      <h1 className="mt-10 text-2xl font-semibold text-ink">More</h1>
 
       {profile && (
         <div className="mt-8 rounded-xl border border-[#E8E6E3] bg-white p-4 shadow-sm">

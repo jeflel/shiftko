@@ -202,7 +202,7 @@ export default function Pool({ user }) {
   }
 
   return (
-    <main className="mx-auto w-full max-w-md px-5 pt-12 pb-12">
+    <main className="mx-auto w-full max-w-md px-5 pt-[26px] pb-12">
       <h1 className="mb-6 font-display text-[26px] font-semibold text-[#111111]">Pool</h1>
 
       {loading && <p className="text-sm text-[#6B7280]">Loading open shifts…</p>}
