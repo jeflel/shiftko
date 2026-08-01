@@ -4,6 +4,7 @@ import Auth from './components/Auth'
 import BottomNav from './components/BottomNav'
 import Home from './pages/Home'
 import Schedule from './pages/Schedule'
+import Pool from './pages/Pool'
 import More from './pages/More'
 import JoinWorkspace from './pages/JoinWorkspace'
 import Welcome from './pages/Welcome'
@@ -122,6 +123,7 @@ function App() {
         {activeTab === 'schedule' && (
           <Schedule user={session.user} role={role} initialTab={scheduleInitialTab} />
         )}
+        {activeTab === 'pool' && <Pool user={session.user} />}
         {activeTab === 'more' && (
           <More user={session.user} onWorkspaceLeft={() => setWorkspaceId(null)} />
         )}

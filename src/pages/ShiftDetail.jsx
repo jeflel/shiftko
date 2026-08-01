@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { ChevronLeft, Users } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { ShiftPeriodPill } from '@/components/ui/pill'
+import { Button } from '@/components/ui/button'
 import {
   formatShiftDate,
   formatShiftTimeRange,
@@ -20,6 +21,10 @@ export default function ShiftDetail({ shift, user, onBack }) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [credential, setCredential] = useState(null)
+  const [shiftState, setShiftState] = useState(null)
+  const [hasPendingClaim, setHasPendingClaim] = useState(false)
+  const [offerSaving, setOfferSaving] = useState(false)
+  const [offerError, setOfferError] = useState(null)
 
   const period = getShiftPeriod(shift.starts_at)
 
@@ -39,6 +44,55 @@ export default function ShiftDetail({ shift, user, onBack }) {
     fetchCredential()
     return () => { cancelled = true }
   }, [user.id])
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function fetchShiftState() {
+      const { data: shiftData } = await supabase
+        .from('shifts')
+        .select('id, nurse_id, status, is_offered')
+        .eq('id', shift.id)
+        .maybeSingle()
+
+      if (cancelled) return
+      setShiftState(shiftData ?? null)
+
+      const { data: claimsData } = await supabase
+        .from('shift_claims')
+        .select('id')
+        .eq('shift_id', shift.id)
+        .eq('status', 'pending')
+
+      if (cancelled) return
+      setHasPendingClaim((claimsData ?? []).length > 0)
+    }
+
+    fetchShiftState()
+    return () => { cancelled = true }
+  }, [shift.id])
+
+  async function handleToggleOffer(offer) {
+    setOfferError(null)
+    setOfferSaving(true)
+
+    const { error: rpcError } = await supabase.rpc('toggle_shift_offer', {
+      p_shift_id: shift.id,
+      p_offer: offer,
+    })
+
+    setOfferSaving(false)
+
+    if (rpcError) {
+      setOfferError(rpcError.message)
+      return
+    }
+
+    setShiftState((current) => (current ? { ...current, is_offered: offer } : current))
+  }
+
+  const canManageOffer =
+    shiftState?.nurse_id === user.id && shiftState?.status === 'scheduled' && !hasPendingClaim
 
   useEffect(() => {
     let cancelled = false
@@ -137,6 +191,33 @@ export default function ShiftDetail({ shift, user, onBack }) {
 
           <p className="mt-3 text-sm text-[#6B7280]">{formatShiftDate(shift.starts_at)}</p>
         </div>
+
+        {canManageOffer && (
+          <div className="mt-6">
+            {shiftState.is_offered ? (
+              <Button
+                type="button"
+                onClick={() => handleToggleOffer(false)}
+                disabled={offerSaving}
+                variant="outline"
+                className="h-auto w-full rounded-full border-[#E8E6E3] py-4 text-base font-semibold text-[#111111] shadow-none hover:bg-white disabled:opacity-60"
+              >
+                {offerSaving ? 'Withdrawing…' : 'Withdraw offer'}
+              </Button>
+            ) : (
+              <Button
+                type="button"
+                onClick={() => handleToggleOffer(true)}
+                disabled={offerSaving}
+                className="h-auto w-full rounded-full bg-[#111111] py-4 text-base font-semibold text-white hover:bg-[#111111]/90 disabled:opacity-60"
+              >
+                {offerSaving ? 'Offering…' : 'Offer this shift'}
+              </Button>
+            )}
+
+            {offerError && <p className="mt-2 text-sm text-red-700">{offerError}</p>}
+          </div>
+        )}
 
         <section className="mt-9">
           <h2 className="mb-4 flex items-center gap-1.5 text-sm font-semibold text-[#111111]">
