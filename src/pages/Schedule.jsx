@@ -137,7 +137,7 @@ function MonthNavHeader() {
 
 const MAX_WEEKS_BACK = 8
 const MAX_WEEKS_FORWARD = 8
-const WEEK_TRANSITION_MS = 280
+const WEEK_TRANSITION_MS = 380
 const SWIPE_THRESHOLD_PX = 40
 
 // No real shift data is wired into this header yet, so shift dots fall back to this
