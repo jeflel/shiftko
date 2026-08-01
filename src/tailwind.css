@@ -105,6 +105,12 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
+html,
+body {
+  overflow-x: hidden;
+  touch-action: pan-y;
+}
+
 body {
   font-family: var(--font-sans);
 }

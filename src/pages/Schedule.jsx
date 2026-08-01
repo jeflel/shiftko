@@ -65,10 +65,7 @@ function ShiftTimeLabel({ startsAt, endsAt }) {
   const [endDigits, endMeridiem] = endTime.split(' ')
 
   return (
-    <p
-      className="truncate font-display text-[18px] font-normal text-[#282828]"
-      style={{ fontVariationSettings: '"SOFT" 0, "WONK" 1' }}
-    >
+    <p className="truncate text-[18px] font-medium text-[#282828]">
       {startDigits}
       <span className="text-[13px] font-semibold text-[#5B5B5B]"> {startMeridiem}</span>
       <span className="text-[#A4A4A4]"> – </span>
@@ -184,7 +181,7 @@ function WeekRow({ days, selectedKey, todayKey, onSelect, shiftDateKeys }) {
           >
             <div
               className={cn(
-                'flex w-12 flex-col items-center gap-1 rounded-[15px] py-2.5',
+                'flex w-12 flex-col items-center gap-0.5 rounded-[15px] py-2.5',
                 isSelected && 'border border-[#79C3D8] bg-[#EBFBFF]',
               )}
             >
@@ -308,7 +305,7 @@ function CalendarViewButton() {
       type="button"
       className="flex h-[42px] shrink-0 items-center gap-2 rounded-full bg-[#282828] pr-4 pl-3.5 text-sm font-medium text-white"
     >
-      <Calendar size={18} strokeWidth={2} className="-rotate-6" />
+      <Calendar size={18} strokeWidth={2} className="-rotate-6 text-[#979797]" />
       Calendar View <span className="text-[#AAAAAA]">→</span>
     </button>
   )
@@ -316,7 +313,7 @@ function CalendarViewButton() {
 
 function ScheduleViewToggle({ value, onChange }) {
   const options = [
-    { id: 'mine', label: 'My Shifts', icon: Smile },
+    { id: 'mine', label: 'My Shifts', icon: Smile, iconClassName: 'text-[#20748C]' },
     { id: 'team', label: 'Team', icon: Users },
   ]
 
@@ -344,7 +341,7 @@ function ScheduleViewToggle({ value, onChange }) {
                 : 'text-[#5B5B5B]',
             )}
           >
-            <Icon size={16} strokeWidth={2} />
+            <Icon size={16} strokeWidth={2} className={option.iconClassName} />
             {option.label}
           </button>
         )
