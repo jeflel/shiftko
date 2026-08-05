@@ -12,8 +12,8 @@ const fieldClassName =
 const CREDENTIAL_OPTIONS = ['RN', 'CNA', 'LVN', 'Other']
 const HOME_UNIT_OPTIONS = ['Unit 1', 'Unit 2', 'Unit 3', 'Unit 4']
 
-export default function Auth() {
-  const [view, setView] = useState('signin')
+export default function Auth({ initialView = 'signin' }) {
+  const [view, setView] = useState(initialView)
   const [signupStep, setSignupStep] = useState(1)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')

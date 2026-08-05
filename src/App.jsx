@@ -9,9 +9,11 @@ import More from './pages/More'
 import JoinWorkspace from './pages/JoinWorkspace'
 import Welcome from './pages/Welcome'
 import Onboarding from './components/Onboarding'
+import Screen0 from './pages/onboarding/Screen0'
 
 function App() {
   const [session, setSession] = useState(null)
+  const [authView, setAuthView] = useState(null)
   const [role, setRole] = useState(null)
   const [workspaceId, setWorkspaceId] = useState(null)
   const [fullName, setFullName] = useState(null)
@@ -81,7 +83,17 @@ function App() {
   }
 
   if (loading) return null
-  if (!session) return <Auth />
+  if (!session) {
+    if (!authView) {
+      return (
+        <Screen0
+          onGetStarted={() => setAuthView('signup')}
+          onSignIn={() => setAuthView('signin')}
+        />
+      )
+    }
+    return <Auth initialView={authView} />
+  }
 
   if (role === 'nurse' && workspaceId === null) {
     return (
