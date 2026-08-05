@@ -1,3 +1,4 @@
+import { Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 export default function Screen4({ onContinue }) {
@@ -26,8 +27,8 @@ export default function Screen4({ onContinue }) {
             </span>
           </span>
 
-          <span className="flex size-[22px] shrink-0 items-center justify-center rounded-full border border-[#7aafbe]">
-            <span className="size-[14px] rounded-full bg-[#003342]" />
+          <span className="flex size-[22px] shrink-0 items-center justify-center rounded-full bg-[#32A8CA]">
+            <Check size={14} strokeWidth={2} className="text-white" />
           </span>
         </div>
 

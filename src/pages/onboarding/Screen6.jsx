@@ -1,9 +1,18 @@
+import { useRef } from 'react'
+import LottieImport from 'lottie-react'
 import { Share } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import confettiData from '@/assets/confetti.json'
+import mascotData from '@/assets/mascot.json'
+
+const Lottie = LottieImport.default || LottieImport
 
 const INVITE_CODE = 'BURLINGAME'
+const MASCOT_SPEED = 0.7
 
 export default function Screen6({ firstName = '', onFinish }) {
+  const mascotRef = useRef(null)
+
   async function handleShare() {
     const shareText = `Join my unit on Shiftko! Use code: ${INVITE_CODE} at shiftko.com`
     if (navigator.share) {
@@ -18,7 +27,23 @@ export default function Screen6({ firstName = '', onFinish }) {
   }
 
   return (
-    <main className="relative mx-auto flex min-h-screen w-full max-w-md flex-col bg-gradient-to-b from-[#ddf6fb] to-white to-[52.354%] px-6 pt-[160px] pb-11">
+    <main className="relative mx-auto flex min-h-screen w-full max-w-md flex-col overflow-hidden bg-gradient-to-b from-[#ddf6fb] to-white to-[52.354%] px-6 pt-[160px] pb-11">
+      <Lottie
+        animationData={confettiData}
+        loop={false}
+        autoplay
+        className="pointer-events-none absolute inset-x-0 top-0 h-[400px] w-full"
+      />
+
+      <Lottie
+        lottieRef={mascotRef}
+        animationData={mascotData}
+        loop
+        autoplay
+        onDOMLoaded={() => mascotRef.current?.setSpeed(MASCOT_SPEED)}
+        className="mx-auto h-[140px] w-[140px]"
+      />
+
       <h1 className="text-center font-display text-[30px] font-semibold tracking-[-0.6px] text-[#003342]">
         You're all set{firstName ? `, ${firstName}` : ''}!
       </h1>

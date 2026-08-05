@@ -1,11 +1,12 @@
 import { useState } from 'react'
+import { Frown, Meh } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
 const PAIN_POINTS = [
-  'Shifts posted by phone call',
-  "Can't see available shifts",
-  'Slow claiming process',
-  'Hard to swap shifts',
+  { label: 'Shifts posted by phone call', icon: Meh },
+  { label: "Can't see available shifts", icon: Frown },
+  { label: 'Slow claiming process', icon: Meh },
+  { label: 'Hard to swap shifts', icon: Frown },
 ]
 
 export default function Screen5({ onContinue }) {
@@ -35,20 +36,25 @@ export default function Screen5({ onContinue }) {
 
       <form className="flex flex-1 flex-col" onSubmit={handleSubmit}>
         <div className="mt-11 flex flex-col gap-2.5">
-          {PAIN_POINTS.map((option) => {
-            const isSelected = selected.includes(option)
+          {PAIN_POINTS.map(({ label, icon: Icon }) => {
+            const isSelected = selected.includes(label)
             return (
               <button
-                key={option}
+                key={label}
                 type="button"
-                onClick={() => toggle(option)}
-                className={`flex h-[70px] w-full items-center justify-center rounded-[20px] border bg-white px-4 text-center text-[17px] font-semibold tracking-[-0.17px] transition-colors ${
+                onClick={() => toggle(label)}
+                className={`flex h-[70px] w-full items-center gap-4 rounded-[20px] border bg-white px-5 text-left text-[17px] tracking-[-0.17px] transition-colors ${
                   isSelected
-                    ? 'border-[#003342] text-[#003342] shadow-[0px_7px_20px_2px_rgba(46,73,92,0.06)]'
-                    : 'border-[#e3e3e3] text-[#003342]'
+                    ? 'border-[#003342] font-semibold text-[#003342] shadow-[0px_7px_20px_2px_rgba(46,73,92,0.06)]'
+                    : 'border-[#e3e3e3] font-medium text-[#003342]'
                 }`}
               >
-                {option}
+                <Icon
+                  size={20}
+                  strokeWidth={2}
+                  className={isSelected ? 'shrink-0 text-[#3A798B]' : 'shrink-0 text-[#A4A4A4]'}
+                />
+                {label}
               </button>
             )
           })}

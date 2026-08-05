@@ -15,7 +15,7 @@ export default function Screen0({ onGetStarted, onSignIn }) {
 
         <div className="pointer-events-none absolute inset-x-0 top-0 h-[31.3%] bg-gradient-to-t from-[rgba(136,172,180,0)] to-[#00536c]" />
         <div
-          className="pointer-events-none absolute inset-x-0 top-[82%] bottom-0 backdrop-blur-[3.5px]"
+          className="pointer-events-none absolute inset-x-0 top-[82%] bottom-0"
           style={{ background: 'linear-gradient(to bottom, rgba(255,255,255,0), #ffffff)' }}
         />
 
