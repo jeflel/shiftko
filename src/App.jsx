@@ -8,8 +8,8 @@ import Pool from './pages/Pool'
 import More from './pages/More'
 import JoinWorkspace from './pages/JoinWorkspace'
 import Welcome from './pages/Welcome'
-import Onboarding from './components/Onboarding'
 import Screen0 from './pages/onboarding/Screen0'
+import OnboardingFlow from './pages/onboarding/OnboardingFlow'
 
 function App() {
   const [session, setSession] = useState(null)
@@ -119,7 +119,7 @@ function App() {
 
   if (!onboardingCompleted && workspaceId !== null) {
     return (
-      <Onboarding
+      <OnboardingFlow
         user={session.user}
         onComplete={() => setOnboardingCompleted(true)}
       />
