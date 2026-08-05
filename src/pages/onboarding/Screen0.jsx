@@ -13,37 +13,31 @@ export default function Screen0({ onGetStarted, onSignIn }) {
         />
         <div className="absolute inset-x-0 top-0 h-[54px] bg-[#81a7af]" />
 
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-[31.3%] bg-gradient-to-t from-[rgba(136,172,180,0)] to-[#00536c]" />
         <div
-          className="pointer-events-none absolute inset-x-0 top-0 h-40"
-          style={{
-            background:
-              'radial-gradient(120% 100% at 50% 0%, rgba(0,53,69,0.45) 0%, rgba(0,53,69,0) 75%)',
-          }}
-        />
-        <div
-          className="pointer-events-none absolute inset-x-0 bottom-0 h-2/3"
-          style={{
-            background: 'linear-gradient(to bottom, rgba(255,255,255,0) 0%, #ffffff 92%)',
-          }}
+          className="pointer-events-none absolute inset-x-0 top-[82%] bottom-0 backdrop-blur-[3.5px]"
+          style={{ background: 'linear-gradient(to bottom, rgba(255,255,255,0), #ffffff)' }}
         />
 
         <Wordmark
           size={30}
-          className="absolute left-1/2 top-16 -translate-x-1/2 text-[#f8fdff] [text-shadow:0_3px_17px_rgba(0,53,69,0.2)]"
+          className="absolute left-1/2 top-[14.7%] -translate-x-1/2 text-[#f8fdff] [text-shadow:0_3px_17px_rgba(0,53,69,0.2)]"
         />
       </div>
 
-      <div className="flex flex-1 flex-col items-center px-6 pb-10 text-center">
-        <h1 className="font-display text-[30px] leading-[1.15] font-semibold tracking-[-0.6px] text-[#004458]">
-          Built for <span className="italic">nurses</span>.
-          <br />
-          Made for your unit.
-        </h1>
-        <p className="mt-4 max-w-[280px] text-[17px] tracking-[-0.34px] text-[#004458]">
-          Track shifts, see who's working, claim open ones.
-        </p>
+      <div className="flex flex-col items-center gap-6 px-6 pt-3 pb-10 text-center">
+        <div className="flex flex-col items-center gap-4">
+          <h1 className="font-display text-[30px] leading-[1.1] font-semibold tracking-[-0.6px] text-[#004458]">
+            Built for <span className="italic">nurses</span>.
+            <br />
+            Made for your unit.
+          </h1>
+          <p className="max-w-[280px] text-[17px] tracking-[-0.34px] text-[#004458]">
+            Track shifts, see who's working, claim open ones.
+          </p>
+        </div>
 
-        <div className="mt-auto flex w-full flex-col gap-3 pt-10">
+        <div className="flex w-full flex-col gap-3">
           <Button
             type="button"
             onClick={onGetStarted}
