@@ -208,7 +208,7 @@ export default function Auth({ initialView = 'signin' }) {
   }
 
   return (
-    <main className="mx-auto w-full max-w-md px-6 pt-[100px] pb-10">
+    <main className="mx-auto w-full max-w-md px-6 pt-[90px] pb-10">
       <h1 className="font-display text-[30px] font-semibold tracking-[-0.6px] text-[#003342]">
         Welcome back.
       </h1>
@@ -216,7 +216,7 @@ export default function Auth({ initialView = 'signin' }) {
         Sign in to view your shifts and stay connected with your team.
       </p>
 
-      <form className="mt-11 flex flex-col" onSubmit={handleSignIn}>
+      <form className="mt-7 flex flex-col" onSubmit={handleSignIn}>
         <Label htmlFor="email" className="mb-2 text-[17px] font-semibold text-[#003342]">
           Email
         </Label>
