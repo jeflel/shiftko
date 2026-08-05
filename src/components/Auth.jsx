@@ -9,6 +9,9 @@ import { Wordmark } from '@/components/ui/wordmark'
 const fieldClassName =
   'h-auto border-gray-300 bg-white px-3.5 py-3 focus-visible:border-[#111] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#111] focus-visible:ring-0'
 
+const signinFieldClassName =
+  'h-[54px] rounded-[15px] border-[#c0c3c4] bg-white px-4 text-[17px] tracking-[-0.34px] text-[#003342] placeholder:text-[#bac2c4] focus-visible:border-[#003342] focus-visible:ring-0 focus-visible:outline-none'
+
 const CREDENTIAL_OPTIONS = ['RN', 'CNA', 'LVN', 'Other']
 const HOME_UNIT_OPTIONS = ['Unit 1', 'Unit 2', 'Unit 3', 'Unit 4']
 
@@ -205,15 +208,18 @@ export default function Auth({ initialView = 'signin' }) {
   }
 
   return (
-    <main className="mx-auto w-full max-w-md px-5 pt-16 pb-8">
-      <Wordmark className="text-center" />
-      <h1 className="mt-8 text-center text-2xl font-bold tracking-tight text-ink">Your schedule, clear as day.</h1>
-      <p className="mx-auto mt-2 max-w-xs text-center text-sm text-[#6B7280]">
+    <main className="mx-auto w-full max-w-md px-6 pt-[100px] pb-10">
+      <h1 className="font-display text-[30px] font-semibold tracking-[-0.6px] text-[#003342]">
+        Welcome back.
+      </h1>
+      <p className="mt-4 text-[17px] tracking-[-0.34px] text-[#004458]">
         Sign in to view your shifts and stay connected with your team.
       </p>
 
-      <form className="mt-8 flex flex-col" onSubmit={handleSignIn}>
-        <Label htmlFor="email" className="mb-2">Email</Label>
+      <form className="mt-11 flex flex-col" onSubmit={handleSignIn}>
+        <Label htmlFor="email" className="mb-2 text-[17px] font-semibold text-[#003342]">
+          Email
+        </Label>
         <Input
           id="email"
           type="email"
@@ -222,11 +228,13 @@ export default function Auth({ initialView = 'signin' }) {
           placeholder="Enter email"
           required
           autoComplete="email"
-          className={`mb-3 ${fieldClassName}`}
+          className={`mb-4 ${signinFieldClassName}`}
         />
 
-        <Label htmlFor="password" className="mb-2">Password</Label>
-        <div className="relative mb-6">
+        <Label htmlFor="password" className="mb-2 text-[17px] font-semibold text-[#003342]">
+          Password
+        </Label>
+        <div className="relative">
           <Input
             id="password"
             type={showPassword ? 'text' : 'password'}
@@ -235,32 +243,32 @@ export default function Auth({ initialView = 'signin' }) {
             placeholder="Enter password"
             required
             autoComplete="current-password"
-            className={`pr-11 ${fieldClassName}`}
+            className={`pr-11 ${signinFieldClassName}`}
           />
           <button
             type="button"
             onClick={() => setShowPassword((current) => !current)}
-            className="absolute inset-y-0 right-0 flex items-center pr-3.5 text-[#6B7280]"
+            className="absolute inset-y-0 right-0 flex items-center pr-4 text-[#bac2c4]"
             aria-label={showPassword ? 'Hide password' : 'Show password'}
           >
             {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
           </button>
         </div>
 
-        {error && <p className="mb-3 text-sm text-red-700">{error}</p>}
+        {error && <p className="mt-3 text-sm text-red-700">{error}</p>}
 
         <Button
           type="submit"
           disabled={loading}
-          className="h-auto w-full rounded-xl bg-ink px-4 py-4 font-semibold text-white hover:bg-ink/90 disabled:opacity-60"
+          className="mt-8 h-[54px] w-full rounded-[20px] bg-[#003342] text-[17px] font-semibold tracking-[-0.34px] text-[#e9faff] hover:bg-[#003342]/90 disabled:opacity-60"
         >
           {loading ? 'Signing in…' : 'Sign in'}
         </Button>
       </form>
 
-      <p className="mt-4 text-center text-sm text-[#6B7280]">
+      <p className="mt-4 text-center text-[15px] tracking-[-0.3px] text-[#004458]">
         Don't have an account?{' '}
-        <button type="button" onClick={toggleView} className="font-medium text-[#4F46E5]">
+        <button type="button" onClick={toggleView} className="font-semibold">
           Sign up
         </button>
       </p>
