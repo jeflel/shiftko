@@ -2,6 +2,7 @@ import { useRef } from 'react'
 import LottieImport from 'lottie-react'
 import { Share } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Wordmark } from '@/components/ui/wordmark'
 import confettiData from '@/assets/confetti.json'
 import mascotData from '@/assets/mascot.json'
 
@@ -28,12 +29,19 @@ export default function Screen6({ firstName = '', onFinish }) {
 
   return (
     <main className="relative mx-auto flex min-h-screen w-full max-w-md flex-col overflow-hidden bg-gradient-to-b from-[#ddf6fb] to-white to-[52.354%] px-6 pt-[160px] pb-11">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 top-0 h-[400px] w-full bg-gradient-to-b from-[#32A8CA] to-transparent"
+      />
+
       <Lottie
         animationData={confettiData}
         loop={false}
         autoplay
         className="pointer-events-none absolute inset-x-0 top-0 h-[400px] w-full"
       />
+
+      <Wordmark size={22} className="absolute left-1/2 top-11 -translate-x-1/2 text-[#003342]" />
 
       <Lottie
         lottieRef={mascotRef}
