@@ -24,7 +24,7 @@ export default function Screen5({ onBack, onContinue }) {
   }
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-md flex-col px-6 pt-[93px] pb-11">
+    <main className="mx-auto flex min-h-screen w-full max-w-md flex-col px-6 pt-[70px] pb-11">
       <div className="-ml-2 flex items-center gap-4">
         <button
           type="button"
