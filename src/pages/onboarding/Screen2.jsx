@@ -18,7 +18,7 @@ export default function Screen2({ onBack, onContinue }) {
 
   return (
     <main className="mx-auto w-full max-w-md px-6 pt-[93px] pb-10">
-      <div className="flex items-center gap-4">
+      <div className="-ml-2 flex items-center gap-4">
         <button
           type="button"
           onClick={onBack}
