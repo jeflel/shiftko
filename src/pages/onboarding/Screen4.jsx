@@ -1,18 +1,32 @@
-import { Check } from 'lucide-react'
+import { ArrowLeft, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
-export default function Screen4({ onContinue }) {
+export default function Screen4({ onBack, onContinue }) {
   function handleSubmit(event) {
     event.preventDefault()
     onContinue()
   }
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-md flex-col px-6 pt-[90px] pb-11">
-      <h1 className="font-display text-[30px] font-semibold tracking-[-0.6px] text-[#003342]">
+    <main className="mx-auto flex min-h-screen w-full max-w-md flex-col px-6 pt-[93px] pb-11">
+      <div className="flex items-center gap-4">
+        <button
+          type="button"
+          onClick={onBack}
+          aria-label="Go back"
+          className="flex h-8 w-8 shrink-0 items-center justify-center"
+        >
+          <ArrowLeft size={20} strokeWidth={2} className="text-[#B8B9B9]" />
+        </button>
+        <div className="h-[10px] w-[150px] rounded-full bg-[#D7F1F9]">
+          <div className="h-full w-[90px] rounded-full bg-[#32A8CA]" />
+        </div>
+      </div>
+
+      <h1 className="mt-10 font-display text-[30px] font-semibold tracking-[-0.6px] text-[#003342]">
         Where do you work?
       </h1>
-      <p className="mt-4 text-[17px] tracking-[-0.34px] text-[#004458]">
+      <p className="mt-3 text-[17px] tracking-[-0.34px] text-[#004458]">
         Search or select your facility.
       </p>
 
