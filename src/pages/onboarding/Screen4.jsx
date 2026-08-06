@@ -31,7 +31,7 @@ export default function Screen4({ onBack, onContinue }) {
       </p>
 
       <form className="flex flex-1 flex-col" onSubmit={handleSubmit}>
-        <div className="mt-[42px] flex h-[94px] w-full items-center justify-between rounded-[20px] border border-[#003342] bg-white px-6 shadow-[0px_7px_20px_2px_rgba(46,73,92,0.06)]">
+        <div className="mt-8 flex h-[94px] w-full items-center justify-between rounded-[20px] border border-[#003342] bg-white px-6 shadow-[0px_7px_20px_2px_rgba(46,73,92,0.06)]">
           <span>
             <span className="block text-[17px] font-semibold text-[#003342]">
               Burlingame Skilled Nursing
@@ -48,7 +48,7 @@ export default function Screen4({ onBack, onContinue }) {
 
         <Button
           type="submit"
-          className="mt-auto h-[54px] w-full rounded-[20px] bg-[#003342] text-[17px] font-semibold tracking-[-0.34px] text-[#e9faff] hover:bg-[#003342]/90"
+          className="mt-auto h-[54px] w-full translate-y-[23px] rounded-[20px] bg-[#003342] text-[17px] font-semibold tracking-[-0.34px] text-[#e9faff] hover:bg-[#003342]/90"
         >
           Continue
         </Button>

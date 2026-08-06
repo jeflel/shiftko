@@ -49,7 +49,7 @@ export default function Screen5({ onBack, onContinue }) {
       </p>
 
       <form className="flex flex-1 flex-col" onSubmit={handleSubmit}>
-        <div className="mt-11 flex flex-col gap-2.5">
+        <div className="mt-8 flex flex-col gap-2.5">
           {PAIN_POINTS.map(({ label, icon: Icon }) => {
             const isSelected = selected.includes(label)
             return (
@@ -76,7 +76,7 @@ export default function Screen5({ onBack, onContinue }) {
 
         <Button
           type="submit"
-          className="mt-auto h-[54px] w-full rounded-[20px] bg-[#003342] text-[17px] font-semibold tracking-[-0.34px] text-[#e9faff] hover:bg-[#003342]/90"
+          className="mt-auto h-[54px] w-full translate-y-[23px] rounded-[20px] bg-[#003342] text-[17px] font-semibold tracking-[-0.34px] text-[#e9faff] hover:bg-[#003342]/90"
         >
           Continue
         </Button>
