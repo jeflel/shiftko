@@ -3,6 +3,7 @@ import Screen0 from './Screen0'
 import Screen2 from './Screen2'
 import Screen3 from './Screen3'
 import Screen4 from './Screen4'
+import ScreenCredential from './ScreenCredential'
 import Screen5 from './Screen5'
 import Screen6 from './Screen6'
 
@@ -11,6 +12,7 @@ export default function OnboardingFlow({ user, onComplete }) {
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [role, setRole] = useState('nurse')
+  const [credential, setCredential] = useState('RN')
 
   function handleName({ firstName: first, lastName: last }) {
     setFirstName(first)
@@ -24,6 +26,11 @@ export default function OnboardingFlow({ user, onComplete }) {
   }
 
   function handleFacility() {
+    setStep(4.5)
+  }
+
+  function handleCredential(selectedCredential) {
+    setCredential(selectedCredential)
     setStep(5)
   }
 
@@ -41,6 +48,7 @@ export default function OnboardingFlow({ user, onComplete }) {
       {step === 2 && <Screen2 onContinue={handleName} />}
       {step === 3 && <Screen3 firstName={firstName} onContinue={handleRole} />}
       {step === 4 && <Screen4 onContinue={handleFacility} />}
+      {step === 4.5 && <ScreenCredential onContinue={handleCredential} />}
       {step === 5 && <Screen5 onContinue={handlePainPoints} />}
       {step === 6 && <Screen6 firstName={firstName} onFinish={handleFinish} />}
     </>
