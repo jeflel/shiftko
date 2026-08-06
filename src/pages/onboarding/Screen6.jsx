@@ -41,7 +41,7 @@ export default function Screen6({ firstName = '', onFinish }) {
         className="pointer-events-none absolute inset-x-0 top-0 h-[400px] w-full"
       />
 
-      <Wordmark size={22} className="absolute left-1/2 top-11 -translate-x-1/2 text-[#003342]" />
+      <Wordmark size={22} className="absolute left-1/2 top-11 -translate-x-1/2 text-white" />
 
       <Lottie
         lottieRef={mascotRef}
