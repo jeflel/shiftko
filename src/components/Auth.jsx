@@ -100,7 +100,40 @@ export default function Auth({ initialView = 'signin' }) {
           Track shifts, see who's working, claim open ones.
         </p>
 
-        <form className="mt-6 flex flex-col" onSubmit={handleSignUp}>
+        <button
+          type="button"
+          onClick={handleGoogleSignIn}
+          disabled={googleLoading}
+          className="mt-7 flex h-[54px] w-full items-center justify-center gap-2 rounded-[20px] border border-[#c0c3c4] bg-white text-[17px] font-semibold tracking-[-0.34px] text-[#003342] disabled:opacity-60"
+        >
+          <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
+            <path
+              fill="#4285F4"
+              d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84c-.21 1.13-.84 2.09-1.8 2.73v2.27h2.92c1.7-1.57 2.68-3.88 2.68-6.64z"
+            />
+            <path
+              fill="#34A853"
+              d="M9 18c2.43 0 4.47-.8 5.96-2.17l-2.92-2.27c-.81.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.03-3.7H.96v2.34C2.44 15.98 5.48 18 9 18z"
+            />
+            <path
+              fill="#FBBC05"
+              d="M3.97 10.72c-.18-.54-.28-1.11-.28-1.72s.1-1.18.28-1.72V4.94H.96C.35 6.17 0 7.55 0 9s.35 2.83.96 4.06l3.01-2.34z"
+            />
+            <path
+              fill="#EA4335"
+              d="M9 3.58c1.32 0 2.51.46 3.44 1.35l2.59-2.59C13.47.89 11.43 0 9 0 5.48 0 2.44 2.02.96 4.94l3.01 2.34C4.68 5.16 6.66 3.58 9 3.58z"
+            />
+          </svg>
+          {googleLoading ? 'Connecting…' : 'Continue with Google'}
+        </button>
+
+        <div className="my-6 flex items-center gap-3">
+          <div className="h-px flex-1 bg-[#c0c3c4]" />
+          <span className="text-[15px] tracking-[-0.3px] text-[#bac2c4]">or</span>
+          <div className="h-px flex-1 bg-[#c0c3c4]" />
+        </div>
+
+        <form className="flex flex-col" onSubmit={handleSignUp}>
           <Label htmlFor="signupEmail" className="mb-2 text-[17px] font-semibold text-[#003342]">
             Email
           </Label>
