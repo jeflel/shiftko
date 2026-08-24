@@ -6,10 +6,7 @@ import Home from './pages/Home'
 import Schedule from './pages/Schedule'
 import Pool from './pages/Pool'
 import More from './pages/More'
-import JoinWorkspace from './pages/JoinWorkspace'
-import Welcome from './pages/Welcome'
 import Screen0 from './pages/onboarding/Screen0'
-import OnboardingFlow from './pages/onboarding/OnboardingFlow'
 
 function App() {
   const [session, setSession] = useState(null)
@@ -93,37 +90,6 @@ function App() {
       )
     }
     return <Auth initialView={authView} />
-  }
-
-  if (role === 'nurse' && workspaceId === null) {
-    return (
-      <JoinWorkspace
-        user={session.user}
-        onJoined={(workspace) => {
-          setWorkspaceId(workspace.id)
-          setJustJoinedWorkspace(workspace)
-        }}
-      />
-    )
-  }
-
-  if (justJoinedWorkspace) {
-    return (
-      <Welcome
-        fullName={fullName}
-        workspaceName={justJoinedWorkspace.name}
-        onContinue={() => setJustJoinedWorkspace(null)}
-      />
-    )
-  }
-
-  if (!onboardingCompleted && workspaceId !== null) {
-    return (
-      <OnboardingFlow
-        user={session.user}
-        onComplete={() => setOnboardingCompleted(true)}
-      />
-    )
   }
 
   return (
