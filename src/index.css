@@ -24,7 +24,7 @@ body {
     'Segoe UI',
     Roboto,
     sans-serif;
-  background: #fff;
+  background: #f9f9f9;
   color: #111;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
@@ -51,7 +51,7 @@ body {
   flex: 1;
   overflow-x: hidden;
   overflow-y: auto;
-  padding-bottom: calc(4.5rem + env(safe-area-inset-bottom));
+  padding-bottom: calc(6rem + env(safe-area-inset-bottom));
 }
 
 .page {

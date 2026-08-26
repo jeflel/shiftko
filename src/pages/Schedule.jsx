@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { AlertTriangle, Calendar, ChevronRight, Pencil, Smile, Trash2, Users } from 'lucide-react'
+import { AlertTriangle, Calendar, ChevronLeft, Pencil, Trash2, Users } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import ShiftDetail from './ShiftDetail'
 import { ShiftPeriodPill, StatusPill } from '@/components/ui/pill'
@@ -76,51 +76,90 @@ function ShiftTimeLabel({ startsAt, endsAt }) {
   )
 }
 
-function ShiftCard({ date, title, subtitle, pill, belowPill, trailing, onClick, isPast }) {
+// My Shifts card, top line: hardcoded facility name (Shiftko is single-facility,
+// Burlingame-only, per the pivot decision — there's no facility column in the
+// shifts table) + a dot separator + the unit, e.g. "Burlingame SNF · UNIT 1".
+function MyShiftFacilityLine({ unit }) {
+  return (
+    <div className="flex min-w-0 items-center gap-[7px]">
+      <p className="truncate text-[14px] font-medium text-[#002D3A]">Burlingame SNF</p>
+      <span className="size-[5px] shrink-0 rounded-full bg-[#8CA5AD]" aria-hidden="true" />
+      <p className="shrink-0 text-[14px] font-medium text-[#2DA1C3] uppercase">{unit}</p>
+    </div>
+  )
+}
+
+// My Shifts card, second line: the shift's time range.
+function MyShiftTimeLine({ startsAt, endsAt }) {
+  return (
+    <p className="truncate text-[17px] font-medium text-[#8CA5AD]">
+      {formatShiftTimeRange(startsAt, endsAt)}
+    </p>
+  )
+}
+
+// The weekday/day-number column that sits to the left of, and outside, the shift
+// card / day-off row. Fixed 30px wide, both lines centered within it, no gap between
+// the weekday label and the day number.
+function ShiftDateColumn({ date }) {
+  return (
+    <div className="flex w-[30px] shrink-0 flex-col items-center text-center">
+      <span className="text-[12px] leading-tight font-medium text-[#2DA1C3]">
+        {weekdayFormatter.format(date)}
+      </span>
+      <span className="text-[18px] leading-tight font-semibold text-[#282828]">
+        {date.getDate()}
+      </span>
+    </div>
+  )
+}
+
+function ShiftCard({ date, title, subtitle, pill, belowPill, trailing, onClick, isPast, accentColor = '#2DA1C3' }) {
   const isInteractive = typeof onClick === 'function'
   const Comp = isInteractive ? 'button' : 'div'
 
   return (
-    <Comp
-      type={isInteractive ? 'button' : undefined}
-      onClick={onClick}
-      className={cn(
-        'flex w-full items-center gap-3.5 rounded-[20px] border border-[#E3E3E3] bg-white p-4 shadow-[0px_7px_20px_2px_rgba(46,73,92,0.06)] transition-opacity',
-        isInteractive && 'text-left active:shadow-none',
-        isPast && 'opacity-45',
-      )}
-    >
-      <div className="flex w-12 shrink-0 flex-col items-center justify-center gap-0.5 text-center">
-        <span className="text-[13px] font-semibold text-[#3A798B]">
-          {weekdayFormatter.format(date)}
-        </span>
-        <span className="text-[18px] font-semibold text-[#282828]">{date.getDate()}</span>
-      </div>
+    <div className="flex items-center gap-5">
+      <ShiftDateColumn date={date} />
 
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center justify-between gap-3">
-          {title}
-          {pill}
+      <Comp
+        type={isInteractive ? 'button' : undefined}
+        onClick={onClick}
+        className={cn(
+          'flex h-[78px] w-[312px] shrink-0 items-center gap-2.5 rounded-[20px] border border-[#DDE5E8] bg-white pr-4 pl-4 shadow-[0px_7px_20px_2px_rgba(46,73,92,0.06)] transition-opacity',
+          isInteractive && 'text-left active:shadow-none',
+          isPast && 'opacity-45',
+        )}
+      >
+        <span
+          className="h-[46px] w-1 shrink-0 self-center rounded-full"
+          style={{ background: accentColor }}
+          aria-hidden="true"
+        />
+
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center justify-between gap-3">
+            {title}
+            {pill}
+          </div>
+          {subtitle}
+          {belowPill && <div className="mt-2">{belowPill}</div>}
         </div>
-        {subtitle}
-        {belowPill && <div className="mt-2">{belowPill}</div>}
-      </div>
 
-      {trailing && <div className="ml-1 shrink-0">{trailing}</div>}
-    </Comp>
+        {trailing && <div className="ml-1 shrink-0">{trailing}</div>}
+      </Comp>
+    </div>
   )
 }
 
 function DayOffRow({ date, text }) {
   return (
-    <li className="flex items-center gap-3.5 px-4 py-[18px]">
-      <div className="flex w-12 shrink-0 flex-col items-center justify-center gap-0.5 text-center">
-        <span className="text-[13px] font-semibold text-[#3A798B]">
-          {weekdayFormatter.format(date)}
-        </span>
-        <span className="text-[18px] font-semibold text-[#282828]">{date.getDate()}</span>
+    <li className="flex items-center gap-5">
+      <ShiftDateColumn date={date} />
+      <div className="flex h-[78px] w-[312px] shrink-0 items-center gap-2.5 pl-4">
+        <span className="h-[46px] w-1 shrink-0 self-center rounded-full bg-[#E9E9E9]" aria-hidden="true" />
+        <p className="text-sm font-medium text-[#ADADAD]">{text}</p>
       </div>
-      <p className="text-sm font-medium text-[#ADADAD]">{text}</p>
     </li>
   )
 }
@@ -148,18 +187,28 @@ function getWeekDaysForOffset(offset) {
   return days
 }
 
+// Precise 5px-dash / 5px-gap rounded dashed border for the date-strip cells. Plain
+// CSS `border-style: dashed` can't be told an exact dash/gap length on a rounded
+// rect, so the border is drawn as a background SVG instead — sized to match the
+// 44x61 cell and 15px corner radius exactly.
+const DASHED_CELL_SVG =
+  "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='61' viewBox='0 0 44 61'%3E%3Crect x='0.5' y='0.5' width='43' height='60' rx='14.5' ry='14.5' fill='none' stroke='%23D7DFE2' stroke-width='1' stroke-dasharray='5 5'/%3E%3C/svg%3E\")"
+
+const monthLongFormatter = new Intl.DateTimeFormat(undefined, { month: 'long' })
+
 function WeekRow({ days, selectedKey, todayKey, onSelect, shiftDateKeys }) {
   return (
-    <div className="flex w-full justify-between">
+    <div className="flex w-full justify-center gap-2">
       {days.map((date) => {
         const dateKey = formatLocalDateKey(date)
         const isToday = dateKey === todayKey
         const isSelected = dateKey === selectedKey
+        const isHighlighted = isSelected || isToday
         const mondayFirstIndex = (date.getDay() + 6) % 7
         const hasShift = shiftDateKeys
           ? shiftDateKeys.has(dateKey)
           : DEFAULT_SHIFT_WEEKDAY_INDEXES.has(mondayFirstIndex)
-        const stateColor = isToday ? '#282828' : hasShift ? '#3A798B' : '#A4A4A4'
+        const stateColor = isHighlighted ? '#2DA1C3' : '#A4A4A4'
 
         return (
           <button
@@ -170,17 +219,20 @@ function WeekRow({ days, selectedKey, todayKey, onSelect, shiftDateKeys }) {
           >
             <div
               className={cn(
-                'flex w-12 flex-col items-center gap-0.5 rounded-[15px] py-2.5',
-                isSelected && 'border border-[#79C3D8] bg-[#EBFBFF]',
+                'flex h-[61px] w-11 flex-col items-center justify-center rounded-[15px] bg-white',
+                isHighlighted && 'border border-[#2DA1C3]',
               )}
+              style={isHighlighted ? undefined : { backgroundImage: DASHED_CELL_SVG }}
             >
-              <span className="text-[11px] font-semibold" style={{ color: stateColor }}>
+              <span className="text-[11px] leading-none font-semibold" style={{ color: stateColor }}>
                 {weekdayLetterFormatter.format(date)}
               </span>
-              <span className="text-[18px] tracking-[-0.36px]" style={{ color: stateColor }}>
+              <span className="text-[18px] leading-none tracking-[-0.36px]" style={{ color: stateColor }}>
                 {date.getDate()}
               </span>
-              <span className={cn('size-1.5 rounded-full', hasShift ? 'bg-[#3A798B]' : 'bg-transparent')} />
+              <span
+                className={cn('mt-2 size-1 rounded-full', hasShift ? 'bg-[#2DA1C3]' : 'bg-transparent')}
+              />
             </div>
           </button>
         )
@@ -195,7 +247,7 @@ function WeekRow({ days, selectedKey, todayKey, onSelect, shiftDateKeys }) {
 // below. Swiping or tapping a date here just asks the parent to scroll there; the
 // strip updates once the parent confirms via the new activeOffset, keeping the two
 // permanently in agreement.
-function MyShiftsWeekStrip({ activeOffset, onSwipe, onSelectDate, shiftDateKeys }) {
+function MyShiftsWeekStrip({ activeOffset, onSwipe, onSelectDate, shiftDateKeys, onOpenCalendarView }) {
   const pointerStartXRef = useRef(null)
   const todayKey = formatLocalDateKey(new Date())
   const days = getWeekDaysForOffset(activeOffset)
@@ -218,6 +270,14 @@ function MyShiftsWeekStrip({ activeOffset, onSwipe, onSelectDate, shiftDateKeys 
 
   return (
     <div onPointerDown={handlePointerDown} onPointerUp={handlePointerUp}>
+      <div className="relative mb-4 flex items-center justify-center">
+        <p className="font-display text-[30px] font-semibold text-[#282828]">
+          {monthLongFormatter.format(days[3])}
+        </p>
+        <div className="absolute right-0">
+          <CalendarIconButton onClick={onOpenCalendarView} />
+        </div>
+      </div>
       <WeekRow
         days={days}
         selectedKey={null}
@@ -229,32 +289,53 @@ function MyShiftsWeekStrip({ activeOffset, onSwipe, onSelectDate, shiftDateKeys 
   )
 }
 
-function CalendarViewButton() {
+// Top-right glass icon button that opens the (placeholder, for now) Calendar View.
+// The left-side "back" button seen in the Figma frame is intentionally not built here —
+// Schedule is a bottom-nav root tab, not a pushed screen, so "back" has no natural
+// destination on this page. It'll make sense once Calendar View itself needs a way
+// back to Schedule.
+function CalendarIconButton({ onClick }) {
   return (
     <button
       type="button"
-      className="flex h-[42px] shrink-0 items-center gap-2 rounded-full bg-[#282828] pr-4 pl-3.5 text-sm font-medium text-white"
+      onClick={onClick}
+      aria-label="Calendar view"
+      className="flex size-11 shrink-0 items-center justify-center rounded-2xl border border-white bg-white/70 shadow-[0_7px_25px_3px_rgba(39,60,66,0.10)] backdrop-blur-md"
     >
-      <Calendar size={18} strokeWidth={2} className="-rotate-6 text-[#979797]" />
-      Calendar View <span className="text-[#AAAAAA]">→</span>
+      <Calendar size={20} strokeWidth={2} className="text-[#282828]" />
     </button>
+  )
+}
+
+// Full-screen stub — the real month-grid Calendar View is deliberately deferred.
+// This exists so the new Calendar button has somewhere real to go instead of being dead.
+function CalendarViewPlaceholder({ onBack }) {
+  return (
+    <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-white px-5">
+      <button
+        type="button"
+        onClick={onBack}
+        className="absolute top-8 left-5 inline-flex items-center gap-1 text-sm font-medium text-[#6B7280]"
+      >
+        <ChevronLeft size={18} strokeWidth={2} />
+        Back
+      </button>
+      <Calendar size={40} strokeWidth={1.5} className="mb-4 text-[#D7DFE2]" />
+      <p className="text-lg font-semibold text-[#282828]">Calendar view</p>
+      <p className="mt-1 text-sm text-[#9CA3AF]">Coming soon.</p>
+    </div>
   )
 }
 
 function ScheduleViewToggle({ value, onChange }) {
   const options = [
-    { id: 'mine', label: 'My Shifts', icon: Smile, iconClassName: 'text-[#20748C]' },
-    { id: 'team', label: 'Team', icon: Users },
+    { id: 'mine', label: 'My Events' },
+    { id: 'team', label: 'Team' },
   ]
 
   return (
-    <div
-      className="inline-flex shrink-0 items-center rounded-full bg-[#F2F2F2] p-[5px]"
-      role="tablist"
-      aria-label="Schedule view"
-    >
+    <div className="flex justify-center gap-2.5" role="tablist" aria-label="Schedule view">
       {options.map((option) => {
-        const Icon = option.icon
         const isActive = value === option.id
 
         return (
@@ -265,13 +346,10 @@ function ScheduleViewToggle({ value, onChange }) {
             aria-selected={isActive}
             onClick={() => onChange(option.id)}
             className={cn(
-              'flex items-center gap-1.5 rounded-full px-3.5 py-2 text-sm font-medium whitespace-nowrap transition-colors',
-              isActive
-                ? 'bg-white text-[#282828] shadow-[0px_5px_10px_0px_rgba(158,158,158,0.1)]'
-                : 'text-[#5B5B5B]',
+              'flex h-[34px] w-[172px] items-center justify-center rounded-[12px] px-4 text-[14px] font-medium whitespace-nowrap transition-colors',
+              isActive ? 'bg-[#282828] text-white' : 'bg-[#F2F2F2] text-[#5B5B5B]',
             )}
           >
-            <Icon size={16} strokeWidth={2} className={option.iconClassName} />
             {option.label}
           </button>
         )
@@ -282,19 +360,25 @@ function ScheduleViewToggle({ value, onChange }) {
 
 function ScheduleTab({ user }) {
   const [view, setView] = useState('mine')
+  const [showCalendarView, setShowCalendarView] = useState(false)
 
-  return (
-    <div>
-      <div className="mb-6 flex items-center justify-between gap-3">
-        <CalendarViewButton />
-        <ScheduleViewToggle value={view} onChange={setView} />
-      </div>
-      {view === 'mine' ? <MyShiftsTab user={user} /> : <TeamScheduleTab />}
-    </div>
+  if (showCalendarView) {
+    return <CalendarViewPlaceholder onBack={() => setShowCalendarView(false)} />
+  }
+
+  return view === 'mine' ? (
+    <MyShiftsTab
+      user={user}
+      onOpenCalendarView={() => setShowCalendarView(true)}
+      view={view}
+      onChangeView={setView}
+    />
+  ) : (
+    <TeamScheduleTab view={view} onChangeView={setView} />
   )
 }
 
-function MyShiftsTab({ user }) {
+function MyShiftsTab({ user, onOpenCalendarView, view, onChangeView }) {
   const [shifts, setShifts] = useState([])
   const [credential, setCredential] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -396,6 +480,11 @@ function MyShiftsTab({ user }) {
 
   // Land on today's week on first load, instantly (no animation) — the user opens
   // My Shifts and is already looking at the current week, not scrolled 8 weeks back.
+  // This intentionally scrolls past ScheduleTab's own header (My Shifts/Team toggle) —
+  // that's the normal, expected pattern for a calendar-style view (Google Calendar,
+  // Fantastical, etc. all open straight to "now"). The Calendar button lives inside
+  // this sticky panel itself (not that header) specifically so it stays reachable
+  // regardless of scroll position, rather than fighting this behavior.
   useEffect(() => {
     if (loading || hasScrolledInitiallyRef.current) return
     const target = weekMarkerRefs.current[0]
@@ -438,33 +527,40 @@ function MyShiftsTab({ user }) {
 
   return (
     <div>
-      <div className="sticky top-0 z-10 -mx-5 bg-white px-5 pb-1">
-        <MyShiftsWeekStrip
-          activeOffset={activeWeekOffset}
-          onSwipe={(offset) => scrollToWeek(offset)}
-          onSelectDate={(dateKey) => {
-            const days = getWeekDaysForOffset(activeWeekOffset)
-            const date = days.find((d) => formatLocalDateKey(d) === dateKey)
-            if (!date) return
-            const targetOffset = Math.round(
-              diffInCalendarDays(getSundayWeekStart(new Date()), date) / 7,
-            )
-            scrollToWeek(targetOffset, dateKey)
-          }}
-          shiftDateKeys={shiftDateKeys}
-        />
+      <div className="sticky top-0 z-10">
+        <div className="-mx-5 rounded-b-[25px] border border-white bg-white px-5 pt-2 pb-3 shadow-[0_7px_15px_0_rgba(53,87,97,0.05)]">
+          <MyShiftsWeekStrip
+            activeOffset={activeWeekOffset}
+            onSwipe={(offset) => scrollToWeek(offset)}
+            onSelectDate={(dateKey) => {
+              const days = getWeekDaysForOffset(activeWeekOffset)
+              const date = days.find((d) => formatLocalDateKey(d) === dateKey)
+              if (!date) return
+              const targetOffset = Math.round(
+                diffInCalendarDays(getSundayWeekStart(new Date()), date) / 7,
+              )
+              scrollToWeek(targetOffset, dateKey)
+            }}
+            shiftDateKeys={shiftDateKeys}
+            onOpenCalendarView={onOpenCalendarView}
+          />
+
+          <div className="mt-5">
+            <ScheduleViewToggle value={view} onChange={onChangeView} />
+          </div>
+        </div>
 
         <div
           className={cn(
             'grid transition-[grid-template-rows,opacity] duration-300 ease-out',
-            isOnTodayWeek ? 'grid-rows-[0fr] opacity-0' : 'mt-2 grid-rows-[1fr] opacity-100',
+            isOnTodayWeek ? 'grid-rows-[0fr] opacity-0' : 'mt-1 grid-rows-[1fr] opacity-100',
           )}
         >
-          <div className="flex justify-center overflow-hidden">
+          <div className="flex justify-center overflow-hidden py-3">
             <button
               type="button"
               onClick={() => scrollToWeek(0)}
-              className="rounded-full bg-[#282828] px-4 py-1.5 text-xs font-semibold text-white shadow-[0px_5px_14px_0px_rgba(40,40,40,0.25)]"
+              className="rounded-full bg-white px-4 py-1.5 text-[14px] font-semibold text-[#282828] shadow-[0px_5px_14px_0px_rgba(40,40,40,0.15)]"
             >
               Today
             </button>
@@ -504,7 +600,7 @@ function MyShiftsTab({ user }) {
                           <ShiftCard
                             date={new Date(shift.starts_at)}
                             isPast={isPast}
-                            title={<ShiftTimeLabel startsAt={shift.starts_at} endsAt={shift.ends_at} />}
+                            title={<MyShiftFacilityLine unit={shift.unit} />}
                             pill={<ShiftPeriodPill period={period} />}
                             belowPill={
                               isPending ? (
@@ -514,17 +610,10 @@ function MyShiftsTab({ user }) {
                               ) : null
                             }
                             subtitle={
-                              <div className="mt-1.5 flex items-center gap-1.5">
-                                <p className="truncate text-sm font-medium text-[#282828]">{shift.unit}</p>
-                                {credential && (
-                                  <>
-                                    <span className="h-3.5 w-[3px] shrink-0 rounded-full bg-[#E2E2E2]" />
-                                    <p className="text-sm text-[#5B5B5B]">{credential}</p>
-                                  </>
-                                )}
+                              <div className="mt-1.5">
+                                <MyShiftTimeLine startsAt={shift.starts_at} endsAt={shift.ends_at} />
                               </div>
                             }
-                            trailing={<ChevronRight size={20} strokeWidth={2} className="text-[#9CA3AF]" />}
                             onClick={() => setSelectedShift(shift)}
                           />
                         </li>
@@ -541,7 +630,7 @@ function MyShiftsTab({ user }) {
   )
 }
 
-function TeamScheduleTab() {
+function TeamScheduleTab({ view, onChangeView }) {
   const [shifts, setShifts] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -587,7 +676,12 @@ function TeamScheduleTab() {
   if (error) return <p className="text-sm text-red-700">Could not load team schedule: {error}</p>
 
   return (
-    <ul className="flex flex-col gap-4">
+    <div>
+      <div className="mb-4">
+        <ScheduleViewToggle value={view} onChange={onChangeView} />
+      </div>
+
+      <ul className="flex flex-col gap-4">
       {days.map((day) => {
         const dayShifts = shiftsByDay[day.key] ?? []
 
@@ -677,7 +771,8 @@ function TeamScheduleTab() {
           </li>
         )
       })}
-    </ul>
+      </ul>
+    </div>
   )
 }
 
@@ -2053,10 +2148,6 @@ export default function Schedule({ user, role, initialTab = 'schedule' }) {
 
   return (
     <main className="mx-auto w-full max-w-md px-5 pt-[26px] pb-12">
-      <div className="mb-4 flex items-end justify-between">
-        <h1 className="font-display text-[26px] font-semibold text-[#111111]">Schedule</h1>
-      </div>
-
       {tabs.length > 1 && (
         <div className="mb-6 flex border-b border-[#E8E6E3]" role="tablist" aria-label="Schedule views">
           {tabs.map((tab) => (
