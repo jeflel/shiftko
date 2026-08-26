@@ -14,6 +14,7 @@ import {
   getFourWeekDays,
   getFourWeekRange,
   getShiftPeriod,
+  getSundayWeekStart,
   getWeekRange,
   getWeekStart,
   groupByDayKey,
@@ -75,7 +76,7 @@ function ShiftTimeLabel({ startsAt, endsAt }) {
   )
 }
 
-function ShiftCard({ date, title, subtitle, pill, belowPill, trailing, onClick }) {
+function ShiftCard({ date, title, subtitle, pill, belowPill, trailing, onClick, isPast }) {
   const isInteractive = typeof onClick === 'function'
   const Comp = isInteractive ? 'button' : 'div'
 
@@ -84,8 +85,9 @@ function ShiftCard({ date, title, subtitle, pill, belowPill, trailing, onClick }
       type={isInteractive ? 'button' : undefined}
       onClick={onClick}
       className={cn(
-        'flex w-full items-center gap-3.5 rounded-[20px] border border-[#E3E3E3] bg-white p-4 shadow-[0px_7px_20px_2px_rgba(46,73,92,0.06)]',
-        isInteractive && 'text-left transition-shadow active:shadow-none',
+        'flex w-full items-center gap-3.5 rounded-[20px] border border-[#E3E3E3] bg-white p-4 shadow-[0px_7px_20px_2px_rgba(46,73,92,0.06)] transition-opacity',
+        isInteractive && 'text-left active:shadow-none',
+        isPast && 'opacity-45',
       )}
     >
       <div className="flex w-12 shrink-0 flex-col items-center justify-center gap-0.5 text-center">
@@ -123,21 +125,8 @@ function DayOffRow({ date, text }) {
   )
 }
 
-function MonthNavHeader() {
-  return (
-    <button
-      type="button"
-      className="relative -top-[3px] flex items-center gap-0.5 text-[15px] font-semibold text-[#AAAAAA]"
-    >
-      JULY 2026
-      <ChevronRight size={16} strokeWidth={2} className="text-[#AAAAAA]" />
-    </button>
-  )
-}
-
 const MAX_WEEKS_BACK = 8
 const MAX_WEEKS_FORWARD = 8
-const WEEK_TRANSITION_MS = 380
 const SWIPE_THRESHOLD_PX = 40
 
 // No real shift data is wired into this header yet, so shift dots fall back to this
@@ -147,7 +136,7 @@ const DEFAULT_SHIFT_WEEKDAY_INDEXES = new Set([2, 3, 5, 6])
 const weekdayLetterFormatter = new Intl.DateTimeFormat(undefined, { weekday: 'narrow' })
 
 function getWeekDaysForOffset(offset) {
-  const start = getWeekStart(new Date())
+  const start = getSundayWeekStart(new Date())
   start.setDate(start.getDate() + offset * 7)
 
   const days = []
@@ -200,37 +189,16 @@ function WeekRow({ days, selectedKey, todayKey, onSelect, shiftDateKeys }) {
   )
 }
 
-function DateScrollerHeader({ shiftDateKeys }) {
-  const [weekOffset, setWeekOffset] = useState(0)
-  const [selectedKey, setSelectedKey] = useState(null)
-  const [pending, setPending] = useState(null)
+// The week strip shown above My Shifts. It has no scroll state of its own — which
+// week's days it displays is fully controlled by `activeOffset`, which the parent
+// (MyShiftsTab) derives from which week is currently scrolled into view in the list
+// below. Swiping or tapping a date here just asks the parent to scroll there; the
+// strip updates once the parent confirms via the new activeOffset, keeping the two
+// permanently in agreement.
+function MyShiftsWeekStrip({ activeOffset, onSwipe, onSelectDate, shiftDateKeys }) {
   const pointerStartXRef = useRef(null)
-
   const todayKey = formatLocalDateKey(new Date())
-
-  function goToWeek(direction) {
-    if (pending) return
-
-    const targetOffset = weekOffset + direction
-    if (targetOffset < -MAX_WEEKS_BACK || targetOffset > MAX_WEEKS_FORWARD) return
-
-    setPending({ direction, targetOffset, phase: 'start' })
-
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        setPending((current) => (current ? { ...current, phase: 'end' } : current))
-      })
-    })
-  }
-
-  function handleTransitionEnd(event) {
-    if (event.target !== event.currentTarget || event.propertyName !== 'transform') return
-    setPending((current) => {
-      if (!current) return current
-      setWeekOffset(current.targetOffset)
-      return null
-    })
-  }
+  const days = getWeekDaysForOffset(activeOffset)
 
   function handlePointerDown(event) {
     pointerStartXRef.current = event.clientX
@@ -241,58 +209,22 @@ function DateScrollerHeader({ shiftDateKeys }) {
     const deltaX = event.clientX - pointerStartXRef.current
     pointerStartXRef.current = null
     if (Math.abs(deltaX) < SWIPE_THRESHOLD_PX) return
-    goToWeek(deltaX < 0 ? 1 : -1)
-  }
 
-  let leftOffset = weekOffset
-  let rightOffset = null
-  let transform = '0%'
-
-  if (pending) {
-    if (pending.direction === 1) {
-      leftOffset = weekOffset
-      rightOffset = pending.targetOffset
-      transform = pending.phase === 'end' ? '-100%' : '0%'
-    } else {
-      leftOffset = pending.targetOffset
-      rightOffset = weekOffset
-      transform = pending.phase === 'end' ? '0%' : '-100%'
-    }
+    const direction = deltaX < 0 ? 1 : -1
+    const targetOffset = activeOffset + direction
+    if (targetOffset < -MAX_WEEKS_BACK || targetOffset > MAX_WEEKS_FORWARD) return
+    onSwipe(targetOffset)
   }
 
   return (
-    <div className="mb-6 overflow-hidden">
-      <div
-        className="flex"
-        style={{
-          transform: `translateX(${transform})`,
-          transition: pending ? `transform ${WEEK_TRANSITION_MS}ms ease-in-out` : 'none',
-        }}
-        onPointerDown={handlePointerDown}
-        onPointerUp={handlePointerUp}
-        onTransitionEnd={handleTransitionEnd}
-      >
-        <div className="w-full shrink-0">
-          <WeekRow
-            days={getWeekDaysForOffset(leftOffset)}
-            selectedKey={selectedKey}
-            todayKey={todayKey}
-            onSelect={setSelectedKey}
-            shiftDateKeys={shiftDateKeys}
-          />
-        </div>
-        {rightOffset !== null && (
-          <div className="w-full shrink-0">
-            <WeekRow
-              days={getWeekDaysForOffset(rightOffset)}
-              selectedKey={selectedKey}
-              todayKey={todayKey}
-              onSelect={setSelectedKey}
-              shiftDateKeys={shiftDateKeys}
-            />
-          </div>
-        )}
-      </div>
+    <div onPointerDown={handlePointerDown} onPointerUp={handlePointerUp}>
+      <WeekRow
+        days={days}
+        selectedKey={null}
+        todayKey={todayKey}
+        onSelect={onSelectDate}
+        shiftDateKeys={shiftDateKeys}
+      />
     </div>
   )
 }
@@ -369,10 +301,21 @@ function MyShiftsTab({ user }) {
   const [error, setError] = useState(null)
   const [selectedShift, setSelectedShift] = useState(null)
   const [refreshKey, setRefreshKey] = useState(0)
+  const [activeWeekOffset, setActiveWeekOffset] = useState(0)
+
+  const dayRefs = useRef({})
+  const weekMarkerRefs = useRef({})
+  const suppressObserverRef = useRef(false)
+  const suppressTimeoutRef = useRef(null)
+  const hasScrolledInitiallyRef = useRef(false)
 
   useEffect(() => {
     let cancelled = false
-    const { start, end } = getFourWeekRange()
+    const currentSunday = getSundayWeekStart(new Date())
+    const start = new Date(currentSunday)
+    start.setDate(start.getDate() - MAX_WEEKS_BACK * 7)
+    const end = new Date(currentSunday)
+    end.setDate(end.getDate() + (MAX_WEEKS_FORWARD + 1) * 7)
 
     async function fetchMyShifts() {
       setLoading(true)
@@ -420,6 +363,61 @@ function MyShiftsTab({ user }) {
     return () => { cancelled = true }
   }, [user.id])
 
+  const shiftsByDay = groupByDayKey(shifts, (shift) => shift.starts_at)
+  const shiftDateKeys = new Set(Object.keys(shiftsByDay))
+
+  const weekOffsets = []
+  for (let offset = -MAX_WEEKS_BACK; offset <= MAX_WEEKS_FORWARD; offset += 1) {
+    weekOffsets.push(offset)
+  }
+
+  // Keeps the week strip in sync as the user scrolls the card list: whichever week's
+  // marker is closest to the top of the viewport becomes the strip's active week.
+  // Suppressed briefly during a programmatic scroll (tap/swipe) so it doesn't fight
+  // the scroll it's causing.
+  useEffect(() => {
+    if (selectedShift || loading) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (suppressObserverRef.current) return
+        const visible = entries.filter((entry) => entry.isIntersecting)
+        if (visible.length === 0) return
+        visible.sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)
+        const offset = Number(visible[0].target.dataset.weekOffset)
+        setActiveWeekOffset(offset)
+      },
+      { root: null, rootMargin: '-88px 0px -70% 0px', threshold: 0 },
+    )
+
+    Object.values(weekMarkerRefs.current).forEach((el) => el && observer.observe(el))
+    return () => observer.disconnect()
+  }, [selectedShift, loading, shifts])
+
+  // Land on today's week on first load, instantly (no animation) — the user opens
+  // My Shifts and is already looking at the current week, not scrolled 8 weeks back.
+  useEffect(() => {
+    if (loading || hasScrolledInitiallyRef.current) return
+    const target = weekMarkerRefs.current[0]
+    if (!target) return
+    hasScrolledInitiallyRef.current = true
+    target.scrollIntoView({ behavior: 'auto', block: 'start' })
+  }, [loading])
+
+  function scrollToWeek(offset, dateKey) {
+    const target = dateKey ? dayRefs.current[dateKey] : weekMarkerRefs.current[offset]
+    if (!target) return
+
+    suppressObserverRef.current = true
+    setActiveWeekOffset(offset)
+    target.scrollIntoView({ behavior: 'smooth', block: 'start' })
+
+    window.clearTimeout(suppressTimeoutRef.current)
+    suppressTimeoutRef.current = window.setTimeout(() => {
+      suppressObserverRef.current = false
+    }, 600)
+  }
+
   if (selectedShift) {
     return (
       <ShiftDetail
@@ -433,58 +431,113 @@ function MyShiftsTab({ user }) {
     )
   }
 
-  const shiftsByDay = groupByDayKey(shifts, (shift) => shift.starts_at)
-  const days = getFourWeekDays()
-
   if (loading) return <p className="text-sm text-[#6B7280]">Loading shifts…</p>
   if (error) return <p className="text-sm text-red-700">Could not load shifts: {error}</p>
 
+  const isOnTodayWeek = activeWeekOffset === 0
+
   return (
-    <ul className="flex flex-col gap-3">
-      {days.map((day) => {
-        const dayShifts = shiftsByDay[day.key] ?? []
+    <div>
+      <div className="sticky top-0 z-10 -mx-5 bg-white px-5 pb-1">
+        <MyShiftsWeekStrip
+          activeOffset={activeWeekOffset}
+          onSwipe={(offset) => scrollToWeek(offset)}
+          onSelectDate={(dateKey) => {
+            const days = getWeekDaysForOffset(activeWeekOffset)
+            const date = days.find((d) => formatLocalDateKey(d) === dateKey)
+            if (!date) return
+            const targetOffset = Math.round(
+              diffInCalendarDays(getSundayWeekStart(new Date()), date) / 7,
+            )
+            scrollToWeek(targetOffset, dateKey)
+          }}
+          shiftDateKeys={shiftDateKeys}
+        />
 
-        if (dayShifts.length === 0) {
-          return <DayOffRow key={day.key} date={day.date} text="You have the day off." />
-        }
+        <div
+          className={cn(
+            'grid transition-[grid-template-rows,opacity] duration-300 ease-out',
+            isOnTodayWeek ? 'grid-rows-[0fr] opacity-0' : 'mt-2 grid-rows-[1fr] opacity-100',
+          )}
+        >
+          <div className="flex justify-center overflow-hidden">
+            <button
+              type="button"
+              onClick={() => scrollToWeek(0)}
+              className="rounded-full bg-[#282828] px-4 py-1.5 text-xs font-semibold text-white shadow-[0px_5px_14px_0px_rgba(40,40,40,0.25)]"
+            >
+              Today
+            </button>
+          </div>
+        </div>
+      </div>
 
-        return dayShifts.map((shift) => {
-          const period = getShiftPeriod(shift.starts_at)
-          const isPending = shift.status === 'pending'
-          const isOffered = shift.is_offered === true
+      <ul className="mt-4 flex flex-col gap-3">
+        {weekOffsets.map((offset) => {
+          const days = getWeekDaysForOffset(offset)
 
-          return (
-            <li key={shift.id}>
-              <ShiftCard
-                date={new Date(shift.starts_at)}
-                title={<ShiftTimeLabel startsAt={shift.starts_at} endsAt={shift.ends_at} />}
-                pill={<ShiftPeriodPill period={period} />}
-                belowPill={
-                  isPending ? (
-                    <StatusPill status="pending" label="Pending" />
-                  ) : isOffered ? (
-                    <StatusPill status="open" label="Offered" />
-                  ) : null
-                }
-                subtitle={
-                  <div className="mt-1.5 flex items-center gap-1.5">
-                    <p className="truncate text-sm font-medium text-[#282828]">{shift.unit}</p>
-                    {credential && (
-                      <>
-                        <span className="h-3.5 w-[3px] shrink-0 rounded-full bg-[#E2E2E2]" />
-                        <p className="text-sm text-[#5B5B5B]">{credential}</p>
-                      </>
-                    )}
-                  </div>
-                }
-                trailing={<ChevronRight size={20} strokeWidth={2} className="text-[#9CA3AF]" />}
-                onClick={() => setSelectedShift(shift)}
-              />
-            </li>
-          )
-        })
-      })}
-    </ul>
+          return days.map((date, index) => {
+            const key = formatLocalDateKey(date)
+            const dayShifts = shiftsByDay[key] ?? []
+
+            return (
+              <li
+                key={key}
+                data-week-offset={offset}
+                ref={(el) => {
+                  dayRefs.current[key] = el
+                  if (index === 0) weekMarkerRefs.current[offset] = el
+                }}
+              >
+                {dayShifts.length === 0 ? (
+                  <DayOffRow date={date} text="You have the day off." />
+                ) : (
+                  <ul className="flex flex-col gap-3">
+                    {dayShifts.map((shift) => {
+                      const period = getShiftPeriod(shift.starts_at)
+                      const isPending = shift.status === 'pending'
+                      const isOffered = shift.is_offered === true
+                      const isPast = new Date(shift.ends_at).getTime() < Date.now()
+
+                      return (
+                        <li key={shift.id}>
+                          <ShiftCard
+                            date={new Date(shift.starts_at)}
+                            isPast={isPast}
+                            title={<ShiftTimeLabel startsAt={shift.starts_at} endsAt={shift.ends_at} />}
+                            pill={<ShiftPeriodPill period={period} />}
+                            belowPill={
+                              isPending ? (
+                                <StatusPill status="pending" label="Pending" />
+                              ) : isOffered ? (
+                                <StatusPill status="open" label="Offered" />
+                              ) : null
+                            }
+                            subtitle={
+                              <div className="mt-1.5 flex items-center gap-1.5">
+                                <p className="truncate text-sm font-medium text-[#282828]">{shift.unit}</p>
+                                {credential && (
+                                  <>
+                                    <span className="h-3.5 w-[3px] shrink-0 rounded-full bg-[#E2E2E2]" />
+                                    <p className="text-sm text-[#5B5B5B]">{credential}</p>
+                                  </>
+                                )}
+                              </div>
+                            }
+                            trailing={<ChevronRight size={20} strokeWidth={2} className="text-[#9CA3AF]" />}
+                            onClick={() => setSelectedShift(shift)}
+                          />
+                        </li>
+                      )
+                    })}
+                  </ul>
+                )}
+              </li>
+            )
+          })
+        })}
+      </ul>
+    </div>
   )
 }
 
@@ -2002,10 +2055,7 @@ export default function Schedule({ user, role, initialTab = 'schedule' }) {
     <main className="mx-auto w-full max-w-md px-5 pt-[26px] pb-12">
       <div className="mb-4 flex items-end justify-between">
         <h1 className="font-display text-[26px] font-semibold text-[#111111]">Schedule</h1>
-        <MonthNavHeader />
       </div>
-
-      <DateScrollerHeader />
 
       {tabs.length > 1 && (
         <div className="mb-6 flex border-b border-[#E8E6E3]" role="tablist" aria-label="Schedule views">

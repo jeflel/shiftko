@@ -95,6 +95,16 @@ export function getFourWeekDays() {
   return days
 }
 
+// Sunday-start week boundary, used by the My Shifts week strip. Kept separate from
+// getWeekStart (Monday-start) below, which the Manage tab's "Duplicate a week" feature
+// and Staff tab already depend on — do not merge these two.
+export function getSundayWeekStart(date) {
+  const start = new Date(date)
+  start.setHours(0, 0, 0, 0)
+  start.setDate(start.getDate() - start.getDay())
+  return start
+}
+
 export function getWeekStart(date) {
   const start = new Date(date)
   start.setHours(0, 0, 0, 0)

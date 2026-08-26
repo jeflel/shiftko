@@ -36,13 +36,20 @@ body {
 }
 
 .app-shell {
-  min-height: 100svh;
+  /* Fixed height (not min-height) so .app-content below is an actually-bounded flex
+     child — otherwise its overflow-y: auto never engages (it just grows to fit its
+     content), the document scrolls instead, and position: sticky breaks for every
+     descendant since it computes stickiness relative to a scroll container whose
+     own scrollTop never changes. This was a pre-existing bug, not introduced by the
+     My Shifts week-strip work, but that work is what surfaced it. */
+  height: 100svh;
   display: flex;
   flex-direction: column;
 }
 
 .app-content {
   flex: 1;
+  overflow-x: hidden;
   overflow-y: auto;
   padding-bottom: calc(4.5rem + env(safe-area-inset-bottom));
 }

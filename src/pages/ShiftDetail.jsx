@@ -91,8 +91,13 @@ export default function ShiftDetail({ shift, user, onBack }) {
     setShiftState((current) => (current ? { ...current, is_offered: offer } : current))
   }
 
+  const isPastShift = new Date(shift.ends_at).getTime() < Date.now()
+
   const canManageOffer =
-    shiftState?.nurse_id === user.id && shiftState?.status === 'scheduled' && !hasPendingClaim
+    !isPastShift &&
+    shiftState?.nurse_id === user.id &&
+    shiftState?.status === 'scheduled' &&
+    !hasPendingClaim
 
   useEffect(() => {
     let cancelled = false
