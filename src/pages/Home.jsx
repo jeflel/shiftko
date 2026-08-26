@@ -1,10 +1,22 @@
-import { useEffect, useState } from 'react'
-import { Calendar, Users, AlertTriangle, CheckCircle2, Bell, X, ChevronRight } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import {
+  Calendar,
+  Users,
+  AlertTriangle,
+  CheckCircle2,
+  Bell,
+  X,
+  ChevronRight,
+  Moon,
+  Hourglass,
+  CalendarDays,
+} from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import ShiftDetail from './ShiftDetail'
 import { Wordmark } from '@/components/ui/wordmark'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { ShiftPeriodPill } from '@/components/ui/pill'
 import { cn } from '@/lib/utils'
 import {
   formatLocalDateKey,
@@ -14,6 +26,34 @@ import {
   isWithinNextSevenDays,
 } from '../lib/shiftFormat'
 
+const shortDateFormatter = new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric' })
+
+// Carousel spans 14 days back through 30 days forward (45 days total). Days with more
+// than one shift get one card per shift; days with none get a single empty-state card,
+// so the range stays continuously swipeable per the Home carousel spec.
+function buildCarouselCards(shifts, today) {
+  const cards = []
+  for (let offset = -14; offset <= 30; offset += 1) {
+    const date = new Date(today)
+    date.setDate(date.getDate() + offset)
+    const dayShifts = shifts.filter((shift) => isSameLocalDay(new Date(shift.starts_at), date))
+
+    if (dayShifts.length === 0) {
+      cards.push({ key: `${formatLocalDateKey(date)}-empty`, date, shift: null })
+    } else {
+      dayShifts.forEach((shift) => cards.push({ key: shift.id, date, shift }))
+    }
+  }
+  return cards
+}
+
+function formatShiftDuration(startsAt, endsAt) {
+  const totalMinutes = Math.round((new Date(endsAt) - new Date(startsAt)) / 60000)
+  const hours = Math.floor(totalMinutes / 60)
+  const minutes = totalMinutes % 60
+  return minutes > 0 ? `${hours}hrs ${minutes}mins` : `${hours}hrs`
+}
+
 const weekdayFormatter = new Intl.DateTimeFormat(undefined, { weekday: 'short' })
 const monthFormatter = new Intl.DateTimeFormat(undefined, { month: 'short' })
 const todayLabelFormatter = new Intl.DateTimeFormat(undefined, {
@@ -21,12 +61,8 @@ const todayLabelFormatter = new Intl.DateTimeFormat(undefined, {
   month: 'long',
   day: 'numeric',
 })
-
-const HOME_PERIOD_STYLES = {
-  Day: { label: 'Morning', article: 'a', bg: '#FFF1E3', text: '#B57F1A' },
-  Evening: { label: 'Evening', article: 'an', bg: '#E5F7FF', text: '#153884' },
-  Night: { label: 'Night', article: 'a', bg: '#F5DDFF', text: '#2D199A' },
-}
+const headerDateFormatter = new Intl.DateTimeFormat(undefined, { month: 'long', day: 'numeric' })
+const weekdayLongFormatter = new Intl.DateTimeFormat(undefined, { weekday: 'long' })
 
 function getGreeting() {
   const hour = new Date().getHours()
@@ -72,21 +108,250 @@ function formatRelativeTime(isoString) {
   return `${diffWeeks} week${diffWeeks === 1 ? '' : 's'} ago`
 }
 
-function HomePeriodPill({ period }) {
-  const config = HOME_PERIOD_STYLES[period] ?? { label: period, bg: '#F3F4F6', text: '#6B7280' }
+function GlassSquircle({ children, className, innerClassName, shadow = true }) {
   return (
-    <span
-      className="shrink-0 rounded-[7px] px-3 py-1 text-xs font-medium"
-      style={{ backgroundColor: config.bg, color: config.text }}
+    <div
+      className={cn('relative shrink-0 rounded-[20px] p-px', className)}
+      style={{
+        background:
+          'linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(255,255,255,0.25) 35%, rgba(255,255,255,0.25) 70%, rgba(255,255,255,1) 100%)',
+        boxShadow: shadow ? '0 7px 25px rgba(39,60,66,0.12)' : undefined,
+      }}
     >
-      {config.label}
-    </span>
+      <div
+        className={cn('flex size-full items-center justify-center rounded-[19px]', innerClassName)}
+        style={innerClassName ? undefined : { backgroundColor: '#48BDE1' }}
+      >
+        {children}
+      </div>
+    </div>
+  )
+}
+
+function ShiftProgressBar({ shift }) {
+  const [now, setNow] = useState(() => Date.now())
+  const [showCountdown, setShowCountdown] = useState(false)
+
+  useEffect(() => {
+    const tick = setInterval(() => setNow(Date.now()), 30000)
+    return () => clearInterval(tick)
+  }, [])
+
+  useEffect(() => {
+    const crossfade = setInterval(() => setShowCountdown((current) => !current), 5000)
+    return () => clearInterval(crossfade)
+  }, [])
+
+  const start = new Date(shift.starts_at).getTime()
+  const end = new Date(shift.ends_at).getTime()
+  const elapsedRatio = Math.min(1, Math.max(0, (now - start) / (end - start)))
+  const percent = Math.round(elapsedRatio * 100)
+
+  const remainingMinutesTotal = Math.max(0, Math.round((end - now) / 60000))
+  const remainingHours = Math.floor(remainingMinutesTotal / 60)
+  const remainingMinutes = remainingMinutesTotal % 60
+  const countdownLabel =
+    remainingMinutesTotal <= 0 ? 'Shift In Progress' : `${remainingHours}hrs ${remainingMinutes}mins left`
+
+  return (
+    <div className="px-6">
+      <div className="h-1.5 w-full overflow-hidden rounded-full" style={{ backgroundColor: '#C9DFE5' }}>
+        <div
+          className="h-full rounded-full transition-[width] duration-500"
+          style={{ width: `${percent}%`, backgroundColor: '#35BEE6' }}
+        />
+      </div>
+
+      <div className="mt-2 flex items-center justify-between">
+        <span className="text-sm font-medium" style={{ color: '#2DA1C3' }}>
+          {showCountdown ? countdownLabel : 'Shift In Progress'}
+        </span>
+        <span style={{ color: '#7DA0AB' }}>
+          <span className="text-sm font-bold">{percent}</span>
+          <span className="text-xs">%</span>
+        </span>
+      </div>
+    </div>
+  )
+}
+
+// Shown instead of the carousel when the nurse has zero shift records at all (not
+// just no shift today/this range) - e.g. a brand-new account not yet scheduled by a
+// coordinator. Distinct from EmptyDayCard, which handles individual empty days
+// within an otherwise-populated carousel.
+function NoShiftsCard() {
+  return (
+    <div className="px-6">
+      <GlassSquircle
+        className="h-[183px] w-full rounded-[20px]"
+        innerClassName="flex-col gap-1.5 rounded-[19px]"
+      >
+        <CheckCircle2 className="text-white" size={24} strokeWidth={2} />
+        <p className="text-sm font-medium text-white">No shifts today</p>
+      </GlassSquircle>
+    </div>
+  )
+}
+
+function EmptyDayCard({ date }) {
+  return (
+    <GlassSquircle
+      className="h-[183px] w-full rounded-[20px]"
+      innerClassName="flex-col gap-1.5 rounded-[19px] bg-white/95"
+      shadow={false}
+    >
+      <Moon className="text-[#7DA0AB]" size={24} strokeWidth={2} />
+      <p className="text-sm font-medium text-[#7DA0AB]">You didn't work this day</p>
+      <p className="text-xs text-[#7DA0AB]">{shortDateFormatter.format(date)}</p>
+    </GlassSquircle>
+  )
+}
+
+function ShiftCarouselCard({ shift, workspaceName, onSelectShift }) {
+  const period = getShiftPeriod(shift.starts_at)
+  const [startTime, endTime] = formatShiftTimeRange(shift.starts_at, shift.ends_at).split(' – ')
+  const [startDigits, startMeridiem] = startTime.split(' ')
+  const [endDigits, endMeridiem] = endTime.split(' ')
+  const duration = formatShiftDuration(shift.starts_at, shift.ends_at)
+  const shortDate = shortDateFormatter.format(new Date(shift.starts_at))
+
+  return (
+    <button
+      type="button"
+      onClick={() => onSelectShift(shift)}
+      className="flex h-[183px] w-full flex-col rounded-[25px] p-5 text-left"
+      style={{
+        background: 'linear-gradient(to bottom, #E7FAFF 0%, #FFFFFF 50%, #FFFFFF 100%)',
+        border: '1px solid #92D6EB',
+        boxShadow: 'inset 0 1.5px 0 rgba(255,255,255,0.9)',
+      }}
+    >
+      <div className="flex items-center gap-2">
+        <span className="truncate text-[17px] font-semibold" style={{ color: '#20748C' }}>
+          {workspaceName ?? 'Shiftko'}
+        </span>
+        <span
+          className="shrink-0 rounded-[7px] px-1.5 py-0.5 text-xs font-bold uppercase"
+          style={{ backgroundColor: '#2DA1C3', color: '#E9FAFF' }}
+        >
+          {shift.unit}
+        </span>
+        <div className="flex-1" />
+        <ShiftPeriodPill period={period} />
+      </div>
+
+      <div className="mt-3 flex items-baseline">
+        <span className="text-[34px] font-semibold tracking-[-0.02em]" style={{ color: '#004458' }}>
+          {startDigits}
+        </span>
+        <span className="ml-1 text-xl font-semibold" style={{ color: '#7DA0AB' }}>
+          {startMeridiem}
+        </span>
+        <span className="mx-2 text-xl font-medium" style={{ color: '#7DA0AB' }}>
+          →
+        </span>
+        <span className="text-[34px] font-semibold tracking-[-0.02em]" style={{ color: '#004458' }}>
+          {endDigits}
+        </span>
+        <span className="ml-1 text-xl font-semibold" style={{ color: '#7DA0AB' }}>
+          {endMeridiem}
+        </span>
+      </div>
+
+      <div className="mt-3 flex-1" style={{ borderTop: '1.5px dashed #C9DFE5' }} />
+
+      <div className="mt-3 flex items-center gap-4 text-sm font-medium" style={{ color: '#2DA1C3' }}>
+        <span className="flex items-center gap-1.5">
+          <Hourglass size={14} strokeWidth={2} />
+          {duration}
+        </span>
+        <span className="flex items-center gap-1.5">
+          <CalendarDays size={14} strokeWidth={2} />
+          {shortDate}
+        </span>
+      </div>
+    </button>
+  )
+}
+
+function HeroCarousel({ shifts, today, workspaceName, onSelectShift, onCenterChange }) {
+  const cards = useMemo(() => buildCarouselCards(shifts, today), [shifts, today])
+  const containerRef = useRef(null)
+  const cardRefs = useRef([])
+  const [centeredIndex, setCenteredIndex] = useState(0)
+
+  useEffect(() => {
+    const initialIndex = Math.max(
+      cards.findIndex((card) => isSameLocalDay(card.date, today)),
+      0,
+    )
+    setCenteredIndex(initialIndex)
+    cardRefs.current[initialIndex]?.scrollIntoView({ inline: 'center', block: 'nearest' })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  useEffect(() => {
+    if (cards[centeredIndex]) onCenterChange?.(cards[centeredIndex])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [centeredIndex])
+
+  function handleScroll() {
+    const container = containerRef.current
+    if (!container) return
+
+    window.requestAnimationFrame(() => {
+      const containerRect = container.getBoundingClientRect()
+      const containerCenter = containerRect.left + containerRect.width / 2
+      let closestIndex = 0
+      let closestDistance = Infinity
+
+      cardRefs.current.forEach((node, index) => {
+        if (!node) return
+        const rect = node.getBoundingClientRect()
+        const distance = Math.abs(rect.left + rect.width / 2 - containerCenter)
+        if (distance < closestDistance) {
+          closestDistance = distance
+          closestIndex = index
+        }
+      })
+
+      setCenteredIndex((current) => (current === closestIndex ? current : closestIndex))
+    })
+  }
+
+  return (
+    <div
+      ref={containerRef}
+      onScroll={handleScroll}
+      className="flex snap-x snap-mandatory gap-2 overflow-x-auto px-6 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      style={{ scrollPaddingInline: '24px' }}
+    >
+      {cards.map((card, index) => (
+        <div
+          key={card.key}
+          ref={(node) => {
+            cardRefs.current[index] = node
+          }}
+          className="shrink-0 snap-center transition-opacity duration-200"
+          style={{ width: '354px', opacity: index === centeredIndex ? 1 : 0.4 }}
+        >
+          {card.shift ? (
+            <ShiftCarouselCard
+              shift={card.shift}
+              workspaceName={workspaceName}
+              onSelectShift={onSelectShift}
+            />
+          ) : (
+            <EmptyDayCard date={card.date} />
+          )}
+        </div>
+      ))}
+    </div>
   )
 }
 
 export default function Home({ user, role, onGoToManage }) {
   const [fullName, setFullName] = useState(null)
-  const [credential, setCredential] = useState(null)
   const [workspaceName, setWorkspaceName] = useState(null)
   const [shifts, setShifts] = useState([])
   const [notifications, setNotifications] = useState([])
@@ -94,6 +359,7 @@ export default function Home({ user, role, onGoToManage }) {
   const [error, setError] = useState(null)
   const [selectedShift, setSelectedShift] = useState(null)
   const [bellOpen, setBellOpen] = useState(false)
+  const [centeredCard, setCenteredCard] = useState({ date: new Date(), shift: null })
 
   const isCoordinator = role === 'coordinator'
 
@@ -131,7 +397,7 @@ export default function Home({ user, role, onGoToManage }) {
       const [profileResult, shiftsResult, notificationsResult] = await Promise.all([
         supabase
           .from('profiles')
-          .select('full_name, credential, workspace_id')
+          .select('full_name, workspace_id')
           .eq('id', user.id)
           .maybeSingle(),
         shiftsQuery,
@@ -143,7 +409,6 @@ export default function Home({ user, role, onGoToManage }) {
       if (profileResult.error) {
         setError(profileResult.error.message)
         setFullName(null)
-        setCredential(null)
         setShifts([])
         setNotifications([])
         setLoading(false)
@@ -153,7 +418,6 @@ export default function Home({ user, role, onGoToManage }) {
       if (shiftsResult.error) {
         setError(shiftsResult.error.message)
         setFullName(profileResult.data?.full_name ?? null)
-        setCredential(profileResult.data?.credential ?? null)
         setShifts([])
         setNotifications([])
         setLoading(false)
@@ -161,7 +425,6 @@ export default function Home({ user, role, onGoToManage }) {
       }
 
       setFullName(profileResult.data?.full_name ?? null)
-      setCredential(profileResult.data?.credential ?? null)
       setShifts(shiftsResult.data ?? [])
       setNotifications(notificationsResult.error ? [] : (notificationsResult.data ?? []))
       setLoading(false)
@@ -184,11 +447,6 @@ export default function Home({ user, role, onGoToManage }) {
       cancelled = true
     }
   }, [user.id, isCoordinator])
-
-  async function handleDismissNotification(id) {
-    setNotifications((current) => current.map((n) => (n.id === id ? { ...n, read: true } : n)))
-    await supabase.from('notifications').update({ read: true }).eq('id', id)
-  }
 
   async function handleBellClick() {
     if (bellOpen) {
@@ -219,111 +477,169 @@ export default function Home({ user, role, onGoToManage }) {
   const todayLabel = todayLabelFormatter.format(today)
   const firstName = getFirstName(fullName)
   const unreadCount = notifications.filter((n) => !n.read).length
+  const isWorkingToday = shifts.some((shift) => isSameLocalDay(new Date(shift.starts_at), today))
+
+  const notificationDropdown = bellOpen && (
+    <>
+      <button
+        type="button"
+        aria-label="Close notifications"
+        onClick={() => setBellOpen(false)}
+        className="fixed inset-0 z-10 cursor-default"
+      />
+      <div className="absolute top-full right-0 z-20 mt-2 w-80 max-w-[80vw] rounded-xl border border-[#E8E6E3] bg-white shadow-sm">
+        <div className="flex items-center justify-between border-b border-[#E8E6E3] p-4">
+          <p className="text-sm font-semibold text-ink">Notifications</p>
+          <button
+            type="button"
+            onClick={() => setBellOpen(false)}
+            aria-label="Close notifications"
+            className="text-[#6B7280]"
+          >
+            <X size={16} strokeWidth={2} />
+          </button>
+        </div>
+
+        {notifications.length === 0 ? (
+          <p className="p-4 text-sm text-[#6B7280]">No notifications yet</p>
+        ) : (
+          <ul className="flex max-h-80 flex-col overflow-y-auto">
+            {notifications.map((notification) => {
+              const isApproved =
+                notification.type === 'claim_approved' || notification.type === 'offer_claimed'
+
+              return (
+                <li
+                  key={notification.id}
+                  className="flex items-start gap-2 border-b border-[#E8E6E3] p-4 last:border-b-0"
+                >
+                  {isApproved ? (
+                    <CheckCircle2
+                      className="mt-0.5 shrink-0 text-[#16A34A]"
+                      size={16}
+                      strokeWidth={2}
+                    />
+                  ) : (
+                    <AlertTriangle
+                      className="mt-0.5 shrink-0 text-[#D97706]"
+                      size={16}
+                      strokeWidth={2}
+                    />
+                  )}
+                  <div className="min-w-0">
+                    <p className="text-sm text-ink">{notification.message}</p>
+                    <p className="mt-0.5 text-xs text-[#9CA3AF]">
+                      {formatRelativeTime(notification.created_at)}
+                    </p>
+                  </div>
+                </li>
+              )
+            })}
+          </ul>
+        )}
+      </div>
+    </>
+  )
 
   return (
-    <div
-      className="flex min-h-screen w-full flex-col"
-      style={{ background: 'linear-gradient(to top, #D2F3FC 70%, #EFFDFF 80%, #F8FEFF 94%)' }}
-    >
-      <main className="mx-auto flex w-full max-w-md flex-1 flex-col pt-10 pb-12">
-        <div className="shrink-0 px-5">
-        <div className="flex items-center justify-between">
-          <Wordmark />
-
-          {!isCoordinator && (
-            <div className="relative shrink-0">
-              <button
-                type="button"
-                onClick={handleBellClick}
-                aria-label="Notifications"
-                className="relative"
-              >
-                <Bell className="text-teal-dark" size={26} strokeWidth={2} />
-                {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1.5 flex size-[18px] items-center justify-center rounded-full bg-[#F97316] text-[10px] font-bold text-white">
-                    {unreadCount}
-                  </span>
-                )}
-              </button>
-
-              {bellOpen && (
-                <>
-                  <button
-                    type="button"
-                    aria-label="Close notifications"
-                    onClick={() => setBellOpen(false)}
-                    className="fixed inset-0 z-10 cursor-default"
-                  />
-                  <div className="absolute top-full right-0 z-20 mt-2 w-80 max-w-[80vw] rounded-xl border border-[#E8E6E3] bg-white shadow-sm">
-                    <div className="flex items-center justify-between border-b border-[#E8E6E3] p-4">
-                      <p className="text-sm font-semibold text-ink">Notifications</p>
-                      <button
-                        type="button"
-                        onClick={() => setBellOpen(false)}
-                        aria-label="Close notifications"
-                        className="text-[#6B7280]"
-                      >
-                        <X size={16} strokeWidth={2} />
-                      </button>
-                    </div>
-
-                    {notifications.length === 0 ? (
-                      <p className="p-4 text-sm text-[#6B7280]">No notifications yet</p>
-                    ) : (
-                      <ul className="flex max-h-80 flex-col overflow-y-auto">
-                        {notifications.map((notification) => {
-                          const isApproved =
-                            notification.type === 'claim_approved' ||
-                            notification.type === 'offer_claimed'
-
-                          return (
-                            <li
-                              key={notification.id}
-                              className="flex items-start gap-2 border-b border-[#E8E6E3] p-4 last:border-b-0"
-                            >
-                              {isApproved ? (
-                                <CheckCircle2
-                                  className="mt-0.5 shrink-0 text-[#16A34A]"
-                                  size={16}
-                                  strokeWidth={2}
-                                />
-                              ) : (
-                                <AlertTriangle
-                                  className="mt-0.5 shrink-0 text-[#D97706]"
-                                  size={16}
-                                  strokeWidth={2}
-                                />
-                              )}
-                              <div className="min-w-0">
-                                <p className="text-sm text-ink">{notification.message}</p>
-                                <p className="mt-0.5 text-xs text-[#9CA3AF]">
-                                  {formatRelativeTime(notification.created_at)}
-                                </p>
-                              </div>
-                            </li>
-                          )
-                        })}
-                      </ul>
-                    )}
-                  </div>
-                </>
-              )}
+    <div className="flex min-h-screen w-full flex-col bg-[#FCFCFC]">
+      <main className="mx-auto flex w-full max-w-md flex-1 flex-col pb-12">
+        {isCoordinator ? (
+          <div className="shrink-0 px-5 pt-10">
+            <div className="flex items-center justify-between">
+              <Wordmark />
             </div>
-          )}
-        </div>
 
-        <p className="mt-1 flex items-center gap-1.5 text-sm font-medium text-teal-dark">
-          <span className="size-1.5 shrink-0 rounded-full bg-[#F97316]" />
-          {todayLabel}
-        </p>
-        </div>
+            <p className="mt-1 flex items-center gap-1.5 text-sm font-medium text-teal-dark">
+              <span className="size-1.5 shrink-0 rounded-full bg-[#F97316]" />
+              {todayLabel}
+            </p>
+          </div>
+        ) : (
+          <div
+            className="relative shrink-0"
+            style={{ background: 'linear-gradient(to bottom, #009ECD 0%, #5DC7E6 50%, #FCFCFC 100%)' }}
+          >
+            <div className="flex items-center gap-3 px-6 pt-10">
+              <GlassSquircle className="size-12">
+                <span className="text-base font-bold text-white">{getInitials(fullName)}</span>
+              </GlassSquircle>
+
+              <div className="flex flex-col gap-1">
+                <span className="text-[15px] font-semibold text-white">
+                  {headerDateFormatter.format(today)}
+                </span>
+                <span className="flex items-center gap-1.5 text-sm font-semibold text-white/90">
+                  <span className="size-2 shrink-0 rounded-full bg-white" />
+                  {isWorkingToday ? 'You have a shift today' : 'No shift today'}
+                </span>
+              </div>
+
+              <div className="flex-1" />
+
+              <div className="relative shrink-0">
+                <button type="button" onClick={handleBellClick} aria-label="Notifications">
+                  <GlassSquircle className="size-12">
+                    <Bell className="text-white" size={20} strokeWidth={2} />
+                  </GlassSquircle>
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 flex size-2.5 items-center justify-center rounded-full bg-red-500 ring-[1.5px] ring-white" />
+                  )}
+                </button>
+
+                {notificationDropdown}
+              </div>
+            </div>
+
+            <div className="mt-8 flex items-center px-6 pr-[26px]">
+              <h1
+                className="font-display text-[26px] font-bold"
+                style={{ color: '#EAFAFF' }}
+              >
+                {weekdayLongFormatter.format(centeredCard.date)}
+              </h1>
+
+              <div className="flex-1" />
+
+              <div className="flex items-center gap-1.5">
+                <span className="size-2 rounded-full bg-white/60" />
+                <span className="h-2 w-[18px] rounded-full bg-white" />
+                <span className="size-2 rounded-full bg-white/60" />
+              </div>
+            </div>
+
+            {!loading && !error && (
+              <div className="mt-4 pb-6">
+                {shifts.length === 0 ? (
+                  <NoShiftsCard />
+                ) : (
+                  <>
+                    <HeroCarousel
+                      shifts={shifts}
+                      today={today}
+                      workspaceName={workspaceName}
+                      onSelectShift={setSelectedShift}
+                      onCenterChange={setCenteredCard}
+                    />
+
+                    {centeredCard.shift && (
+                      <div className="mt-4">
+                        <ShiftProgressBar shift={centeredCard.shift} />
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        )}
 
         {!loading && error && (
           <p className="mt-6 px-5 text-sm text-red-700">Could not load home data: {error}</p>
         )}
 
         {!loading && !error && (
-          <div className="mt-[30px] flex flex-1 flex-col">
+          <div className={cn('flex flex-1 flex-col', isCoordinator && 'mt-[30px]')}>
             {isCoordinator ? (
               <div className="px-5">
                 <CoordinatorSummary
@@ -336,14 +652,8 @@ export default function Home({ user, role, onGoToManage }) {
             ) : (
               <NurseSummary
                 shifts={shifts}
-                today={today}
-                firstName={firstName}
-                credential={credential}
-                workspaceName={workspaceName}
                 userId={user.id}
                 onSelectShift={setSelectedShift}
-                notifications={notifications}
-                onDismissNotification={handleDismissNotification}
               />
             )}
           </div>
@@ -353,151 +663,59 @@ export default function Home({ user, role, onGoToManage }) {
   )
 }
 
-function NotificationBanner({ notification, onDismiss }) {
-  const isApproved =
-    notification.type === 'claim_approved' || notification.type === 'offer_claimed'
-
-  return (
-    <div
-      className={cn(
-        'relative rounded-xl border-l-4 p-4',
-        isApproved ? 'border-green-500 bg-green-50' : 'border-amber-500 bg-amber-50',
-      )}
-    >
-      <div className="flex items-start gap-2 pr-6">
-        {isApproved ? (
-          <CheckCircle2 className="mt-0.5 shrink-0 text-[#16A34A]" size={16} strokeWidth={2} />
-        ) : (
-          <AlertTriangle className="mt-0.5 shrink-0 text-[#D97706]" size={16} strokeWidth={2} />
-        )}
-        <p className={cn('text-sm', isApproved ? 'text-[#166534]' : 'text-[#92400E]')}>
-          {notification.message}
-        </p>
-      </div>
-
-      <button
-        type="button"
-        onClick={() => onDismiss(notification.id)}
-        aria-label="Dismiss notification"
-        className={cn('absolute top-3 right-3', isApproved ? 'text-[#16A34A]' : 'text-[#D97706]')}
-      >
-        <X size={14} strokeWidth={2} />
-      </button>
-    </div>
-  )
-}
-
-function ShiftRow({ shift, workspaceName, onSelectShift }) {
+// Home's list-section card, used identically by both "My Upcoming Shifts" and "Open
+// Shifts" (same layout, different data source/header per product decision). Facility
+// line matches Schedule's "Burlingame SNF · UNIT 1" convention (Shiftko is
+// single-facility, Burlingame-only, per the pivot decision) rather than the iOS
+// spec's original department+facility pattern, so Home and Schedule read consistently.
+function HomeShiftCard({ shift, onSelectShift }) {
   const period = getShiftPeriod(shift.starts_at)
   const shiftDate = new Date(shift.starts_at)
-  const [startTime, endTime] = formatShiftTimeRange(shift.starts_at, shift.ends_at).split(' – ')
-  const [startDigits, startMeridiem] = startTime.split(' ')
-  const [endDigits, endMeridiem] = endTime.split(' ')
 
   return (
     <li>
       <button
         type="button"
         onClick={() => onSelectShift(shift)}
-        className="flex w-full items-center gap-3.5 py-3.5 text-left"
+        className="flex h-[86px] w-full items-center gap-3.5 rounded-[20px] border border-[#DDE5E8] bg-[#FCFCFC] px-4 text-left shadow-[0px_2px_7px_rgba(0,0,0,0.08)]"
       >
         <div className="flex w-11 shrink-0 flex-col items-center gap-[0.75px] text-center">
-          <span className="text-[10px] font-medium tracking-wide text-[#6B7280] uppercase">
+          <span className="text-[12px] font-medium tracking-wide text-[#888888] uppercase">
             {weekdayFormatter.format(shiftDate)}
           </span>
-          <span className="text-[22px] font-bold text-[#111111]">{shiftDate.getDate()}</span>
-          <span className="text-[10px] font-medium tracking-wide text-[#6B7280] uppercase">
+          <span className="text-[18px] font-semibold text-[#282828]">{shiftDate.getDate()}</span>
+          <span className="text-[12px] font-medium tracking-wide text-[#888888] uppercase">
             {monthFormatter.format(shiftDate)}
           </span>
         </div>
 
         <div className="min-w-0 flex-1">
-          <p className="truncate font-medium text-[#1A1A1A]">
-            <span className="text-[17px]">{startDigits}</span>
-            <span className="text-[13px]"> {startMeridiem}</span>
-            <span className="text-[17px]"> – {endDigits}</span>
-            <span className="text-[13px]"> {endMeridiem}</span>
+          <p className="truncate text-[17px] font-medium text-[#282828]">
+            {formatShiftTimeRange(shift.starts_at, shift.ends_at)}
           </p>
-          <p className="mt-0.5 truncate text-xs text-[#6B7280]">
-            <span className="font-semibold text-[#3A798B]">{shift.unit}</span>
-            {workspaceName && `  |  ${workspaceName}`}
-          </p>
+          <div className="mt-0.5 flex min-w-0 items-center gap-[7px]">
+            <span className="size-[5px] shrink-0 rounded-full bg-[#2DA1C3]" aria-hidden="true" />
+            <p className="truncate text-[14px] font-medium text-[#282828]">Burlingame SNF</p>
+            <span className="text-[#C9DFE5]" aria-hidden="true">
+              |
+            </span>
+            <p className="shrink-0 text-[14px] font-medium text-[#2DA1C3] uppercase">
+              {shift.unit}
+            </p>
+          </div>
         </div>
 
-        <div className="flex shrink-0 items-center gap-2">
-          <HomePeriodPill period={period} />
-          <ChevronRight className="text-[#9CA3AF]" size={18} strokeWidth={2} />
-        </div>
+        <ShiftPeriodPill period={period} />
       </button>
     </li>
   )
 }
 
-function NurseSummary({
-  shifts,
-  today,
-  firstName,
-  credential,
-  workspaceName,
-  userId,
-  onSelectShift,
-  notifications,
-  onDismissNotification,
-}) {
-  const [coworkers, setCoworkers] = useState([])
+function NurseSummary({ shifts, userId, onSelectShift }) {
   const [openShifts, setOpenShifts] = useState([])
   const [openShiftsLoading, setOpenShiftsLoading] = useState(true)
 
-  const todayShifts = shifts.filter((shift) => isSameLocalDay(new Date(shift.starts_at), today))
   const upcomingShifts = shifts.filter((shift) => isWithinNextSevenDays(shift.starts_at))
-  const isWorkingToday = todayShifts.length > 0
-  const primaryTodayShift = todayShifts[0]
-  const primaryPeriod = primaryTodayShift ? getShiftPeriod(primaryTodayShift.starts_at) : null
-  const periodConfig = primaryPeriod ? HOME_PERIOD_STYLES[primaryPeriod] : null
-
-  useEffect(() => {
-    if (!primaryTodayShift) {
-      setCoworkers([])
-      return
-    }
-
-    let cancelled = false
-
-    async function fetchCoworkers() {
-      const { data } = await supabase
-        .from('shifts')
-        .select(`
-          id,
-          nurse_id,
-          profiles!nurse_id ( full_name )
-        `)
-        .eq('unit', primaryTodayShift.unit)
-        .neq('nurse_id', userId)
-        .lt('starts_at', primaryTodayShift.ends_at)
-        .gt('ends_at', primaryTodayShift.starts_at)
-
-      if (cancelled) return
-
-      const uniqueCoworkers = []
-      const seenNurseIds = new Set()
-
-      for (const row of data ?? []) {
-        if (seenNurseIds.has(row.nurse_id)) continue
-        seenNurseIds.add(row.nurse_id)
-        const profile = Array.isArray(row.profiles) ? row.profiles[0] : row.profiles
-        uniqueCoworkers.push({ nurseId: row.nurse_id, full_name: profile?.full_name ?? null })
-      }
-
-      setCoworkers(uniqueCoworkers)
-    }
-
-    fetchCoworkers()
-
-    return () => {
-      cancelled = true
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [primaryTodayShift?.id, userId])
 
   useEffect(() => {
     let cancelled = false
@@ -542,150 +760,52 @@ function NurseSummary({
   }, [userId])
 
   return (
-    <div className="flex flex-1 flex-col">
-      <div className="shrink-0 px-5">
-      <p
-        className="font-display text-[26px] font-semibold"
-        style={{ letterSpacing: '-0.03em', lineHeight: '115%' }}
-      >
-        <span style={{ color: '#20748C' }}>{getGreeting()},</span>
-        {firstName && <span style={{ color: '#7CB9CA' }}> {firstName}</span>}
-        <br />
-        {isWorkingToday && periodConfig ? (
-          <>
-            <span style={{ color: '#7CB9CA' }}>You have {periodConfig.article}</span>
-            <span style={{ color: '#20748C' }}> {periodConfig.label.toLowerCase()} shift</span>
-            <span style={{ color: '#7CB9CA' }}> today.</span>
-          </>
+    <div className="flex flex-1 flex-col px-6 pt-6 pb-10">
+      <section>
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-semibold text-[#282828]" style={{ letterSpacing: '-0.4px' }}>
+            My Upcoming Shifts
+          </h2>
+          <span className="flex items-center gap-0.5 text-[15px] font-medium" style={{ color: '#3A798B' }}>
+            See All <ChevronRight size={14} strokeWidth={2.5} />
+          </span>
+        </div>
+
+        {upcomingShifts.length === 0 ? (
+          <p className="mt-3 text-[15px]" style={{ color: '#7DA0AB' }}>
+            Nothing in the next 7 days
+          </p>
         ) : (
-          <span style={{ color: '#7CB9CA' }}>You have the day off.</span>
-        )}
-      </p>
-
-      {isWorkingToday && (
-        <div className="mt-5 flex flex-col gap-3">
-          {todayShifts.map((shift, index) => {
-            const [startTime, endTime] = formatShiftTimeRange(shift.starts_at, shift.ends_at).split(' – ')
-            const [startDigits, startMeridiem] = startTime.split(' ')
-            const [endDigits, endMeridiem] = endTime.split(' ')
-
-            return (
-              <div
-                key={shift.id}
-                className="rounded-[30px] bg-white pt-[15px] pr-[25px] pb-[15px] pl-[25px] shadow-[0_4px_12px_rgba(156,212,223,0.4)]"
-              >
-                <div className="flex items-baseline">
-                  <span className="text-[36px] font-medium text-[#111111]">{startDigits}</span>
-                  <span className="ml-1 text-base font-medium text-[#3A798B]">{startMeridiem}</span>
-                  <span className="mx-2 text-xl text-[#6B7280]">→</span>
-                  <span className="text-[36px] font-medium text-[#111111]">{endDigits}</span>
-                  <span className="ml-1 text-base font-medium text-[#3A798B]">{endMeridiem}</span>
-                </div>
-
-                <div className="mt-[5px] flex items-center gap-2">
-                  <span className="rounded-[7px] bg-[#E0F7FA] px-2.5 py-1 text-xs font-semibold text-teal-mid">
-                    {shift.unit}
-                  </span>
-                  {credential && <span className="text-[13px] font-medium text-[#1A1A1A]">{credential}</span>}
-                </div>
-
-                {index === 0 && coworkers.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => onSelectShift(shift)}
-                    className="mt-3 flex w-full items-center justify-between"
-                  >
-                    <span className="text-[14px] font-medium" style={{ color: '#20748C' }}>
-                      see who's working today →
-                    </span>
-
-                    <div className="flex -translate-y-[5px] items-center">
-                      {coworkers.slice(0, 3).map((coworker, avatarIndex) => (
-                        <div
-                          key={coworker.nurseId}
-                          className={cn(
-                            'flex size-8 items-center justify-center rounded-full border-2 border-white text-xs font-semibold',
-                            avatarIndex > 0 && '-ml-2.5',
-                          )}
-                          style={{ backgroundColor: '#20748C', color: '#DDF7FF' }}
-                        >
-                          {getInitials(coworker.full_name)}
-                        </div>
-                      ))}
-                      {coworkers.length > 3 && (
-                        <div className="-ml-2.5 flex size-8 items-center justify-center rounded-full border-2 border-white bg-teal-mid text-xs font-bold text-white">
-                          +{coworkers.length - 3}
-                        </div>
-                      )}
-                    </div>
-                  </button>
-                )}
-              </div>
-            )
-          })}
-        </div>
-      )}
-
-      {notifications.some((n) => !n.read) && (
-        <div className="mt-5 flex flex-col gap-2">
-          {notifications
-            .filter((n) => !n.read)
-            .map((notification) => (
-              <NotificationBanner
-                key={notification.id}
-                notification={notification}
-                onDismiss={onDismissNotification}
-              />
+          <ul className="mt-3 flex flex-col gap-2">
+            {upcomingShifts.map((shift) => (
+              <HomeShiftCard key={shift.id} shift={shift} onSelectShift={onSelectShift} />
             ))}
+          </ul>
+        )}
+      </section>
+
+      <section className="mt-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-semibold text-[#282828]" style={{ letterSpacing: '-0.4px' }}>
+            Open Shifts
+          </h2>
+          <span className="flex items-center gap-0.5 text-[15px] font-medium" style={{ color: '#3A798B' }}>
+            See All <ChevronRight size={14} strokeWidth={2.5} />
+          </span>
         </div>
-      )}
-      </div>
 
-      <div className="mt-6 flex-1 rounded-t-[40px] bg-white px-6 pt-6 pb-10">
-        <section>
-          <div className="flex items-center justify-between">
-            <h2 className="text-[20px] font-semibold text-[#111111]">Upcoming Shifts</h2>
-            <span className="text-sm text-[#6B7280]">See All ↓</span>
-          </div>
-
-          {upcomingShifts.length === 0 ? (
-            <p className="mt-3 text-sm text-[#6B7280]">No upcoming shifts</p>
-          ) : (
-            <ul className="mt-1 flex flex-col divide-y divide-[#F3F4F6]">
-              {upcomingShifts.map((shift) => (
-                <ShiftRow
-                  key={shift.id}
-                  shift={shift}
-                  workspaceName={workspaceName}
-                  onSelectShift={onSelectShift}
-                />
-              ))}
-            </ul>
-          )}
-        </section>
-
-        <section className="mt-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-[20px] font-semibold text-[#111111]">Open Shifts</h2>
-            <span className="text-sm text-[#6B7280]">See All ↓</span>
-          </div>
-
-          {!openShiftsLoading && openShifts.length === 0 ? (
-            <p className="mt-3 text-sm text-[#6B7280]">No open shifts right now</p>
-          ) : (
-            <ul className="mt-1 flex flex-col divide-y divide-[#F3F4F6]">
-              {openShifts.map((shift) => (
-                <ShiftRow
-                  key={shift.id}
-                  shift={shift}
-                  workspaceName={workspaceName}
-                  onSelectShift={onSelectShift}
-                />
-              ))}
-            </ul>
-          )}
-        </section>
-      </div>
+        {!openShiftsLoading && openShifts.length === 0 ? (
+          <p className="mt-3 text-[15px]" style={{ color: '#7DA0AB' }}>
+            No open shifts right now
+          </p>
+        ) : (
+          <ul className="mt-3 flex flex-col gap-2">
+            {openShifts.map((shift) => (
+              <HomeShiftCard key={shift.id} shift={shift} onSelectShift={onSelectShift} />
+            ))}
+          </ul>
+        )}
+      </section>
     </div>
   )
 }

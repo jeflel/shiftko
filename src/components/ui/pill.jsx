@@ -5,17 +5,17 @@ const PERIOD_CONFIG = {
   Day: {
     label: 'MORNING',
     icon: Sun,
-    className: 'rounded-[7px] bg-[#FEF9EC] px-2 py-1 text-[11px] font-bold tracking-[-0.22px] text-[#C96F15]',
+    className: 'rounded-[7px] bg-[#FCF4DD] px-2 py-1 text-[11px] font-bold tracking-[-0.22px] text-[#C96F15]',
   },
   Evening: {
     label: 'EVENING',
     icon: Sunset,
-    className: 'rounded-[7px] bg-[#EDFBF0] px-2 py-1 text-[11px] font-bold tracking-[-0.22px] text-[#278E8E]',
+    className: 'rounded-[7px] bg-[#DBF9E2] px-2 py-1 text-[11px] font-bold tracking-[-0.22px] text-[#278E8E]',
   },
   Night: {
     label: 'NIGHT',
     icon: Moon,
-    className: 'rounded-[7px] bg-[#FFF2FE] px-2 py-1 text-[11px] font-bold tracking-[-0.22px] text-[#5132AE]',
+    className: 'rounded-[7px] bg-[#FFE4FC] px-2 py-1 text-[11px] font-bold tracking-[-0.22px] text-[#5132AE]',
   },
 }
 
