@@ -134,7 +134,7 @@ function ShiftCard({ date, title, subtitle, pill, belowPill, trailing, onClick, 
         type={isInteractive ? 'button' : undefined}
         onClick={onClick}
         className={cn(
-          'flex h-[78px] w-[312px] shrink-0 items-center gap-2.5 rounded-[20px] border border-[#DDE5E8] bg-white pr-4 pl-4 shadow-[0px_7px_20px_2px_rgba(46,73,92,0.06)] transition-opacity',
+          'flex h-[78px] w-full min-w-0 flex-1 items-center gap-2.5 rounded-[20px] border border-[#DDE5E8] bg-white pr-4 pl-4 shadow-[0px_7px_20px_2px_rgba(46,73,92,0.06)] transition-opacity',
           isInteractive && 'text-left active:shadow-none',
           isPast && 'opacity-45',
         )}
@@ -164,7 +164,7 @@ function DayOffRow({ date, text }) {
   return (
     <li className="flex items-center gap-5">
       <ShiftDateColumn date={date} />
-      <div className="flex h-[78px] w-[312px] shrink-0 items-center gap-2.5 pl-4">
+      <div className="flex h-[78px] w-full min-w-0 flex-1 items-center gap-2.5 pl-4">
         <span className="h-[46px] w-1 shrink-0 self-center rounded-full bg-[#E9E9E9]" aria-hidden="true" />
         <p className="text-sm font-medium text-[#ADADAD]">{text}</p>
       </div>
@@ -223,14 +223,18 @@ function WeekRow({ days, selectedKey, todayKey, onSelect, shiftDateKeys }) {
             key={dateKey}
             type="button"
             onClick={() => onSelect(dateKey)}
-            className="flex flex-col items-center"
+            className="flex min-w-0 flex-1 flex-col items-center"
           >
             <div
               className={cn(
-                'flex h-[61px] w-11 flex-col items-center justify-center rounded-[15px] bg-white',
+                'flex h-[61px] w-full max-w-11 flex-col items-center justify-center rounded-[15px] bg-white',
                 isHighlighted && 'border border-[#2DA1C3]',
               )}
-              style={isHighlighted ? undefined : { backgroundImage: DASHED_CELL_SVG }}
+              style={
+                isHighlighted
+                  ? undefined
+                  : { backgroundImage: DASHED_CELL_SVG, backgroundSize: '100% 100%', backgroundRepeat: 'no-repeat' }
+              }
             >
               <span className="text-[11px] leading-none font-semibold" style={{ color: stateColor }}>
                 {weekdayLetterFormatter.format(date)}
@@ -354,7 +358,7 @@ function ScheduleViewToggle({ value, onChange }) {
             aria-selected={isActive}
             onClick={() => onChange(option.id)}
             className={cn(
-              'flex h-[34px] w-[172px] items-center justify-center rounded-[12px] px-4 text-[14px] font-medium whitespace-nowrap transition-colors',
+              'flex h-[34px] w-full max-w-[172px] flex-1 items-center justify-center rounded-[12px] px-4 text-[14px] font-medium whitespace-nowrap transition-colors',
               isActive ? 'bg-[#282828] text-white' : 'bg-[#F2F2F2] text-[#5B5B5B]',
             )}
           >
