@@ -1,10 +1,18 @@
 import { useEffect, useRef, useState } from 'react'
-import { AlertTriangle, Calendar, ChevronLeft, Pencil, Trash2, Users } from 'lucide-react'
+import { AlertTriangle, Calendar, ChevronLeft, Pencil, Sun, Sunset, Moon, X, Trash2, Users } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import ShiftDetail from './ShiftDetail'
 import { ShiftPeriodPill, StatusPill } from '@/components/ui/pill'
 import { Button } from '@/components/ui/button'
+import { CalendarStrip } from '@/components/ui/calendar-strip'
 import { cn } from '@/lib/utils'
+import {
+  MAX_SAVED_SHIFT_PRESETS,
+  deleteShiftPreset,
+  fetchSavedShiftPresets,
+  parsePresetTime,
+  saveShiftPreset,
+} from '@/lib/savedShiftPresets'
 import {
   addLocalDays,
   diffInCalendarDays,
@@ -780,6 +788,41 @@ const inputClassName =
   'w-full rounded-xl border border-[#E8E6E3] p-3 text-sm focus:border-[#111111] focus:outline-none'
 const labelClassName = 'text-xs font-medium tracking-wide text-[#6B7280] uppercase'
 
+// Standard Burlingame shift blocks (30-min overlap for handoff/report).
+// Matches the ShiftPeriodPill color language used elsewhere in the app.
+const SHIFT_PRESETS = [
+  {
+    key: 'day',
+    label: 'Day',
+    time: '7:00 AM – 3:30 PM',
+    start: { hours: 7, minutes: 0 },
+    end: { hours: 15, minutes: 30 },
+    icon: Sun,
+    className: 'bg-[#FCF4DD] text-[#C96F15]',
+    selectedClassName: 'bg-[#C96F15] text-white',
+  },
+  {
+    key: 'evening',
+    label: 'Evening',
+    time: '3:00 PM – 11:30 PM',
+    start: { hours: 15, minutes: 0 },
+    end: { hours: 23, minutes: 30 },
+    icon: Sunset,
+    className: 'bg-[#DBF9E2] text-[#278E8E]',
+    selectedClassName: 'bg-[#278E8E] text-white',
+  },
+  {
+    key: 'night',
+    label: 'Night',
+    time: '11:00 PM – 7:30 AM',
+    start: { hours: 23, minutes: 0 },
+    end: { hours: 7, minutes: 30 },
+    icon: Moon,
+    className: 'bg-[#FFE4FC] text-[#5132AE]',
+    selectedClassName: 'bg-[#5132AE] text-white',
+  },
+]
+
 function ManageTab() {
   const [nurses, setNurses] = useState([])
   const [loading, setLoading] = useState(true)
@@ -791,14 +834,101 @@ function ManageTab() {
     nurse_id: '',
     unit: 'Unit 1',
     date: '',
+    // One of: 'day' | 'evening' | 'night' | `saved:<preset id>` | 'custom'
     shift_type: 'day',
+    customStart: { hours: 7, minutes: 0 },
+    customEnd: { hours: 15, minutes: 0 },
     unassigned: false,
   })
 
-  const SHIFT_HOURS = {
-    day:     { start: 7,  end: 19 },
-    evening: { start: 15, end: 23 },
-    night:   { start: 23, end: 7  },
+  const [currentUserId, setCurrentUserId] = useState(null)
+  const [savedPresets, setSavedPresets] = useState([])
+  const [savedPresetsLoading, setSavedPresetsLoading] = useState(true)
+  const [presetActionError, setPresetActionError] = useState(null)
+  const [saveThisShift, setSaveThisShift] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function loadUserAndPresets() {
+      const { data: { session } } = await supabase.auth.getSession()
+      const userId = session?.user?.id ?? null
+      if (cancelled) return
+      setCurrentUserId(userId)
+
+      if (!userId) {
+        setSavedPresetsLoading(false)
+        return
+      }
+
+      try {
+        const presets = await fetchSavedShiftPresets(userId)
+        if (!cancelled) setSavedPresets(presets)
+      } catch (err) {
+        if (!cancelled) setPresetActionError(err.message)
+      } finally {
+        if (!cancelled) setSavedPresetsLoading(false)
+      }
+    }
+
+    loadUserAndPresets()
+    return () => { cancelled = true }
+  }, [])
+
+  // Resolves the currently selected shift_type into a concrete
+  // { start: {hours, minutes}, end: {hours, minutes} } pair, whether it's
+  // a standard preset, a saved custom preset, or a one-off custom entry.
+  function resolveShiftTimes() {
+    const preset = SHIFT_PRESETS.find((p) => p.key === form.shift_type)
+    if (preset) return { start: preset.start, end: preset.end }
+
+    if (form.shift_type.startsWith('saved:')) {
+      const id = form.shift_type.slice('saved:'.length)
+      const saved = savedPresets.find((p) => p.id === id)
+      if (saved) {
+        return { start: parsePresetTime(saved.start_time), end: parsePresetTime(saved.end_time) }
+      }
+    }
+
+    return { start: form.customStart, end: form.customEnd }
+  }
+
+  async function handleSaveThisShift() {
+    if (!currentUserId) return
+    if (savedPresets.length >= MAX_SAVED_SHIFT_PRESETS) {
+      setPresetActionError(`You can save up to ${MAX_SAVED_SHIFT_PRESETS} custom shifts. Delete one to save a new one.`)
+      return
+    }
+
+    setPresetActionError(null)
+    const { start, end } = resolveShiftTimes()
+
+    try {
+      const saved = await saveShiftPreset(currentUserId, {
+        startHours: start.hours,
+        startMinutes: start.minutes,
+        endHours: end.hours,
+        endMinutes: end.minutes,
+      })
+      setSavedPresets((prev) => [...prev, saved])
+      setForm((f) => ({ ...f, shift_type: `saved:${saved.id}` }))
+      setSaveThisShift(false)
+    } catch (err) {
+      setPresetActionError(err.message)
+    }
+  }
+
+  async function handleDeletePreset(presetId) {
+    setPresetActionError(null)
+    try {
+      await deleteShiftPreset(presetId)
+      setSavedPresets((prev) => prev.filter((p) => p.id !== presetId))
+      if (form.shift_type === `saved:${presetId}`) {
+        setForm((f) => ({ ...f, shift_type: 'day' }))
+      }
+    } catch (err) {
+      setPresetActionError(err.message)
+    }
   }
 
   const [claimGroups, setClaimGroups] = useState([])
@@ -960,7 +1090,8 @@ function ManageTab() {
     setEditSaving(true)
     setEditError(null)
 
-    const { starts_at, ends_at } = buildShiftTimes(editForm.date, editForm.shift_type)
+    const editPreset = SHIFT_PRESETS.find((p) => p.key === editForm.shift_type) ?? SHIFT_PRESETS[0]
+    const { starts_at, ends_at } = buildShiftTimes(editForm.date, editPreset.start, editPreset.end)
 
     const { error: updateError } = await supabase
       .from('shifts')
@@ -1041,10 +1172,13 @@ function ManageTab() {
     return () => { cancelled = true }
   }, [dupSourceDate])
 
-  function buildShiftTimes(date, shift_type) {
-    const { start, end } = SHIFT_HOURS[shift_type]
-    const starts_at = new Date(`${date}T${String(start).padStart(2, '0')}:00:00`)
-    const ends_at = new Date(`${date}T${String(end).padStart(2, '0')}:00:00`)
+  // Builds ISO start/end timestamps for `date` (YYYY-MM-DD) given
+  // { hours, minutes } start/end pairs. Handles overnight shifts (e.g.
+  // Night: 11pm-7:30am) by rolling the end date forward one day.
+  function buildShiftTimes(date, start, end) {
+    const pad = (n) => String(n).padStart(2, '0')
+    const starts_at = new Date(`${date}T${pad(start.hours)}:${pad(start.minutes)}:00`)
+    const ends_at = new Date(`${date}T${pad(end.hours)}:${pad(end.minutes)}:00`)
     if (ends_at <= starts_at) ends_at.setDate(ends_at.getDate() + 1)
     return { starts_at: starts_at.toISOString(), ends_at: ends_at.toISOString() }
   }
@@ -1059,7 +1193,8 @@ function ManageTab() {
     }
 
     setSaving(true)
-    const { starts_at, ends_at } = buildShiftTimes(form.date, form.shift_type)
+    const { start, end } = resolveShiftTimes()
+    const { starts_at, ends_at } = buildShiftTimes(form.date, start, end)
 
     const payload = form.unassigned
       ? { unit: form.unit, starts_at, ends_at, status: 'open', nurse_id: null }
@@ -1073,7 +1208,16 @@ function ManageTab() {
       setError(insertError.message)
     } else {
       setSuccess(true)
-      setForm({ nurse_id: '', unit: 'Unit 1', date: '', shift_type: 'day', unassigned: false })
+      setSaveThisShift(false)
+      setForm({
+        nurse_id: '',
+        unit: 'Unit 1',
+        date: '',
+        shift_type: 'day',
+        customStart: { hours: 7, minutes: 0 },
+        customEnd: { hours: 15, minutes: 0 },
+        unassigned: false,
+      })
       fetchRecentShifts()
     }
   }
@@ -1374,25 +1518,119 @@ function ManageTab() {
 
           <div className="flex flex-col gap-1.5">
             <label className={labelClassName}>Date</label>
-            <input
-              type="date"
-              value={form.date}
-              onChange={(e) => setForm({ ...form, date: e.target.value })}
-              className={inputClassName}
+            <CalendarStrip
+              selectedDateKey={form.date}
+              onSelect={(dateKey) => setForm({ ...form, date: dateKey })}
             />
           </div>
 
           <div className="flex flex-col gap-1.5">
             <label className={labelClassName}>Shift</label>
-            <select
-              value={form.shift_type}
-              onChange={(e) => setForm({ ...form, shift_type: e.target.value })}
-              className={inputClassName}
-            >
-              <option value="day">Day (7am – 7pm)</option>
-              <option value="evening">Evening (3pm – 11pm)</option>
-              <option value="night">Night (11pm – 7am)</option>
-            </select>
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {SHIFT_PRESETS.map((preset) => {
+                const Icon = preset.icon
+                const isSelected = form.shift_type === preset.key
+                return (
+                  <button
+                    key={preset.key}
+                    type="button"
+                    onClick={() => setForm({ ...form, shift_type: preset.key })}
+                    className={cn(
+                      'flex shrink-0 flex-col items-start gap-1 rounded-xl px-3 py-2 text-left',
+                      isSelected ? preset.selectedClassName : preset.className,
+                    )}
+                  >
+                    <span className="flex items-center gap-1 text-xs font-bold uppercase tracking-wide">
+                      <Icon size={13} strokeWidth={2.5} />
+                      {preset.label}
+                    </span>
+                    <span className="text-[11px] font-medium">{preset.time}</span>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          {!savedPresetsLoading && savedPresets.length > 0 && (
+            <div className="flex flex-col gap-1.5">
+              <label className={labelClassName}>Your saved shifts</label>
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {savedPresets.map((preset) => {
+                  const isSelected = form.shift_type === `saved:${preset.id}`
+                  const { hours: sh, minutes: sm } = parsePresetTime(preset.start_time)
+                  const { hours: eh, minutes: em } = parsePresetTime(preset.end_time)
+                  const timeLabel = `${String(sh).padStart(2, '0')}:${String(sm).padStart(2, '0')} – ${String(eh).padStart(2, '0')}:${String(em).padStart(2, '0')}`
+                  return (
+                    <span
+                      key={preset.id}
+                      className={cn(
+                        'flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium',
+                        isSelected
+                          ? 'border-[#111111] bg-[#111111] text-white'
+                          : 'border-[#E8E6E3] bg-white text-[#111111]',
+                      )}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => setForm({ ...form, shift_type: `saved:${preset.id}` })}
+                      >
+                        {preset.label || timeLabel}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeletePreset(preset.id)}
+                        aria-label="Delete saved shift"
+                        className="opacity-60 hover:opacity-100"
+                      >
+                        <X size={12} strokeWidth={2.5} />
+                      </button>
+                    </span>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
+          <div className="flex flex-col gap-1.5">
+            <label className={labelClassName}>Custom time</label>
+            <div className="flex items-center gap-2">
+              <input
+                type="time"
+                value={`${String(form.customStart.hours).padStart(2, '0')}:${String(form.customStart.minutes).padStart(2, '0')}`}
+                onChange={(e) => {
+                  const [hours, minutes] = e.target.value.split(':').map(Number)
+                  setForm({ ...form, shift_type: 'custom', customStart: { hours, minutes } })
+                }}
+                className={inputClassName}
+              />
+              <span className="text-sm text-[#6B7280]">to</span>
+              <input
+                type="time"
+                value={`${String(form.customEnd.hours).padStart(2, '0')}:${String(form.customEnd.minutes).padStart(2, '0')}`}
+                onChange={(e) => {
+                  const [hours, minutes] = e.target.value.split(':').map(Number)
+                  setForm({ ...form, shift_type: 'custom', customEnd: { hours, minutes } })
+                }}
+                className={inputClassName}
+              />
+            </div>
+
+            {form.shift_type === 'custom' && currentUserId && (
+              <label className="flex items-center gap-2 pt-1 text-sm text-[#111111]">
+                <input
+                  type="checkbox"
+                  checked={saveThisShift}
+                  onChange={(e) => {
+                    setSaveThisShift(e.target.checked)
+                    if (e.target.checked) handleSaveThisShift()
+                  }}
+                  disabled={savedPresets.length >= MAX_SAVED_SHIFT_PRESETS}
+                  className="h-4 w-4 rounded border-[#E8E6E3] accent-[#111111]"
+                />
+                Save this shift for next time
+              </label>
+            )}
+            {presetActionError && <p className="text-xs text-red-700">{presetActionError}</p>}
           </div>
 
           {error && <p className="text-sm text-red-700">{error}</p>}
