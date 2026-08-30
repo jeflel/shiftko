@@ -596,17 +596,15 @@ function MyShiftsTab({ user, onOpenCalendarView, view, onChangeView }) {
       </div>
 
       {showAddPanel && (
-        <div className="mt-4">
-          <AddMyShiftPanel
-            userId={user.id}
-            homeUnit={homeUnit}
-            onClose={() => setShowAddPanel(false)}
-            onSaved={() => {
-              setShowAddPanel(false)
-              setRefreshKey((k) => k + 1)
-            }}
-          />
-        </div>
+        <AddMyShiftPanel
+          userId={user.id}
+          homeUnit={homeUnit}
+          onClose={() => setShowAddPanel(false)}
+          onSaved={() => {
+            setShowAddPanel(false)
+            setRefreshKey((k) => k + 1)
+          }}
+        />
       )}
 
       <ul className="mt-4 flex flex-col gap-3">
@@ -979,8 +977,17 @@ function AddMyShiftPanel({ userId, homeUnit, onClose, onSaved }) {
     }
   }
 
+  // Fixed full-screen overlay, not inline in the page flow: MyShiftsTab
+  // auto-scrolls to "today's week" on load, which can be many weeks past
+  // the top of the page. An inline panel would render at the top of that
+  // scrollable list and end up invisible above the fold. A fixed overlay
+  // is always visible regardless of the page's scroll position.
   return (
-    <div className="mb-5 flex flex-col gap-4 rounded-xl border border-[#E8E6E3] bg-white p-4 shadow-sm">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/30 sm:items-center" onClick={onClose}>
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="flex max-h-[85vh] w-full max-w-md flex-col gap-4 overflow-y-auto rounded-t-2xl border border-[#E8E6E3] bg-white p-4 shadow-sm sm:rounded-2xl"
+      >
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold text-[#111111]">Add a shift</h3>
         <button type="button" onClick={onClose} aria-label="Close" className="text-[#9CA3AF] hover:text-[#111111]">
@@ -1104,6 +1111,7 @@ function AddMyShiftPanel({ userId, homeUnit, onClose, onSaved }) {
       >
         {saving ? 'Saving…' : 'Save shift'}
       </Button>
+      </div>
     </div>
   )
 }
