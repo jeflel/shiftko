@@ -79,7 +79,13 @@ function App() {
     setActiveTab('schedule')
   }
 
-  if (loading) return null
+  if (loading) {
+    return (
+      <div className="flex h-screen w-screen items-center justify-center bg-white">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-line border-t-ink" />
+      </div>
+    )
+  }
   if (!session) {
     if (!authView) {
       return (
