@@ -1,11 +1,11 @@
-import { Home, Calendar, Waves, MoreHorizontal } from 'lucide-react'
+import { Home, Calendar, Waves, CircleUserRound } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const tabs = [
   { id: 'home', label: 'Home', icon: Home },
   { id: 'schedule', label: 'Schedule', icon: Calendar },
   { id: 'pool', label: 'Pool', icon: Waves },
-  { id: 'more', label: 'More', icon: MoreHorizontal },
+  { id: 'more', label: 'Profile', icon: CircleUserRound },
 ]
 
 export default function BottomNav({ activeTab, onTabChange }) {

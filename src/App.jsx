@@ -5,7 +5,7 @@ import BottomNav from './components/BottomNav'
 import Home from './pages/Home'
 import Schedule from './pages/Schedule'
 import Pool from './pages/Pool'
-import More from './pages/More'
+import Profile from './pages/Profile'
 import Screen0 from './pages/onboarding/Screen0'
 
 function App() {
@@ -109,7 +109,7 @@ function App() {
         )}
         {activeTab === 'pool' && <Pool user={session.user} />}
         {activeTab === 'more' && (
-          <More user={session.user} onWorkspaceLeft={() => setWorkspaceId(null)} />
+          <Profile user={session.user} onWorkspaceLeft={() => setWorkspaceId(null)} />
         )}
       </div>
       <BottomNav activeTab={activeTab} onTabChange={handleBottomNavChange} />

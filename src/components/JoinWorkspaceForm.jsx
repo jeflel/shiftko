@@ -51,7 +51,7 @@ export default function JoinWorkspaceForm({ user, onSuccess, submitLabel = 'Join
         placeholder="Enter code"
         required
         autoCapitalize="characters"
-        className="h-auto border-gray-300 bg-white px-3.5 py-3 text-center text-lg font-medium tracking-widest uppercase focus-visible:border-[#111] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#111] focus-visible:ring-0"
+        className="h-auto border-[#E8E6E3] bg-white px-3.5 py-3 text-center text-lg font-medium tracking-widest uppercase focus-visible:border-[#111] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#111] focus-visible:ring-0"
       />
 
       {error && <p className="text-sm text-red-700">{error}</p>}
