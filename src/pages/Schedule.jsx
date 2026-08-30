@@ -565,6 +565,16 @@ function MyShiftsTab({ user, onOpenCalendarView, view, onChangeView }) {
           <div className="mt-5">
             <ScheduleViewToggle value={view} onChange={onChangeView} />
           </div>
+
+          {!showAddPanel && (
+            <button
+              type="button"
+              onClick={() => setShowAddPanel(true)}
+              className="mt-3 w-full rounded-full border border-[#E8E6E3] bg-white py-3 text-sm font-semibold text-[#111111] shadow-sm"
+            >
+              + Add a shift
+            </button>
+          )}
         </div>
 
         <div
@@ -585,8 +595,8 @@ function MyShiftsTab({ user, onOpenCalendarView, view, onChangeView }) {
         </div>
       </div>
 
-      <div className="mt-4">
-        {showAddPanel ? (
+      {showAddPanel && (
+        <div className="mt-4">
           <AddMyShiftPanel
             userId={user.id}
             homeUnit={homeUnit}
@@ -596,16 +606,8 @@ function MyShiftsTab({ user, onOpenCalendarView, view, onChangeView }) {
               setRefreshKey((k) => k + 1)
             }}
           />
-        ) : (
-          <button
-            type="button"
-            onClick={() => setShowAddPanel(true)}
-            className="w-full rounded-full border border-[#E8E6E3] bg-white py-3 text-sm font-semibold text-[#111111] shadow-sm"
-          >
-            + Add a shift
-          </button>
-        )}
-      </div>
+        </div>
+      )}
 
       <ul className="mt-4 flex flex-col gap-3">
         {weekOffsets.map((offset) => {
