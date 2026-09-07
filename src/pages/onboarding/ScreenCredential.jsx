@@ -25,17 +25,17 @@ export default function ScreenCredential({ onBack, onContinue }) {
           aria-label="Go back"
           className="flex h-8 w-8 shrink-0 items-center justify-center"
         >
-          <ArrowLeft size={20} strokeWidth={2} className="text-[#B8B9B9]" />
+          <ArrowLeft size={20} strokeWidth={2} className="text-ink-secondary" />
         </button>
-        <div className="h-[10px] w-[150px] rounded-full bg-[#D7F1F9]">
-          <div className="h-full w-[120px] rounded-full bg-[#32A8CA]" />
+        <div className="h-[10px] w-[150px] rounded-full bg-track-neutral">
+          <div className="h-full w-[120px] rounded-full bg-teal" />
         </div>
       </div>
 
-      <h1 className="mt-10 text-[30px] font-semibold tracking-[-0.6px] text-[#003342]">
+      <h1 className="mt-10 text-[30px] font-semibold tracking-[-0.6px] text-ink">
         What's your credential?
       </h1>
-      <p className="mt-3 text-[17px] tracking-[-0.34px] text-[#004458]">
+      <p className="mt-3 text-[17px] tracking-[-0.34px] text-ink-secondary">
         Pick the one that best describes you at work.
       </p>
 
@@ -48,28 +48,28 @@ export default function ScreenCredential({ onBack, onContinue }) {
                 key={option.value}
                 type="button"
                 onClick={() => setCredential(option.value)}
-                className={`flex h-[94px] w-full items-center justify-between rounded-[20px] border bg-white px-6 text-left transition-colors ${
+                className={`flex h-[94px] w-full items-center justify-between rounded-card border bg-white px-6 text-left transition-colors ${
                   selected
-                    ? 'border-[#003342] shadow-[0px_7px_20px_2px_rgba(46,73,92,0.06)]'
-                    : 'border-[#e3e3e3]'
+                    ? 'border-teal-foreground shadow-[0px_7px_20px_2px_rgba(46,73,92,0.06)]'
+                    : 'border-hairline'
                 }`}
               >
                 <span>
                   <span
                     className={`block text-[17px] ${
-                      selected ? 'font-semibold text-[#003342]' : 'font-medium text-[#004458]'
+                      selected ? 'font-semibold text-ink' : 'font-medium text-ink-secondary'
                     }`}
                   >
                     {option.label}
                   </span>
-                  <span className="mt-1.5 block text-[15px] tracking-[0.15px] text-[#004458]">
+                  <span className="mt-1.5 block text-[15px] tracking-[0.15px] text-ink-secondary">
                     {option.description}
                   </span>
                 </span>
 
                 <span
                   className={`flex size-[22px] shrink-0 items-center justify-center rounded-full ${
-                    selected ? 'bg-[#32A8CA]' : 'border border-[#e3e3e3]'
+                    selected ? 'bg-teal-foreground' : 'border border-hairline'
                   }`}
                 >
                   {selected && <Check size={14} strokeWidth={2} className="text-white" />}
@@ -79,10 +79,7 @@ export default function ScreenCredential({ onBack, onContinue }) {
           })}
         </div>
 
-        <Button
-          type="submit"
-          className="mt-auto h-[54px] w-full translate-y-[23px] rounded-[20px] bg-[#003342] text-[17px] font-semibold tracking-[-0.34px] text-[#e9faff] hover:bg-[#003342]/90"
-        >
+        <Button type="submit" className="mt-auto h-[54px] w-full translate-y-[23px]">
           Continue
         </Button>
       </form>

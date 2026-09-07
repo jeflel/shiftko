@@ -32,19 +32,19 @@ export default function Screen5({ onBack, onContinue }) {
           aria-label="Go back"
           className="flex h-8 w-8 shrink-0 items-center justify-center"
         >
-          <ArrowLeft size={20} strokeWidth={2} className="text-[#B8B9B9]" />
+          <ArrowLeft size={20} strokeWidth={2} className="text-ink-secondary" />
         </button>
-        <div className="h-[10px] w-[150px] rounded-full bg-[#D7F1F9]">
-          <div className="h-full w-[150px] rounded-full bg-[#32A8CA]" />
+        <div className="h-[10px] w-[150px] rounded-full bg-track-neutral">
+          <div className="h-full w-[150px] rounded-full bg-teal" />
         </div>
       </div>
 
-      <h1 className="mt-10 text-[30px] leading-[1.2] font-semibold tracking-[-0.6px] text-[#003342]">
+      <h1 className="mt-10 text-[30px] leading-[1.2] font-semibold tracking-[-0.6px] text-ink">
         What's your biggest
         <br />
         scheduling challenge?
       </h1>
-      <p className="mt-3 text-[17px] tracking-[-0.34px] text-[#004458]">
+      <p className="mt-3 text-[17px] tracking-[-0.34px] text-ink-secondary">
         We're building features based on what matters most to you. Select all that applies.
       </p>
 
@@ -57,16 +57,16 @@ export default function Screen5({ onBack, onContinue }) {
                 key={label}
                 type="button"
                 onClick={() => toggle(label)}
-                className={`flex h-[70px] w-full items-center gap-4 rounded-[20px] border bg-white px-5 text-left text-[17px] tracking-[-0.17px] transition-colors ${
+                className={`flex h-[70px] w-full items-center gap-4 rounded-card border bg-white px-5 text-left text-[17px] tracking-[-0.17px] transition-colors ${
                   isSelected
-                    ? 'border-[#003342] font-semibold text-[#003342] shadow-[0px_7px_20px_2px_rgba(46,73,92,0.06)]'
-                    : 'border-[#e3e3e3] font-medium text-[#003342]'
+                    ? 'border-teal-foreground font-semibold text-ink shadow-[0px_7px_20px_2px_rgba(46,73,92,0.06)]'
+                    : 'border-hairline font-medium text-ink'
                 }`}
               >
                 <Icon
                   size={20}
                   strokeWidth={2}
-                  className={isSelected ? 'shrink-0 text-[#3A798B]' : 'shrink-0 text-[#A4A4A4]'}
+                  className={isSelected ? 'shrink-0 text-teal-foreground' : 'shrink-0 text-ink-secondary'}
                 />
                 {label}
               </button>
@@ -74,10 +74,7 @@ export default function Screen5({ onBack, onContinue }) {
           })}
         </div>
 
-        <Button
-          type="submit"
-          className="mt-auto h-[54px] w-full translate-y-[23px] rounded-[20px] bg-[#003342] text-[17px] font-semibold tracking-[-0.34px] text-[#e9faff] hover:bg-[#003342]/90"
-        >
+        <Button type="submit" className="mt-auto h-[54px] w-full translate-y-[23px]">
           Continue
         </Button>
       </form>

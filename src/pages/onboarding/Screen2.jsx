@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
 const fieldClassName =
-  'h-[54px] rounded-[15px] border-[#c0c3c4] bg-white px-4 text-[17px] tracking-[-0.34px] text-[#003342] placeholder:text-[#bac2c4] focus-visible:border-[#003342] focus-visible:ring-0 focus-visible:outline-none'
+  'h-[54px] rounded-button border-hairline bg-white px-4 text-[17px] tracking-[-0.34px] text-ink placeholder:text-ink-secondary focus-visible:border-ink focus-visible:ring-0 focus-visible:outline-none'
 
 export default function Screen2({ onBack, onContinue }) {
   const [firstName, setFirstName] = useState('')
@@ -25,22 +25,22 @@ export default function Screen2({ onBack, onContinue }) {
           aria-label="Go back"
           className="flex h-8 w-8 shrink-0 items-center justify-center"
         >
-          <ArrowLeft size={20} strokeWidth={2} className="text-[#B8B9B9]" />
+          <ArrowLeft size={20} strokeWidth={2} className="text-ink-secondary" />
         </button>
-        <div className="h-[10px] w-[150px] rounded-full bg-[#D7F1F9]">
-          <div className="h-full w-[30px] rounded-full bg-[#32A8CA]" />
+        <div className="h-[10px] w-[150px] rounded-full bg-track-neutral">
+          <div className="h-full w-[30px] rounded-full bg-teal" />
         </div>
       </div>
 
-      <h1 className="mt-10 text-[30px] font-semibold tracking-[-0.6px] text-[#003342]">
+      <h1 className="mt-10 text-[30px] font-semibold tracking-[-0.6px] text-ink">
         What's your name?
       </h1>
-      <p className="mt-3 text-[17px] tracking-[-0.34px] text-[#004458]">
+      <p className="mt-3 text-[17px] tracking-[-0.34px] text-ink-secondary">
         This is how your friends and coworkers can find you on Shiftko.
       </p>
 
       <form className="mt-7 flex flex-col" onSubmit={handleSubmit}>
-        <Label htmlFor="firstName" className="mb-2 text-[17px] font-semibold text-[#003342]">
+        <Label htmlFor="firstName" className="mb-2 text-[17px] font-semibold text-ink">
           First name
         </Label>
         <Input
@@ -54,7 +54,7 @@ export default function Screen2({ onBack, onContinue }) {
           className={`mb-4 ${fieldClassName}`}
         />
 
-        <Label htmlFor="lastName" className="mb-2 text-[17px] font-semibold text-[#003342]">
+        <Label htmlFor="lastName" className="mb-2 text-[17px] font-semibold text-ink">
           Last name
         </Label>
         <Input
@@ -68,10 +68,7 @@ export default function Screen2({ onBack, onContinue }) {
           className={fieldClassName}
         />
 
-        <Button
-          type="submit"
-          className="mt-8 h-[54px] w-full rounded-[20px] bg-[#003342] text-[17px] font-semibold tracking-[-0.34px] text-[#e9faff] hover:bg-[#003342]/90"
-        >
+        <Button type="submit" className="mt-8 h-[54px] w-full">
           Continue
         </Button>
       </form>

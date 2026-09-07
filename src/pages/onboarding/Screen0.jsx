@@ -27,30 +27,21 @@ export default function Screen0({ onGetStarted, onSignIn }) {
 
       <div className="flex flex-col items-center gap-6 px-6 pt-3 pb-10 text-center">
         <div className="flex flex-col items-center gap-4">
-          <h1 className="text-[30px] leading-[1.1] font-semibold tracking-[-0.6px] text-[#004458]">
+          <h1 className="text-[30px] leading-[1.1] font-semibold tracking-[-0.6px] text-ink-secondary">
             Built for <span className="italic">nurses</span>.
             <br />
             Made for your unit.
           </h1>
-          <p className="max-w-[280px] text-[17px] tracking-[-0.34px] text-[#004458]">
+          <p className="max-w-[280px] text-[17px] tracking-[-0.34px] text-ink-secondary">
             Track shifts, see who's working, claim open ones.
           </p>
         </div>
 
         <div className="flex w-full flex-col gap-3">
-          <Button
-            type="button"
-            onClick={onGetStarted}
-            className="h-[54px] w-full rounded-[20px] bg-[#003342] text-[17px] font-semibold tracking-[-0.34px] text-[#e9faff] hover:bg-[#003342]/90"
-          >
+          <Button type="button" onClick={onGetStarted} className="h-[54px] w-full">
             Get Started
           </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onSignIn}
-            className="h-[54px] w-full rounded-[20px] border-[#c0c3c4] bg-white text-[17px] font-medium tracking-[-0.34px] text-black hover:bg-white"
-          >
+          <Button type="button" variant="outline" onClick={onSignIn} className="h-[54px] w-full">
             I already have an account
           </Button>
         </div>

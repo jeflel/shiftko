@@ -52,38 +52,34 @@ export default function Screen6({ firstName = '', onFinish }) {
         className="mx-auto h-[140px] w-[140px]"
       />
 
-      <h1 className="text-center text-[30px] font-semibold tracking-[-0.6px] text-[#003342]">
+      <h1 className="text-center text-[30px] font-semibold tracking-[-0.6px] text-ink">
         You're all set{firstName ? `, ${firstName}` : ''}!
       </h1>
-      <p className="mt-2 text-center text-[17px] tracking-[-0.34px] text-[#004458]">
+      <p className="mt-2 text-center text-[17px] tracking-[-0.34px] text-ink-secondary">
         Welcome to your unit's Shiftko.
       </p>
 
-      <p className="mt-[75px] text-[14px] font-bold tracking-[0.14px] text-[#3a798b]">
+      <p className="mt-[75px] text-[14px] font-bold tracking-[0.14px] text-teal-foreground">
         INVITE YOUR TEAMMATES
       </p>
-      <div className="relative mt-2 rounded-[20px] border border-[#e3e3e3] bg-white px-6 pt-5 pb-5">
-        <span className="inline-flex h-[28px] items-center rounded-[10px] bg-[#e3f9ff] px-2.5 text-[14px] font-semibold text-[#004d63]">
+      <div className="relative mt-2 rounded-card border border-hairline bg-white px-6 pt-5 pb-5">
+        <span className="inline-flex h-[28px] items-center rounded-control bg-teal-tint px-2.5 text-[14px] font-semibold text-teal-foreground">
           {INVITE_CODE}
         </span>
-        <p className="mt-2.5 max-w-[224px] text-[14px] tracking-[-0.28px] text-[#004458]">
+        <p className="mt-2.5 max-w-[224px] text-[14px] tracking-[-0.28px] text-ink-secondary">
           Share this code so coworkers can join your unit.
         </p>
         <button
           type="button"
           onClick={handleShare}
-          className="absolute top-[48px] right-8 text-[#3a798b]"
+          className="absolute top-[48px] right-8 text-teal-foreground"
           aria-label="Share invite code"
         >
           <Share size={22} strokeWidth={1.83} />
         </button>
       </div>
 
-      <Button
-        type="button"
-        onClick={onFinish}
-        className="mt-auto h-[54px] w-full rounded-[20px] bg-[#003342] text-[17px] font-semibold tracking-[-0.34px] text-[#e9faff] hover:bg-[#003342]/90"
-      >
+      <Button type="button" onClick={onFinish} className="mt-auto h-[54px] w-full">
         Let's Go
       </Button>
     </main>

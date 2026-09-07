@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
 const signinFieldClassName =
-  'h-[54px] rounded-[15px] border-[#c0c3c4] bg-white px-4 text-[17px] tracking-[-0.34px] text-[#003342] placeholder:text-[#bac2c4] focus-visible:border-[#003342] focus-visible:ring-0 focus-visible:outline-none'
+  'h-[54px] rounded-button border-hairline bg-white px-4 text-[17px] tracking-[-0.34px] text-ink placeholder:text-ink-secondary focus-visible:border-ink focus-visible:ring-0 focus-visible:outline-none'
 
 export default function Auth({ initialView = 'signin' }) {
   const [view, setView] = useState(initialView)
@@ -93,10 +93,10 @@ export default function Auth({ initialView = 'signin' }) {
   if (view === 'signup') {
     return (
       <main className="mx-auto w-full max-w-md px-6 pt-[90px] pb-10">
-        <h1 className="text-[30px] font-semibold tracking-[-0.6px] text-[#003342]">
+        <h1 className="text-[30px] font-semibold tracking-[-0.6px] text-ink">
           Create your account
         </h1>
-        <p className="mt-4 text-[17px] tracking-[-0.34px] text-[#004458]">
+        <p className="mt-4 text-[17px] tracking-[-0.34px] text-ink-secondary">
           Track shifts, see who's working, claim open ones.
         </p>
 
@@ -104,7 +104,7 @@ export default function Auth({ initialView = 'signin' }) {
           type="button"
           onClick={handleGoogleSignIn}
           disabled={googleLoading}
-          className="mt-7 flex h-[54px] w-full items-center justify-center gap-2 rounded-[20px] border border-[#c0c3c4] bg-white text-[17px] font-semibold tracking-[-0.34px] text-[#003342] disabled:opacity-60"
+          className="mt-7 flex h-[54px] w-full items-center justify-center gap-2 rounded-button border border-hairline bg-white text-[17px] font-semibold tracking-[-0.34px] text-ink disabled:opacity-60"
         >
           <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
             <path
@@ -128,13 +128,13 @@ export default function Auth({ initialView = 'signin' }) {
         </button>
 
         <div className="my-6 flex items-center gap-3">
-          <div className="h-px flex-1 bg-[#c0c3c4]" />
-          <span className="text-[15px] tracking-[-0.3px] text-[#bac2c4]">or</span>
-          <div className="h-px flex-1 bg-[#c0c3c4]" />
+          <div className="h-px flex-1 bg-hairline" />
+          <span className="text-[15px] tracking-[-0.3px] text-ink-secondary">or</span>
+          <div className="h-px flex-1 bg-hairline" />
         </div>
 
         <form className="flex flex-col" onSubmit={handleSignUp}>
-          <Label htmlFor="signupEmail" className="mb-2 text-[17px] font-semibold text-[#003342]">
+          <Label htmlFor="signupEmail" className="mb-2 text-[17px] font-semibold text-ink">
             Email
           </Label>
           <Input
@@ -148,7 +148,7 @@ export default function Auth({ initialView = 'signin' }) {
             className={`mb-4 ${signinFieldClassName}`}
           />
 
-          <Label htmlFor="signupPassword" className="mb-2 text-[17px] font-semibold text-[#003342]">
+          <Label htmlFor="signupPassword" className="mb-2 text-[17px] font-semibold text-ink">
             Password
           </Label>
           <Input
@@ -167,13 +167,13 @@ export default function Auth({ initialView = 'signin' }) {
           <Button
             type="submit"
             disabled={loading}
-            className="mt-8 h-[54px] w-full rounded-[20px] bg-[#003342] text-[17px] font-semibold tracking-[-0.34px] text-[#e9faff] hover:bg-[#003342]/90 disabled:opacity-60"
+            className="mt-8 h-[54px] w-full"
           >
             {loading ? 'Signing up…' : 'Sign up'}
           </Button>
         </form>
 
-        <p className="mt-4 text-center text-[15px] tracking-[-0.3px] text-[#004458]">
+        <p className="mt-4 text-center text-[15px] tracking-[-0.3px] text-ink-secondary">
           Already have an account?{' '}
           <button type="button" onClick={toggleView} className="font-semibold">
             Sign in
@@ -185,10 +185,10 @@ export default function Auth({ initialView = 'signin' }) {
 
   return (
     <main className="mx-auto w-full max-w-md px-6 pt-[90px] pb-10">
-      <h1 className="text-[30px] font-semibold tracking-[-0.6px] text-[#003342]">
+      <h1 className="text-[30px] font-semibold tracking-[-0.6px] text-ink">
         Welcome back.
       </h1>
-      <p className="mt-4 text-[17px] tracking-[-0.34px] text-[#004458]">
+      <p className="mt-4 text-[17px] tracking-[-0.34px] text-ink-secondary">
         Sign in to view your shifts and stay connected with your team.
       </p>
 
@@ -196,7 +196,7 @@ export default function Auth({ initialView = 'signin' }) {
         type="button"
         onClick={handleGoogleSignIn}
         disabled={googleLoading}
-        className="mt-7 flex h-[54px] w-full items-center justify-center gap-2 rounded-[20px] border border-[#c0c3c4] bg-white text-[17px] font-semibold tracking-[-0.34px] text-[#003342] disabled:opacity-60"
+        className="mt-7 flex h-[54px] w-full items-center justify-center gap-2 rounded-button border border-hairline bg-white text-[17px] font-semibold tracking-[-0.34px] text-ink disabled:opacity-60"
       >
         <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
           <path
@@ -220,13 +220,13 @@ export default function Auth({ initialView = 'signin' }) {
       </button>
 
       <div className="my-6 flex items-center gap-3">
-        <div className="h-px flex-1 bg-[#c0c3c4]" />
-        <span className="text-[15px] tracking-[-0.3px] text-[#bac2c4]">or</span>
-        <div className="h-px flex-1 bg-[#c0c3c4]" />
+        <div className="h-px flex-1 bg-hairline" />
+        <span className="text-[15px] tracking-[-0.3px] text-ink-secondary">or</span>
+        <div className="h-px flex-1 bg-hairline" />
       </div>
 
       <form className="flex flex-col" onSubmit={handleSignIn}>
-        <Label htmlFor="email" className="mb-2 text-[17px] font-semibold text-[#003342]">
+        <Label htmlFor="email" className="mb-2 text-[17px] font-semibold text-ink">
           Email
         </Label>
         <Input
@@ -240,7 +240,7 @@ export default function Auth({ initialView = 'signin' }) {
           className={`mb-4 ${signinFieldClassName}`}
         />
 
-        <Label htmlFor="password" className="mb-2 text-[17px] font-semibold text-[#003342]">
+        <Label htmlFor="password" className="mb-2 text-[17px] font-semibold text-ink">
           Password
         </Label>
         <div className="relative">
@@ -257,7 +257,7 @@ export default function Auth({ initialView = 'signin' }) {
           <button
             type="button"
             onClick={() => setShowPassword((current) => !current)}
-            className="absolute inset-y-0 right-0 flex items-center pr-4 text-[#bac2c4]"
+            className="absolute inset-y-0 right-0 flex items-center pr-4 text-ink-secondary"
             aria-label={showPassword ? 'Hide password' : 'Show password'}
           >
             {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -269,13 +269,13 @@ export default function Auth({ initialView = 'signin' }) {
         <Button
           type="submit"
           disabled={loading}
-          className="mt-8 h-[54px] w-full rounded-[20px] bg-[#003342] text-[17px] font-semibold tracking-[-0.34px] text-[#e9faff] hover:bg-[#003342]/90 disabled:opacity-60"
+          className="mt-8 h-[54px] w-full rounded-button bg-teal-foreground text-[17px] font-semibold tracking-[-0.34px] text-white hover:bg-teal-foreground/90 disabled:opacity-60"
         >
           {loading ? 'Signing in…' : 'Sign in'}
         </Button>
       </form>
 
-      <p className="mt-4 text-center text-[15px] tracking-[-0.3px] text-[#004458]">
+      <p className="mt-4 text-center text-[15px] tracking-[-0.3px] text-ink-secondary">
         Don't have an account?{' '}
         <button type="button" onClick={toggleView} className="font-semibold">
           Sign up

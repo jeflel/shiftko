@@ -56,11 +56,7 @@ export default function JoinWorkspaceForm({ user, onSuccess, submitLabel = 'Join
 
       {error && <p className="text-sm text-red-700">{error}</p>}
 
-      <Button
-        type="submit"
-        disabled={loading}
-        className="h-auto w-full rounded-full bg-ink px-4 py-3 text-white hover:bg-ink/90 disabled:opacity-60"
-      >
+      <Button type="submit" disabled={loading} className="w-full">
         {loading ? 'Joining…' : submitLabel}
       </Button>
     </form>
