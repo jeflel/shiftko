@@ -26,12 +26,12 @@ export default function BottomNav({ activeTab, onTabChange }) {
               aria-current={isActive ? 'page' : undefined}
               onClick={() => onTabChange(tab.id)}
               className={cn(
-                'flex flex-col items-center gap-1 rounded-full px-4 py-1.5 text-xs text-gray-400',
-                isActive && 'font-semibold',
+                'flex flex-col items-center gap-1 rounded-full px-4 py-1.5 text-xs text-ink-secondary',
+                isActive && 'font-semibold text-teal-foreground',
               )}
             >
-              <Icon className={isActive ? 'text-teal-mid' : undefined} size={22} strokeWidth={isActive ? 2.25 : 2} />
-              <span className={isActive ? 'text-[#282828]' : undefined}>{tab.label}</span>
+              <Icon size={22} strokeWidth={isActive ? 2.25 : 2} />
+              <span>{tab.label}</span>
             </button>
           )
         })}
