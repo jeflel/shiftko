@@ -59,7 +59,6 @@ function App() {
       .eq('id', userId)
       .single()
 
-    console.log('role fetch result:', data, error)
     if (!error && data) {
       setRole(data.role)
       setWorkspaceId(data.workspace_id)
@@ -77,6 +76,10 @@ function App() {
   function handleGoToManage() {
     setScheduleInitialTab('manage')
     setActiveTab('schedule')
+  }
+
+  function handleGoToPool() {
+    setActiveTab('pool')
   }
 
   if (loading) {
@@ -102,7 +105,12 @@ function App() {
     <div className="app-shell">
       <div className="app-content">
         {activeTab === 'home' && (
-          <Home user={session.user} role={role} onGoToManage={handleGoToManage} />
+          <Home
+            user={session.user}
+            role={role}
+            onGoToManage={handleGoToManage}
+            onGoToPool={handleGoToPool}
+          />
         )}
         {activeTab === 'schedule' && (
           <Schedule user={session.user} role={role} initialTab={scheduleInitialTab} />

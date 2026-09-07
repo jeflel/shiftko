@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   Calendar,
   Users,
@@ -6,10 +6,9 @@ import {
   CheckCircle2,
   Bell,
   X,
+  ChevronLeft,
   ChevronRight,
-  Moon,
-  Hourglass,
-  CalendarDays,
+  Waves,
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import ShiftDetail from './ShiftDetail'
@@ -26,34 +25,6 @@ import {
   isWithinNextSevenDays,
 } from '../lib/shiftFormat'
 
-const shortDateFormatter = new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric' })
-
-// Carousel spans 14 days back through 30 days forward (45 days total). Days with more
-// than one shift get one card per shift; days with none get a single empty-state card,
-// so the range stays continuously swipeable per the Home carousel spec.
-function buildCarouselCards(shifts, today) {
-  const cards = []
-  for (let offset = -14; offset <= 30; offset += 1) {
-    const date = new Date(today)
-    date.setDate(date.getDate() + offset)
-    const dayShifts = shifts.filter((shift) => isSameLocalDay(new Date(shift.starts_at), date))
-
-    if (dayShifts.length === 0) {
-      cards.push({ key: `${formatLocalDateKey(date)}-empty`, date, shift: null })
-    } else {
-      dayShifts.forEach((shift) => cards.push({ key: shift.id, date, shift }))
-    }
-  }
-  return cards
-}
-
-function formatShiftDuration(startsAt, endsAt) {
-  const totalMinutes = Math.round((new Date(endsAt) - new Date(startsAt)) / 60000)
-  const hours = Math.floor(totalMinutes / 60)
-  const minutes = totalMinutes % 60
-  return minutes > 0 ? `${hours}hrs ${minutes}mins` : `${hours}hrs`
-}
-
 const weekdayFormatter = new Intl.DateTimeFormat(undefined, { weekday: 'short' })
 const monthFormatter = new Intl.DateTimeFormat(undefined, { month: 'short' })
 const todayLabelFormatter = new Intl.DateTimeFormat(undefined, {
@@ -61,8 +32,271 @@ const todayLabelFormatter = new Intl.DateTimeFormat(undefined, {
   month: 'long',
   day: 'numeric',
 })
-const headerDateFormatter = new Intl.DateTimeFormat(undefined, { month: 'long', day: 'numeric' })
-const weekdayLongFormatter = new Intl.DateTimeFormat(undefined, { weekday: 'long' })
+
+function formatHM(totalMinutes) {
+  const clamped = Math.max(0, Math.round(totalMinutes))
+  const hours = Math.floor(clamped / 60)
+  const minutes = clamped % 60
+  return `${hours}h ${minutes}m`
+}
+
+// Monday-start week containing today, shifted by weekOffset weeks.
+function getWeekBounds(weekOffset) {
+  const now = new Date()
+  const day = now.getDay()
+  const diffToMonday = (day + 6) % 7
+  const start = new Date(now)
+  start.setHours(0, 0, 0, 0)
+  start.setDate(now.getDate() - diffToMonday + weekOffset * 7)
+  const end = new Date(start)
+  end.setDate(start.getDate() + 7)
+  return { start, end }
+}
+
+function notificationTitle(type) {
+  if (type === 'offer_claimed') return 'Offer picked up'
+  if (type === 'claim_approved') return 'Claim approved'
+  if (type === 'claim_denied') return 'Claim update'
+  return 'Notification'
+}
+
+// Today hero card: the shift the nurse is on today, or "No shift today". Per
+// DESIGN.md's Today Hero + Shift Progress spec (Main.dc.html).
+function TodayHero({ todaysShift, credential }) {
+  const period = todaysShift ? getShiftPeriod(todaysShift.starts_at) : null
+
+  return (
+    <div className="flex flex-col gap-2.5 rounded-card border border-hairline bg-white p-4 shadow-card-lift">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-semibold tracking-[0.05em] text-ink-secondary uppercase">
+          Today
+        </span>
+        {period && <ShiftPeriodPill period={period} />}
+      </div>
+
+      {todaysShift ? (
+        <>
+          <p className="text-[25px] font-bold tracking-[-0.01em] text-ink">
+            {formatShiftTimeRange(todaysShift.starts_at, todaysShift.ends_at)}
+          </p>
+          <p className="text-[13px] text-ink-secondary">
+            {[todaysShift.unit, credential].filter(Boolean).join(' · ')}
+          </p>
+          <ShiftProgress shift={todaysShift} />
+        </>
+      ) : (
+        <p className="text-[15px] text-ink-secondary">No shift today</p>
+      )}
+    </div>
+  )
+}
+
+function ShiftProgress({ shift }) {
+  const [now, setNow] = useState(() => Date.now())
+
+  useEffect(() => {
+    const tick = setInterval(() => setNow(Date.now()), 30000)
+    return () => clearInterval(tick)
+  }, [])
+
+  const start = new Date(shift.starts_at).getTime()
+  const end = new Date(shift.ends_at).getTime()
+  const clampedNow = Math.min(end, Math.max(start, now))
+  const elapsedMinutes = (clampedNow - start) / 60000
+  const remainingMinutes = (end - clampedNow) / 60000
+  const percent = Math.round((elapsedMinutes / ((end - start) / 60000)) * 100)
+
+  return (
+    <div className="mt-1 flex flex-col gap-1.5">
+      <div className="h-1.5 w-full overflow-hidden rounded-full bg-track-neutral">
+        <div
+          className="h-full rounded-full bg-teal transition-[width] duration-500"
+          style={{ width: `${percent}%` }}
+        />
+      </div>
+      <p className="text-xs text-ink-secondary">
+        <span className="font-semibold text-ink">{formatHM(elapsedMinutes)}</span> in ·{' '}
+        {formatHM(remainingMinutes)} left
+      </p>
+    </div>
+  )
+}
+
+// Action list: Claim Shifts (net-new per the Reskin Plan, links to the Pool tab) plus
+// the most recent notification, if any. Per DESIGN.md's Action Row spec.
+function ActionList({ openCount, homeUnit, notification, onGoToPool, onOpenNotification }) {
+  const isNegative = notification?.type === 'claim_denied'
+  const NotifIcon = isNegative ? AlertTriangle : CheckCircle2
+
+  return (
+    <div className="flex flex-col rounded-card border border-hairline bg-white shadow-card-lift">
+      <button
+        type="button"
+        onClick={onGoToPool}
+        className="flex items-center gap-3 rounded-t-card px-4 py-3.5 text-left transition-colors active:bg-press-state"
+      >
+        <span className="flex size-8 shrink-0 items-center justify-center rounded-control bg-teal-tint text-teal-foreground">
+          <Waves size={17} strokeWidth={1.9} />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold text-ink">Claim Shifts</p>
+          <p className="truncate text-xs text-ink-secondary">
+            {openCount} open{homeUnit ? ` on ${homeUnit}` : ''}
+          </p>
+        </div>
+        {openCount > 0 && (
+          <span className="flex h-[18px] min-w-[18px] shrink-0 items-center justify-center rounded-control bg-urgency-red px-1.5 text-[11px] font-semibold text-white">
+            {openCount}
+          </span>
+        )}
+        <ChevronRight size={16} strokeWidth={2} className="shrink-0 text-chevron-muted" />
+      </button>
+
+      {notification && (
+        <>
+          <div className="ml-[60px] h-px bg-hairline" />
+          <button
+            type="button"
+            onClick={() => onOpenNotification(notification)}
+            className="flex items-center gap-3 rounded-b-card px-4 py-3.5 text-left transition-colors active:bg-press-state"
+          >
+            <span
+              className={cn(
+                'flex size-8 shrink-0 items-center justify-center rounded-control',
+                isNegative ? 'bg-press-state text-ink-secondary' : 'bg-teal-tint text-teal-foreground',
+              )}
+            >
+              <NotifIcon size={17} strokeWidth={1.75} />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold text-ink">{notificationTitle(notification.type)}</p>
+              <p className="truncate text-xs text-ink-secondary">{notification.message}</p>
+            </div>
+            <ChevronRight size={16} strokeWidth={2} className="shrink-0 text-chevron-muted" />
+          </button>
+        </>
+      )}
+    </div>
+  )
+}
+
+function UpcomingShiftRow({ shift, isFirst, isLast, onSelectShift }) {
+  const period = getShiftPeriod(shift.starts_at)
+  const shiftDate = new Date(shift.starts_at)
+
+  return (
+    <button
+      type="button"
+      onClick={() => onSelectShift(shift)}
+      className={cn(
+        'flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors active:bg-press-state',
+        isFirst && 'rounded-t-card',
+        isLast && 'rounded-b-card',
+      )}
+    >
+      <div className="flex w-8 shrink-0 flex-col items-center text-center">
+        <span className="text-[11px] font-semibold tracking-[0.03em] text-ink-secondary uppercase">
+          {weekdayFormatter.format(shiftDate)}
+        </span>
+        <span className="text-[19px] leading-[1.15] font-semibold text-ink">
+          {shiftDate.getDate()}
+        </span>
+      </div>
+
+      <div className="h-full self-stretch border-l border-hairline" />
+
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-[13px] font-semibold text-ink">
+          {formatShiftTimeRange(shift.starts_at, shift.ends_at)}
+        </p>
+        <p className="truncate text-xs text-ink-secondary">{shift.unit}</p>
+      </div>
+
+      <ShiftPeriodPill period={period} />
+    </button>
+  )
+}
+
+function ThisWeekReport({ shifts, weekOffset, onChangeWeekOffset }) {
+  const { start, end } = getWeekBounds(weekOffset)
+  const weekShifts = shifts.filter((shift) => {
+    const startsAt = new Date(shift.starts_at)
+    return startsAt >= start && startsAt < end
+  })
+  const shiftCount = weekShifts.length
+  const totalHours = Math.round(
+    weekShifts.reduce(
+      (sum, shift) => sum + (new Date(shift.ends_at) - new Date(shift.starts_at)) / 3600000,
+      0,
+    ),
+  )
+  const shiftsTarget = 7
+  const hoursTarget = 40
+
+  return (
+    <section className="flex flex-col gap-2.5">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-semibold tracking-[0.05em] text-ink-secondary uppercase">
+          This Week
+        </span>
+        <div className="flex gap-1">
+          <button
+            type="button"
+            onClick={() => onChangeWeekOffset(weekOffset - 1)}
+            aria-label="Previous week"
+            className="flex size-6 items-center justify-center rounded-control-sm border border-hairline bg-white text-ink-secondary"
+          >
+            <ChevronLeft size={13} strokeWidth={2} />
+          </button>
+          <button
+            type="button"
+            onClick={() => onChangeWeekOffset(weekOffset + 1)}
+            aria-label="Next week"
+            className="flex size-6 items-center justify-center rounded-control-sm border border-hairline bg-white text-ink-secondary"
+          >
+            <ChevronRight size={13} strokeWidth={2} />
+          </button>
+        </div>
+      </div>
+
+      <div className="flex items-stretch rounded-card border border-hairline bg-white p-4 shadow-card-lift">
+        <div className="flex flex-1 flex-col gap-2.5">
+          <span className="text-[11px] font-semibold tracking-[0.04em] text-ink-secondary uppercase">
+            Shifts
+          </span>
+          <p className="text-[22px] leading-none font-bold tracking-[-0.01em] text-ink">
+            {shiftCount}
+            <span className="ml-0.5 text-sm font-medium text-ink-secondary">/{shiftsTarget}</span>
+          </p>
+          <div className="h-1.5 overflow-hidden rounded-full bg-track-neutral">
+            <div
+              className="h-full rounded-full bg-teal"
+              style={{ width: `${Math.min(100, (shiftCount / shiftsTarget) * 100)}%` }}
+            />
+          </div>
+        </div>
+
+        <div className="mx-5 my-px w-px shrink-0 bg-hairline" />
+
+        <div className="flex flex-1 flex-col gap-2.5">
+          <span className="text-[11px] font-semibold tracking-[0.04em] text-ink-secondary uppercase">
+            Hours
+          </span>
+          <p className="text-[22px] leading-none font-bold tracking-[-0.01em] text-ink">
+            {totalHours}
+            <span className="ml-0.5 text-sm font-medium text-ink-secondary">/{hoursTarget}</span>
+          </p>
+          <div className="h-1.5 overflow-hidden rounded-full bg-track-neutral">
+            <div
+              className="h-full rounded-full bg-teal"
+              style={{ width: `${Math.min(100, (totalHours / hoursTarget) * 100)}%` }}
+            />
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
 
 function getGreeting() {
   const hour = new Date().getHours()
@@ -85,13 +319,6 @@ function getFirstName(fullName) {
   return firstName.endsWith('.') ? firstName : `${firstName}.`
 }
 
-function getInitials(fullName) {
-  if (!fullName) return '?'
-  const parts = fullName.trim().split(/\s+/)
-  const initials = parts.length === 1 ? parts[0][0] : parts[0][0] + parts[parts.length - 1][0]
-  return initials.toUpperCase()
-}
-
 function formatRelativeTime(isoString) {
   const diffMinutes = Math.floor((Date.now() - new Date(isoString).getTime()) / 60000)
 
@@ -108,258 +335,18 @@ function formatRelativeTime(isoString) {
   return `${diffWeeks} week${diffWeeks === 1 ? '' : 's'} ago`
 }
 
-function GlassSquircle({ children, className, innerClassName, shadow = true }) {
-  return (
-    <div
-      className={cn('relative shrink-0 rounded-[20px] p-px', className)}
-      style={{
-        background:
-          'linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(255,255,255,0.25) 35%, rgba(255,255,255,0.25) 70%, rgba(255,255,255,1) 100%)',
-        boxShadow: shadow ? '0 7px 25px rgba(39,60,66,0.12)' : undefined,
-      }}
-    >
-      <div
-        className={cn('flex size-full items-center justify-center rounded-[19px]', innerClassName)}
-        style={innerClassName ? undefined : { backgroundColor: '#48BDE1' }}
-      >
-        {children}
-      </div>
-    </div>
-  )
-}
-
-function ShiftProgressBar({ shift }) {
-  const [now, setNow] = useState(() => Date.now())
-  const [showCountdown, setShowCountdown] = useState(false)
-
-  useEffect(() => {
-    const tick = setInterval(() => setNow(Date.now()), 30000)
-    return () => clearInterval(tick)
-  }, [])
-
-  useEffect(() => {
-    const crossfade = setInterval(() => setShowCountdown((current) => !current), 5000)
-    return () => clearInterval(crossfade)
-  }, [])
-
-  const start = new Date(shift.starts_at).getTime()
-  const end = new Date(shift.ends_at).getTime()
-  const elapsedRatio = Math.min(1, Math.max(0, (now - start) / (end - start)))
-  const percent = Math.round(elapsedRatio * 100)
-
-  const remainingMinutesTotal = Math.max(0, Math.round((end - now) / 60000))
-  const remainingHours = Math.floor(remainingMinutesTotal / 60)
-  const remainingMinutes = remainingMinutesTotal % 60
-  const countdownLabel =
-    remainingMinutesTotal <= 0 ? 'Shift In Progress' : `${remainingHours}hrs ${remainingMinutes}mins left`
-
-  return (
-    <div className="px-6">
-      <div className="h-1.5 w-full overflow-hidden rounded-full" style={{ backgroundColor: '#C9DFE5' }}>
-        <div
-          className="h-full rounded-full transition-[width] duration-500"
-          style={{ width: `${percent}%`, backgroundColor: '#35BEE6' }}
-        />
-      </div>
-
-      <div className="mt-2 flex items-center justify-between">
-        <span className="text-sm font-medium" style={{ color: '#2DA1C3' }}>
-          {showCountdown ? countdownLabel : 'Shift In Progress'}
-        </span>
-        <span style={{ color: '#7DA0AB' }}>
-          <span className="text-sm font-bold">{percent}</span>
-          <span className="text-xs">%</span>
-        </span>
-      </div>
-    </div>
-  )
-}
-
-// Shown instead of the carousel when the nurse has zero shift records at all (not
-// just no shift today/this range) - e.g. a brand-new account not yet scheduled by a
-// coordinator. Distinct from EmptyDayCard, which handles individual empty days
-// within an otherwise-populated carousel.
-function NoShiftsCard() {
-  return (
-    <div className="px-6">
-      <GlassSquircle
-        className="h-[183px] w-full rounded-[20px]"
-        innerClassName="flex-col gap-1.5 rounded-[19px]"
-      >
-        <CheckCircle2 className="text-white" size={24} strokeWidth={2} />
-        <p className="text-sm font-medium text-white">No shifts today</p>
-      </GlassSquircle>
-    </div>
-  )
-}
-
-function EmptyDayCard({ date }) {
-  return (
-    <GlassSquircle
-      className="h-[183px] w-full rounded-[20px]"
-      innerClassName="flex-col gap-1.5 rounded-[19px] bg-white/95"
-      shadow={false}
-    >
-      <Moon className="text-[#7DA0AB]" size={24} strokeWidth={2} />
-      <p className="text-sm font-medium text-[#7DA0AB]">You didn't work this day</p>
-      <p className="text-xs text-[#7DA0AB]">{shortDateFormatter.format(date)}</p>
-    </GlassSquircle>
-  )
-}
-
-function ShiftCarouselCard({ shift, workspaceName, onSelectShift }) {
-  const period = getShiftPeriod(shift.starts_at)
-  const [startTime, endTime] = formatShiftTimeRange(shift.starts_at, shift.ends_at).split(' – ')
-  const [startDigits, startMeridiem] = startTime.split(' ')
-  const [endDigits, endMeridiem] = endTime.split(' ')
-  const duration = formatShiftDuration(shift.starts_at, shift.ends_at)
-  const shortDate = shortDateFormatter.format(new Date(shift.starts_at))
-
-  return (
-    <button
-      type="button"
-      onClick={() => onSelectShift(shift)}
-      className="flex h-[183px] w-full flex-col rounded-[25px] p-5 text-left"
-      style={{
-        background: 'linear-gradient(to bottom, #E7FAFF 0%, #FFFFFF 50%, #FFFFFF 100%)',
-        border: '1px solid #92D6EB',
-        boxShadow: 'inset 0 1.5px 0 rgba(255,255,255,0.9)',
-      }}
-    >
-      <div className="flex items-center gap-2">
-        <span className="truncate text-[17px] font-semibold" style={{ color: '#20748C' }}>
-          {workspaceName ?? 'Shiftko'}
-        </span>
-        <span
-          className="shrink-0 rounded-[7px] px-1.5 py-0.5 text-xs font-bold uppercase"
-          style={{ backgroundColor: '#2DA1C3', color: '#E9FAFF' }}
-        >
-          {shift.unit}
-        </span>
-        <div className="flex-1" />
-        <ShiftPeriodPill period={period} />
-      </div>
-
-      <div className="mt-3 flex items-baseline">
-        <span className="text-[34px] font-semibold tracking-[-0.02em]" style={{ color: '#004458' }}>
-          {startDigits}
-        </span>
-        <span className="ml-1 text-xl font-semibold" style={{ color: '#7DA0AB' }}>
-          {startMeridiem}
-        </span>
-        <span className="mx-2 text-xl font-medium" style={{ color: '#7DA0AB' }}>
-          →
-        </span>
-        <span className="text-[34px] font-semibold tracking-[-0.02em]" style={{ color: '#004458' }}>
-          {endDigits}
-        </span>
-        <span className="ml-1 text-xl font-semibold" style={{ color: '#7DA0AB' }}>
-          {endMeridiem}
-        </span>
-      </div>
-
-      <div className="mt-3 flex-1" style={{ borderTop: '1.5px dashed #C9DFE5' }} />
-
-      <div className="mt-3 flex items-center gap-4 text-sm font-medium" style={{ color: '#2DA1C3' }}>
-        <span className="flex items-center gap-1.5">
-          <Hourglass size={14} strokeWidth={2} />
-          {duration}
-        </span>
-        <span className="flex items-center gap-1.5">
-          <CalendarDays size={14} strokeWidth={2} />
-          {shortDate}
-        </span>
-      </div>
-    </button>
-  )
-}
-
-function HeroCarousel({ shifts, today, workspaceName, onSelectShift, onCenterChange }) {
-  const cards = useMemo(() => buildCarouselCards(shifts, today), [shifts, today])
-  const containerRef = useRef(null)
-  const cardRefs = useRef([])
-  const [centeredIndex, setCenteredIndex] = useState(0)
-
-  useEffect(() => {
-    const initialIndex = Math.max(
-      cards.findIndex((card) => isSameLocalDay(card.date, today)),
-      0,
-    )
-    setCenteredIndex(initialIndex)
-    cardRefs.current[initialIndex]?.scrollIntoView({ inline: 'center', block: 'nearest' })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  useEffect(() => {
-    if (cards[centeredIndex]) onCenterChange?.(cards[centeredIndex])
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [centeredIndex])
-
-  function handleScroll() {
-    const container = containerRef.current
-    if (!container) return
-
-    window.requestAnimationFrame(() => {
-      const containerRect = container.getBoundingClientRect()
-      const containerCenter = containerRect.left + containerRect.width / 2
-      let closestIndex = 0
-      let closestDistance = Infinity
-
-      cardRefs.current.forEach((node, index) => {
-        if (!node) return
-        const rect = node.getBoundingClientRect()
-        const distance = Math.abs(rect.left + rect.width / 2 - containerCenter)
-        if (distance < closestDistance) {
-          closestDistance = distance
-          closestIndex = index
-        }
-      })
-
-      setCenteredIndex((current) => (current === closestIndex ? current : closestIndex))
-    })
-  }
-
-  return (
-    <div
-      ref={containerRef}
-      onScroll={handleScroll}
-      className="flex snap-x snap-mandatory gap-2 overflow-x-auto px-6 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-      style={{ scrollPaddingInline: '24px' }}
-    >
-      {cards.map((card, index) => (
-        <div
-          key={card.key}
-          ref={(node) => {
-            cardRefs.current[index] = node
-          }}
-          className="shrink-0 snap-center transition-opacity duration-200"
-          style={{ width: '354px', opacity: index === centeredIndex ? 1 : 0.4 }}
-        >
-          {card.shift ? (
-            <ShiftCarouselCard
-              shift={card.shift}
-              workspaceName={workspaceName}
-              onSelectShift={onSelectShift}
-            />
-          ) : (
-            <EmptyDayCard date={card.date} />
-          )}
-        </div>
-      ))}
-    </div>
-  )
-}
-
-export default function Home({ user, role, onGoToManage }) {
+export default function Home({ user, role, onGoToManage, onGoToPool }) {
   const [fullName, setFullName] = useState(null)
-  const [workspaceName, setWorkspaceName] = useState(null)
+  const [credential, setCredential] = useState(null)
+  const [homeUnit, setHomeUnit] = useState(null)
   const [shifts, setShifts] = useState([])
   const [notifications, setNotifications] = useState([])
+  const [openCount, setOpenCount] = useState(0)
+  const [weekOffset, setWeekOffset] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [selectedShift, setSelectedShift] = useState(null)
   const [bellOpen, setBellOpen] = useState(false)
-  const [centeredCard, setCenteredCard] = useState({ date: new Date(), shift: null })
 
   const isCoordinator = role === 'coordinator'
 
@@ -397,7 +384,7 @@ export default function Home({ user, role, onGoToManage }) {
       const [profileResult, shiftsResult, notificationsResult] = await Promise.all([
         supabase
           .from('profiles')
-          .select('full_name, workspace_id')
+          .select('full_name, credential, home_unit')
           .eq('id', user.id)
           .maybeSingle(),
         shiftsQuery,
@@ -409,6 +396,8 @@ export default function Home({ user, role, onGoToManage }) {
       if (profileResult.error) {
         setError(profileResult.error.message)
         setFullName(null)
+        setCredential(null)
+        setHomeUnit(null)
         setShifts([])
         setNotifications([])
         setLoading(false)
@@ -418,6 +407,8 @@ export default function Home({ user, role, onGoToManage }) {
       if (shiftsResult.error) {
         setError(shiftsResult.error.message)
         setFullName(profileResult.data?.full_name ?? null)
+        setCredential(profileResult.data?.credential ?? null)
+        setHomeUnit(profileResult.data?.home_unit ?? null)
         setShifts([])
         setNotifications([])
         setLoading(false)
@@ -425,20 +416,11 @@ export default function Home({ user, role, onGoToManage }) {
       }
 
       setFullName(profileResult.data?.full_name ?? null)
+      setCredential(profileResult.data?.credential ?? null)
+      setHomeUnit(profileResult.data?.home_unit ?? null)
       setShifts(shiftsResult.data ?? [])
       setNotifications(notificationsResult.error ? [] : (notificationsResult.data ?? []))
       setLoading(false)
-
-      const workspaceId = profileResult.data?.workspace_id
-      if (workspaceId) {
-        const { data: workspaceData } = await supabase
-          .from('workspaces')
-          .select('name')
-          .eq('id', workspaceId)
-          .maybeSingle()
-
-        if (!cancelled) setWorkspaceName(workspaceData?.name ?? null)
-      }
     }
 
     fetchHomeData()
@@ -447,6 +429,31 @@ export default function Home({ user, role, onGoToManage }) {
       cancelled = true
     }
   }, [user.id, isCoordinator])
+
+  useEffect(() => {
+    if (isCoordinator || !homeUnit) {
+      setOpenCount(0)
+      return
+    }
+
+    let cancelled = false
+
+    async function fetchOpenCount() {
+      const { count } = await supabase
+        .from('shifts')
+        .select('id', { count: 'exact', head: true })
+        .eq('unit', homeUnit)
+        .or('status.eq.open,and(is_offered.eq.true,status.eq.scheduled)')
+
+      if (!cancelled) setOpenCount(count ?? 0)
+    }
+
+    fetchOpenCount()
+
+    return () => {
+      cancelled = true
+    }
+  }, [isCoordinator, homeUnit])
 
   async function handleBellClick() {
     if (bellOpen) {
@@ -463,6 +470,15 @@ export default function Home({ user, role, onGoToManage }) {
     await supabase.from('notifications').update({ read: true }).in('id', unreadIds)
   }
 
+  async function handleOpenNotification(notification) {
+    if (notification.read) return
+
+    setNotifications((current) =>
+      current.map((n) => (n.id === notification.id ? { ...n, read: true } : n)),
+    )
+    await supabase.from('notifications').update({ read: true }).eq('id', notification.id)
+  }
+
   if (selectedShift) {
     return (
       <ShiftDetail
@@ -476,8 +492,12 @@ export default function Home({ user, role, onGoToManage }) {
   const today = new Date()
   const todayLabel = todayLabelFormatter.format(today)
   const firstName = getFirstName(fullName)
-  const unreadCount = notifications.filter((n) => !n.read).length
-  const isWorkingToday = shifts.some((shift) => isSameLocalDay(new Date(shift.starts_at), today))
+  const nurseFirstName = fullName?.trim().split(' ')[0] ?? null
+  const todaysShift = shifts.find((shift) => isSameLocalDay(new Date(shift.starts_at), today))
+  const upcomingShifts = shifts.filter(
+    (shift) => isWithinNextSevenDays(shift.starts_at) && shift.id !== todaysShift?.id,
+  )
+  const latestNotification = notifications.find((n) => !n.read) ?? notifications[0] ?? null
 
   const notificationDropdown = bellOpen && (
     <>
@@ -487,21 +507,21 @@ export default function Home({ user, role, onGoToManage }) {
         onClick={() => setBellOpen(false)}
         className="fixed inset-0 z-10 cursor-default"
       />
-      <div className="absolute top-full right-0 z-20 mt-2 w-80 max-w-[80vw] rounded-xl border border-[#E5E5EA] bg-white shadow-sm">
-        <div className="flex items-center justify-between border-b border-[#E5E5EA] p-4">
+      <div className="absolute top-full right-0 z-20 mt-2 w-80 max-w-[80vw] rounded-card border border-hairline bg-white shadow-card-lift">
+        <div className="flex items-center justify-between border-b border-hairline p-4">
           <p className="text-sm font-semibold text-ink">Notifications</p>
           <button
             type="button"
             onClick={() => setBellOpen(false)}
             aria-label="Close notifications"
-            className="text-[#6B7280]"
+            className="text-ink-secondary"
           >
             <X size={16} strokeWidth={2} />
           </button>
         </div>
 
         {notifications.length === 0 ? (
-          <p className="p-4 text-sm text-[#6B7280]">No notifications yet</p>
+          <p className="p-4 text-sm text-ink-secondary">No notifications yet</p>
         ) : (
           <ul className="flex max-h-80 flex-col overflow-y-auto">
             {notifications.map((notification) => {
@@ -511,24 +531,24 @@ export default function Home({ user, role, onGoToManage }) {
               return (
                 <li
                   key={notification.id}
-                  className="flex items-start gap-2 border-b border-[#E5E5EA] p-4 last:border-b-0"
+                  className="flex items-start gap-2 border-b border-hairline p-4 last:border-b-0"
                 >
                   {isApproved ? (
                     <CheckCircle2
-                      className="mt-0.5 shrink-0 text-[#16A34A]"
+                      className="mt-0.5 shrink-0 text-teal-foreground"
                       size={16}
                       strokeWidth={2}
                     />
                   ) : (
                     <AlertTriangle
-                      className="mt-0.5 shrink-0 text-[#D97706]"
+                      className="mt-0.5 shrink-0 text-ink-secondary"
                       size={16}
                       strokeWidth={2}
                     />
                   )}
                   <div className="min-w-0">
                     <p className="text-sm text-ink">{notification.message}</p>
-                    <p className="mt-0.5 text-xs text-[#9CA3AF]">
+                    <p className="mt-0.5 text-xs text-ink-secondary">
                       {formatRelativeTime(notification.created_at)}
                     </p>
                   </div>
@@ -542,7 +562,7 @@ export default function Home({ user, role, onGoToManage }) {
   )
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-[#FCFCFC]">
+    <div className="flex min-h-screen w-full flex-col bg-page-ground">
       <main className="mx-auto flex w-full max-w-md flex-1 flex-col pb-12">
         {isCoordinator ? (
           <div className="shrink-0 px-5 pt-10">
@@ -556,80 +576,67 @@ export default function Home({ user, role, onGoToManage }) {
             </p>
           </div>
         ) : (
-          <div
-            className="relative shrink-0"
-            style={{ background: 'linear-gradient(to bottom, #009ECD 0%, #5DC7E6 50%, #FCFCFC 100%)' }}
-          >
-            <div className="flex items-center gap-3 px-6 pt-10">
-              <GlassSquircle className="size-12">
-                <span className="text-base font-bold text-white">{getInitials(fullName)}</span>
-              </GlassSquircle>
-
-              <div className="flex flex-col gap-1">
-                <span className="text-[15px] font-semibold text-white">
-                  {headerDateFormatter.format(today)}
-                </span>
-                <span className="flex items-center gap-1.5 text-sm font-semibold text-white/90">
-                  <span className="size-2 shrink-0 rounded-full bg-white" />
-                  {isWorkingToday ? 'You have a shift today' : 'No shift today'}
-                </span>
-              </div>
-
-              <div className="flex-1" />
+          <div className="flex flex-1 flex-col gap-5 px-5 pt-10">
+            <div className="flex items-center justify-between">
+              <Wordmark />
 
               <div className="relative shrink-0">
-                <button type="button" onClick={handleBellClick} aria-label="Notifications">
-                  <GlassSquircle className="size-12">
-                    <Bell className="text-white" size={20} strokeWidth={2} />
-                  </GlassSquircle>
-                  {unreadCount > 0 && (
-                    <span className="absolute -top-0.5 -right-0.5 flex size-2.5 items-center justify-center rounded-full bg-red-500 ring-[1.5px] ring-white" />
-                  )}
+                <button
+                  type="button"
+                  onClick={handleBellClick}
+                  aria-label="Notifications"
+                  className="flex size-8 items-center justify-center rounded-control border border-hairline bg-white text-ink-tertiary"
+                >
+                  <Bell size={18} strokeWidth={1.75} />
                 </button>
 
                 {notificationDropdown}
               </div>
             </div>
 
-            <div className="mt-8 flex items-center px-6 pr-[26px]">
-              <h1
-                className="text-[26px] font-bold"
-                style={{ color: '#EAFAFF' }}
-              >
-                {weekdayLongFormatter.format(centeredCard.date)}
-              </h1>
-
-              <div className="flex-1" />
-
-              <div className="flex items-center gap-1.5">
-                <span className="size-2 rounded-full bg-white/60" />
-                <span className="h-2 w-[18px] rounded-full bg-white" />
-                <span className="size-2 rounded-full bg-white/60" />
-              </div>
-            </div>
+            <p className="text-base font-medium text-ink-secondary">
+              {getGreeting()}{nurseFirstName ? `, ${nurseFirstName}` : ''}
+            </p>
 
             {!loading && !error && (
-              <div className="mt-4 pb-6">
-                {shifts.length === 0 ? (
-                  <NoShiftsCard />
-                ) : (
-                  <>
-                    <HeroCarousel
-                      shifts={shifts}
-                      today={today}
-                      workspaceName={workspaceName}
-                      onSelectShift={setSelectedShift}
-                      onCenterChange={setCenteredCard}
-                    />
+              <>
+                <TodayHero todaysShift={todaysShift} credential={credential} />
 
-                    {centeredCard.shift && (
-                      <div className="mt-4">
-                        <ShiftProgressBar shift={centeredCard.shift} />
-                      </div>
-                    )}
-                  </>
+                <ActionList
+                  openCount={openCount}
+                  homeUnit={homeUnit}
+                  notification={latestNotification}
+                  onGoToPool={onGoToPool}
+                  onOpenNotification={handleOpenNotification}
+                />
+
+                {upcomingShifts.length > 0 && (
+                  <section className="flex flex-col gap-2.5">
+                    <span className="text-xs font-semibold tracking-[0.05em] text-ink-secondary uppercase">
+                      Upcoming
+                    </span>
+                    <div className="rounded-card border border-hairline bg-white shadow-card-lift">
+                      {upcomingShifts.map((shift, index) => (
+                        <div key={shift.id}>
+                          {index > 0 && <div className="ml-[73px] h-px bg-hairline" />}
+                          <UpcomingShiftRow
+                            shift={shift}
+                            isFirst={index === 0}
+                            isLast={index === upcomingShifts.length - 1}
+                            onSelectShift={setSelectedShift}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </section>
                 )}
-              </div>
+
+                <ThisWeekReport
+                  shifts={shifts}
+                  weekOffset={weekOffset}
+                  onChangeWeekOffset={setWeekOffset}
+                />
+              </>
             )}
           </div>
         )}
@@ -638,174 +645,19 @@ export default function Home({ user, role, onGoToManage }) {
           <p className="mt-6 px-5 text-sm text-red-700">Could not load home data: {error}</p>
         )}
 
-        {!loading && !error && (
-          <div className={cn('flex flex-1 flex-col', isCoordinator && 'mt-[30px]')}>
-            {isCoordinator ? (
-              <div className="px-5">
-                <CoordinatorSummary
-                  shifts={shifts}
-                  today={today}
-                  firstName={firstName}
-                  onGoToManage={onGoToManage}
-                />
-              </div>
-            ) : (
-              <NurseSummary
+        {!loading && !error && isCoordinator && (
+          <div className="flex flex-1 flex-col mt-[30px]">
+            <div className="px-5">
+              <CoordinatorSummary
                 shifts={shifts}
-                userId={user.id}
-                onSelectShift={setSelectedShift}
+                today={today}
+                firstName={firstName}
+                onGoToManage={onGoToManage}
               />
-            )}
+            </div>
           </div>
         )}
       </main>
-    </div>
-  )
-}
-
-// Home's list-section card, used identically by both "My Upcoming Shifts" and "Open
-// Shifts" (same layout, different data source/header per product decision). Facility
-// line matches Schedule's "Burlingame SNF · UNIT 1" convention (Shiftko is
-// single-facility, Burlingame-only, per the pivot decision) rather than the iOS
-// spec's original department+facility pattern, so Home and Schedule read consistently.
-function HomeShiftCard({ shift, onSelectShift }) {
-  const period = getShiftPeriod(shift.starts_at)
-  const shiftDate = new Date(shift.starts_at)
-
-  return (
-    <li>
-      <button
-        type="button"
-        onClick={() => onSelectShift(shift)}
-        className="flex h-[86px] w-full items-center gap-3.5 rounded-[20px] border border-[#DDE5E8] bg-[#FCFCFC] px-4 text-left shadow-[0px_2px_7px_rgba(0,0,0,0.08)]"
-      >
-        <div className="flex w-11 shrink-0 flex-col items-center gap-[0.75px] text-center">
-          <span className="text-[12px] font-medium tracking-wide text-[#888888] uppercase">
-            {weekdayFormatter.format(shiftDate)}
-          </span>
-          <span className="text-[18px] font-semibold text-[#282828]">{shiftDate.getDate()}</span>
-          <span className="text-[12px] font-medium tracking-wide text-[#888888] uppercase">
-            {monthFormatter.format(shiftDate)}
-          </span>
-        </div>
-
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-[17px] font-medium text-[#282828]">
-            {formatShiftTimeRange(shift.starts_at, shift.ends_at)}
-          </p>
-          <div className="mt-0.5 flex min-w-0 items-center gap-[7px]">
-            <span className="size-[5px] shrink-0 rounded-full bg-[#2DA1C3]" aria-hidden="true" />
-            <p className="truncate text-[14px] font-medium text-[#282828]">Burlingame SNF</p>
-            <span className="text-[#C9DFE5]" aria-hidden="true">
-              |
-            </span>
-            <p className="shrink-0 text-[14px] font-medium text-[#2DA1C3] uppercase">
-              {shift.unit}
-            </p>
-          </div>
-        </div>
-
-        <ShiftPeriodPill period={period} />
-      </button>
-    </li>
-  )
-}
-
-function NurseSummary({ shifts, userId, onSelectShift }) {
-  const [openShifts, setOpenShifts] = useState([])
-  const [openShiftsLoading, setOpenShiftsLoading] = useState(true)
-
-  const upcomingShifts = shifts.filter((shift) => isWithinNextSevenDays(shift.starts_at))
-
-  useEffect(() => {
-    let cancelled = false
-
-    async function fetchOpenShifts() {
-      setOpenShiftsLoading(true)
-
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('home_unit')
-        .eq('id', userId)
-        .maybeSingle()
-
-      if (cancelled) return
-
-      const unit = profile?.home_unit ?? null
-      if (!unit) {
-        setOpenShifts([])
-        setOpenShiftsLoading(false)
-        return
-      }
-
-      const { data } = await supabase
-        .from('shifts')
-        .select('id, unit, starts_at, ends_at')
-        .eq('status', 'open')
-        .eq('unit', unit)
-        .order('starts_at', { ascending: true })
-        .limit(3)
-
-      if (cancelled) return
-
-      setOpenShifts(data ?? [])
-      setOpenShiftsLoading(false)
-    }
-
-    fetchOpenShifts()
-
-    return () => {
-      cancelled = true
-    }
-  }, [userId])
-
-  return (
-    <div className="flex flex-1 flex-col px-6 pt-6 pb-10">
-      <section>
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-[#282828]" style={{ letterSpacing: '-0.4px' }}>
-            My Upcoming Shifts
-          </h2>
-          <span className="flex items-center gap-0.5 text-[15px] font-medium" style={{ color: '#3A798B' }}>
-            See All <ChevronRight size={14} strokeWidth={2.5} />
-          </span>
-        </div>
-
-        {upcomingShifts.length === 0 ? (
-          <p className="mt-3 text-[15px]" style={{ color: '#7DA0AB' }}>
-            Nothing in the next 7 days
-          </p>
-        ) : (
-          <ul className="mt-3 flex flex-col gap-2">
-            {upcomingShifts.map((shift) => (
-              <HomeShiftCard key={shift.id} shift={shift} onSelectShift={onSelectShift} />
-            ))}
-          </ul>
-        )}
-      </section>
-
-      <section className="mt-6">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-[#282828]" style={{ letterSpacing: '-0.4px' }}>
-            Open Shifts
-          </h2>
-          <span className="flex items-center gap-0.5 text-[15px] font-medium" style={{ color: '#3A798B' }}>
-            See All <ChevronRight size={14} strokeWidth={2.5} />
-          </span>
-        </div>
-
-        {!openShiftsLoading && openShifts.length === 0 ? (
-          <p className="mt-3 text-[15px]" style={{ color: '#7DA0AB' }}>
-            No open shifts right now
-          </p>
-        ) : (
-          <ul className="mt-3 flex flex-col gap-2">
-            {openShifts.map((shift) => (
-              <HomeShiftCard key={shift.id} shift={shift} onSelectShift={onSelectShift} />
-            ))}
-          </ul>
-        )}
-      </section>
     </div>
   )
 }
