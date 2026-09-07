@@ -93,7 +93,7 @@ export default function Auth({ initialView = 'signin' }) {
   if (view === 'signup') {
     return (
       <main className="mx-auto w-full max-w-md px-6 pt-[90px] pb-10">
-        <h1 className="font-display text-[30px] font-semibold tracking-[-0.6px] text-[#003342]">
+        <h1 className="text-[30px] font-semibold tracking-[-0.6px] text-[#003342]">
           Create your account
         </h1>
         <p className="mt-4 text-[17px] tracking-[-0.34px] text-[#004458]">
@@ -185,7 +185,7 @@ export default function Auth({ initialView = 'signin' }) {
 
   return (
     <main className="mx-auto w-full max-w-md px-6 pt-[90px] pb-10">
-      <h1 className="font-display text-[30px] font-semibold tracking-[-0.6px] text-[#003342]">
+      <h1 className="text-[30px] font-semibold tracking-[-0.6px] text-[#003342]">
         Welcome back.
       </h1>
       <p className="mt-4 text-[17px] tracking-[-0.34px] text-[#004458]">

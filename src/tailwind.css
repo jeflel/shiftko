@@ -1,14 +1,36 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: 'Geist', sans-serif;
-  --font-display: 'Fraunces', serif;
-  --color-ink: #111111;
-  --color-surface: #f8f7f5;
-  --color-line: #e8e6e3;
-  --color-teal-dark: #0b6e7a;
-  --color-teal-mid: #0b9bad;
-  --radius-card: 0.75rem;
+  --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI',
+    system-ui, sans-serif;
+
+  /* v2 design tokens — see DESIGN.md in shiftko-design-v2-visual-pass-dup */
+  --color-page-ground: #f9f9fb;
+  --color-card-surface: #ffffff;
+  --color-ink: #1d1d1f;
+  --color-ink-secondary: #6e6e73;
+  --color-ink-tertiary: #48484a;
+  --color-hairline: #e5e5ea;
+  --color-track-neutral: #ededf2;
+  --color-press-state: #f2f2f7;
+  --color-teal: #38bde5;
+  --color-teal-foreground: #0e7490;
+  --color-teal-foreground-hover: #0a5e73;
+  --color-teal-tint: rgba(56, 189, 229, 0.15);
+  --color-urgency-red: #d9291c;
+  --color-chevron-muted: #c7c7cc;
+  --color-selection-ink: #10222a;
+  --radius-card: 14px;
+  --radius-control: 9px;
+  --radius-control-sm: 7px;
+  --shadow-card-lift: 0 6px 20px rgba(20, 20, 43, 0.08);
+
+  /* Aliases for pre-v2 token names still referenced page-by-page —
+     drop each alias once every reader of it is migrated (Reskin Plan Phase 3). */
+  --color-surface: var(--color-page-ground);
+  --color-line: var(--color-hairline);
+  --color-teal-mid: var(--color-teal);
+  --color-teal-dark: var(--color-teal-foreground);
 }
 
 @custom-variant dark (&:is(.dark *));

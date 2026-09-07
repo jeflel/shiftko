@@ -39,7 +39,7 @@ export default function Screen5({ onBack, onContinue }) {
         </div>
       </div>
 
-      <h1 className="mt-10 font-display text-[30px] leading-[1.2] font-semibold tracking-[-0.6px] text-[#003342]">
+      <h1 className="mt-10 text-[30px] leading-[1.2] font-semibold tracking-[-0.6px] text-[#003342]">
         What's your biggest
         <br />
         scheduling challenge?

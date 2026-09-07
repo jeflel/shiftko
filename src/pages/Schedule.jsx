@@ -283,7 +283,7 @@ function MyShiftsWeekStrip({ activeOffset, onSwipe, onSelectDate, shiftDateKeys,
   return (
     <div onPointerDown={handlePointerDown} onPointerUp={handlePointerUp}>
       <div className="relative mb-4 flex items-center justify-center">
-        <p className="font-display text-[30px] font-semibold text-[#282828]">
+        <p className="text-[30px] font-semibold text-[#282828]">
           {monthLongFormatter.format(days[3])}
         </p>
         <div className="absolute right-0">
@@ -570,7 +570,7 @@ function MyShiftsTab({ user, onOpenCalendarView, view, onChangeView }) {
             <button
               type="button"
               onClick={() => setShowAddPanel(true)}
-              className="mt-3 w-full rounded-full border border-[#E8E6E3] bg-white py-3 text-sm font-semibold text-[#111111] shadow-sm"
+              className="mt-3 w-full rounded-full border border-[#E5E5EA] bg-white py-3 text-sm font-semibold text-[#1D1D1F] shadow-sm"
             >
               + Add a shift
             </button>
@@ -744,17 +744,17 @@ function TeamScheduleTab({ view, onChangeView }) {
                 return (
                   <div
                     key={`${firstShift.starts_at}__${firstShift.ends_at}`}
-                    className="rounded-xl bg-white p-4 shadow-sm border border-[#E8E6E3]"
+                    className="rounded-xl bg-white p-4 shadow-sm border border-[#E5E5EA]"
                   >
                     <div className="flex items-center justify-between gap-3">
-                      <p className="text-sm font-semibold text-[#111111]">
+                      <p className="text-sm font-semibold text-[#1D1D1F]">
                         {formatShiftTimeRange(firstShift.starts_at, firstShift.ends_at)}
                       </p>
                       <ShiftPeriodPill period={period} />
                     </div>
                     <p className="mt-0.5 text-xs text-[#9CA3AF]">{units.join(', ')}</p>
 
-                    <div className="mt-3 border-b border-[#E8E6E3]" />
+                    <div className="mt-3 border-b border-[#E5E5EA]" />
 
                     <ul className="flex flex-col">
                       {slotShifts.map((shift) => {
@@ -762,7 +762,7 @@ function TeamScheduleTab({ view, onChangeView }) {
                           return (
                             <li
                               key={shift.id}
-                              className="flex items-center justify-between border-b border-[#E8E6E3] py-3 last:border-b-0"
+                              className="flex items-center justify-between border-b border-[#E5E5EA] py-3 last:border-b-0"
                             >
                               <p className="text-sm text-[#9CA3AF]">Open shift</p>
                               <StatusPill status="open" />
@@ -782,19 +782,19 @@ function TeamScheduleTab({ view, onChangeView }) {
                         return (
                           <li
                             key={shift.id}
-                            className="flex items-center gap-3 border-b border-[#E8E6E3] py-3 last:border-b-0"
+                            className="flex items-center gap-3 border-b border-[#E5E5EA] py-3 last:border-b-0"
                           >
-                            <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#F8F7F5] text-xs font-semibold text-[#6B7280]">
+                            <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#F9F9FB] text-xs font-semibold text-[#6B7280]">
                               {getInitials(displayName)}
                             </div>
 
                             <div className="flex min-w-0 flex-1 items-center gap-1.5">
-                              <p className="truncate text-sm font-medium text-[#111111]">
+                              <p className="truncate text-sm font-medium text-[#1D1D1F]">
                                 {displayName}
                               </p>
                               {displayCredential && (
                                 <>
-                                  <span className="h-3 border-l border-[#E8E6E3]" />
+                                  <span className="h-3 border-l border-[#E5E5EA]" />
                                   <p className="text-xs text-[#9CA3AF]">{displayCredential}</p>
                                 </>
                               )}
@@ -816,7 +816,7 @@ function TeamScheduleTab({ view, onChangeView }) {
 }
 
 const inputClassName =
-  'w-full rounded-xl border border-[#E8E6E3] p-3 text-sm focus:border-[#111111] focus:outline-none'
+  'w-full rounded-xl border border-[#E5E5EA] p-3 text-sm focus:border-[#1D1D1F] focus:outline-none'
 const labelClassName = 'text-xs font-medium tracking-wide text-[#6B7280] uppercase'
 
 // Standard Burlingame shift blocks (30-min overlap for handoff/report).
@@ -986,11 +986,11 @@ function AddMyShiftPanel({ userId, homeUnit, onClose, onSaved }) {
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/30 sm:items-center" onClick={onClose}>
       <div
         onClick={(e) => e.stopPropagation()}
-        className="flex max-h-[85vh] w-full max-w-md flex-col gap-4 overflow-y-auto rounded-t-2xl border border-[#E8E6E3] bg-white p-4 shadow-sm sm:rounded-2xl"
+        className="flex max-h-[85vh] w-full max-w-md flex-col gap-4 overflow-y-auto rounded-t-2xl border border-[#E5E5EA] bg-white p-4 shadow-sm sm:rounded-2xl"
       >
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-[#111111]">Add a shift</h3>
-        <button type="button" onClick={onClose} aria-label="Close" className="text-[#9CA3AF] hover:text-[#111111]">
+        <h3 className="text-sm font-semibold text-[#1D1D1F]">Add a shift</h3>
+        <button type="button" onClick={onClose} aria-label="Close" className="text-[#9CA3AF] hover:text-[#1D1D1F]">
           <X size={16} strokeWidth={2.5} />
         </button>
       </div>
@@ -1041,7 +1041,7 @@ function AddMyShiftPanel({ userId, homeUnit, onClose, onSaved }) {
                   key={preset.id}
                   className={cn(
                     'flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium',
-                    isSelected ? 'border-[#111111] bg-[#111111] text-white' : 'border-[#E8E6E3] bg-white text-[#111111]',
+                    isSelected ? 'border-[#1D1D1F] bg-[#1D1D1F] text-white' : 'border-[#E5E5EA] bg-white text-[#1D1D1F]',
                   )}
                 >
                   <button type="button" onClick={() => setShiftType(`saved:${preset.id}`)}>
@@ -1084,7 +1084,7 @@ function AddMyShiftPanel({ userId, homeUnit, onClose, onSaved }) {
         </div>
 
         {shiftType === 'custom' && (
-          <label className="flex items-center gap-2 pt-1 text-sm text-[#111111]">
+          <label className="flex items-center gap-2 pt-1 text-sm text-[#1D1D1F]">
             <input
               type="checkbox"
               checked={saveThisShift}
@@ -1093,7 +1093,7 @@ function AddMyShiftPanel({ userId, homeUnit, onClose, onSaved }) {
                 if (e.target.checked) handleSaveThisShift()
               }}
               disabled={savedPresets.length >= MAX_SAVED_SHIFT_PRESETS}
-              className="h-4 w-4 rounded border-[#E8E6E3] accent-[#111111]"
+              className="h-4 w-4 rounded border-[#E5E5EA] accent-[#1D1D1F]"
             />
             Save this shift for next time
           </label>
@@ -1107,7 +1107,7 @@ function AddMyShiftPanel({ userId, homeUnit, onClose, onSaved }) {
         type="button"
         onClick={handleSubmit}
         disabled={saving}
-        className="h-auto w-full rounded-full bg-[#111111] py-4 text-base font-semibold text-white hover:bg-[#111111]/90 disabled:opacity-60"
+        className="h-auto w-full rounded-full bg-[#1D1D1F] py-4 text-base font-semibold text-white hover:bg-[#1D1D1F]/90 disabled:opacity-60"
       >
         {saving ? 'Saving…' : 'Save shift'}
       </Button>
@@ -1754,17 +1754,17 @@ function ManageTab() {
   return (
     <div className="flex flex-col gap-10">
       <section>
-        <h2 className="mb-4 text-[20px] font-semibold text-[#111111]">Post a shift</h2>
+        <h2 className="mb-4 text-[20px] font-semibold text-[#1D1D1F]">Post a shift</h2>
 
         <div className="flex flex-col gap-4">
-          <label className="flex items-center gap-2 text-sm font-medium text-[#111111]">
+          <label className="flex items-center gap-2 text-sm font-medium text-[#1D1D1F]">
             <input
               type="checkbox"
               checked={form.unassigned}
               onChange={(e) =>
                 setForm({ ...form, unassigned: e.target.checked, nurse_id: '' })
               }
-              className="h-4 w-4 rounded border-[#E8E6E3] accent-[#111111]"
+              className="h-4 w-4 rounded border-[#E5E5EA] accent-[#1D1D1F]"
             />
             Leave unassigned (open shift)
           </label>
@@ -1848,8 +1848,8 @@ function ManageTab() {
                       className={cn(
                         'flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium',
                         isSelected
-                          ? 'border-[#111111] bg-[#111111] text-white'
-                          : 'border-[#E8E6E3] bg-white text-[#111111]',
+                          ? 'border-[#1D1D1F] bg-[#1D1D1F] text-white'
+                          : 'border-[#E5E5EA] bg-white text-[#1D1D1F]',
                       )}
                     >
                       <button
@@ -1898,7 +1898,7 @@ function ManageTab() {
             </div>
 
             {form.shift_type === 'custom' && currentUserId && (
-              <label className="flex items-center gap-2 pt-1 text-sm text-[#111111]">
+              <label className="flex items-center gap-2 pt-1 text-sm text-[#1D1D1F]">
                 <input
                   type="checkbox"
                   checked={saveThisShift}
@@ -1907,7 +1907,7 @@ function ManageTab() {
                     if (e.target.checked) handleSaveThisShift()
                   }}
                   disabled={savedPresets.length >= MAX_SAVED_SHIFT_PRESETS}
-                  className="h-4 w-4 rounded border-[#E8E6E3] accent-[#111111]"
+                  className="h-4 w-4 rounded border-[#E5E5EA] accent-[#1D1D1F]"
                 />
                 Save this shift for next time
               </label>
@@ -1922,7 +1922,7 @@ function ManageTab() {
             type="button"
             onClick={handleSubmit}
             disabled={saving}
-            className="h-auto w-full rounded-full bg-[#111111] py-4 text-base font-semibold text-white hover:bg-[#111111]/90 disabled:opacity-60"
+            className="h-auto w-full rounded-full bg-[#1D1D1F] py-4 text-base font-semibold text-white hover:bg-[#1D1D1F]/90 disabled:opacity-60"
           >
             {saving ? 'Posting…' : 'Post shift'}
           </Button>
@@ -1930,7 +1930,7 @@ function ManageTab() {
       </section>
 
       <section>
-        <h2 className="mb-4 text-[20px] font-semibold text-[#111111]">Recent shifts</h2>
+        <h2 className="mb-4 text-[20px] font-semibold text-[#1D1D1F]">Recent shifts</h2>
 
         {recentActionMessage && (
           <p className="mb-3 text-sm text-[#16A34A]">{recentActionMessage}</p>
@@ -1986,7 +1986,7 @@ function ManageTab() {
                     {openShiftAction?.type === 'edit' &&
                       openShiftAction.shiftId === shift.id &&
                       editForm && (
-                        <div className="mt-2 flex flex-col gap-4 rounded-xl bg-white p-4 shadow-sm border border-[#E8E6E3]">
+                        <div className="mt-2 flex flex-col gap-4 rounded-xl bg-white p-4 shadow-sm border border-[#E5E5EA]">
                           <div className="flex flex-col gap-1.5">
                             <label className={labelClassName}>Nurse</label>
                             <select
@@ -2049,7 +2049,7 @@ function ManageTab() {
                               type="button"
                               onClick={() => handleSaveEdit(shift.id)}
                               disabled={editSaving}
-                              className="rounded-full bg-[#111111] px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+                              className="rounded-full bg-[#1D1D1F] px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
                             >
                               {editSaving ? 'Saving…' : 'Save'}
                             </button>
@@ -2057,7 +2057,7 @@ function ManageTab() {
                               type="button"
                               onClick={handleCloseShiftAction}
                               disabled={editSaving}
-                              className="rounded-full border border-[#E8E6E3] px-4 py-2 text-sm font-medium text-[#111111] disabled:opacity-60"
+                              className="rounded-full border border-[#E5E5EA] px-4 py-2 text-sm font-medium text-[#1D1D1F] disabled:opacity-60"
                             >
                               Cancel
                             </button>
@@ -2066,8 +2066,8 @@ function ManageTab() {
                       )}
 
                     {openShiftAction?.type === 'delete' && openShiftAction.shiftId === shift.id && (
-                      <div className="mt-2 flex flex-col gap-3 rounded-xl bg-white p-4 shadow-sm border border-[#E8E6E3]">
-                        <p className="text-sm font-medium text-[#111111]">Delete this shift?</p>
+                      <div className="mt-2 flex flex-col gap-3 rounded-xl bg-white p-4 shadow-sm border border-[#E5E5EA]">
+                        <p className="text-sm font-medium text-[#1D1D1F]">Delete this shift?</p>
 
                         {shift.status === 'pending' && (
                           <div className="flex items-start gap-1.5 text-sm text-[#D97706]">
@@ -2091,7 +2091,7 @@ function ManageTab() {
                             type="button"
                             onClick={handleCloseShiftAction}
                             disabled={deleteSaving}
-                            className="rounded-full border border-[#E8E6E3] px-4 py-2 text-sm font-medium text-[#111111] disabled:opacity-60"
+                            className="rounded-full border border-[#E5E5EA] px-4 py-2 text-sm font-medium text-[#1D1D1F] disabled:opacity-60"
                           >
                             Cancel
                           </button>
@@ -2117,7 +2117,7 @@ function ManageTab() {
       </section>
 
       <section>
-        <h2 className="mb-4 text-[20px] font-semibold text-[#111111]">Pending claims</h2>
+        <h2 className="mb-4 text-[20px] font-semibold text-[#1D1D1F]">Pending claims</h2>
 
         {pendingLoading && <p className="text-sm text-[#6B7280]">Loading pending claims…</p>}
         {pendingError && (
@@ -2138,47 +2138,47 @@ function ManageTab() {
               return (
                 <li
                   key={group.shift.id}
-                  className="rounded-xl bg-white p-4 shadow-sm border border-[#E8E6E3]"
+                  className="rounded-xl bg-white p-4 shadow-sm border border-[#E5E5EA]"
                 >
                   <div className="flex items-center justify-between gap-3">
-                    <p className="text-sm font-semibold text-[#111111]">
+                    <p className="text-sm font-semibold text-[#1D1D1F]">
                       {formatShiftTimeRange(group.shift.starts_at, group.shift.ends_at)}
                     </p>
                     <ShiftPeriodPill period={period} />
                   </div>
                   <div className="mt-0.5 flex items-center gap-1.5">
                     <p className="text-xs text-[#9CA3AF]">{group.shift.unit}</p>
-                    <span className="h-3 border-l border-[#E8E6E3]" />
+                    <span className="h-3 border-l border-[#E5E5EA]" />
                     <p className="text-xs text-[#9CA3AF]">
                       {formatShiftDate(group.shift.starts_at)}
                     </p>
                   </div>
 
-                  <div className="mt-3 border-b border-[#E8E6E3]" />
+                  <div className="mt-3 border-b border-[#E5E5EA]" />
 
                   <ul className="flex flex-col">
                     {group.claims.map((claim, index) => (
                       <li
                         key={claim.id}
-                        className="flex items-center gap-3 border-b border-[#E8E6E3] py-3 last:border-b-0"
+                        className="flex items-center gap-3 border-b border-[#E5E5EA] py-3 last:border-b-0"
                       >
-                        <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#F8F7F5] text-xs font-semibold text-[#6B7280]">
+                        <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#F9F9FB] text-xs font-semibold text-[#6B7280]">
                           {getInitials(claim.profiles?.full_name)}
                         </div>
 
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-1.5">
                             {index === 0 && (
-                              <span className="rounded-full bg-[#111111] px-2 py-0.5 text-xs text-white">
+                              <span className="rounded-full bg-[#1D1D1F] px-2 py-0.5 text-xs text-white">
                                 RECENT
                               </span>
                             )}
-                            <p className="truncate text-sm font-medium text-[#111111]">
+                            <p className="truncate text-sm font-medium text-[#1D1D1F]">
                               {claim.profiles?.full_name ?? 'Unknown'}
                             </p>
                             {claim.profiles?.credential && (
                               <>
-                                <span className="h-3 border-l border-[#E8E6E3]" />
+                                <span className="h-3 border-l border-[#E5E5EA]" />
                                 <p className="text-xs text-[#9CA3AF]">
                                   {claim.profiles.credential}
                                 </p>
@@ -2195,7 +2195,7 @@ function ManageTab() {
                             type="button"
                             onClick={() => handleApprove(group, claim)}
                             disabled={isActioning}
-                            className="rounded-full bg-[#111111] px-3 py-1 text-xs font-medium text-white disabled:opacity-60"
+                            className="rounded-full bg-[#1D1D1F] px-3 py-1 text-xs font-medium text-white disabled:opacity-60"
                           >
                             Approve
                           </button>
@@ -2203,7 +2203,7 @@ function ManageTab() {
                             type="button"
                             onClick={() => handleDeny(group, claim)}
                             disabled={isActioning}
-                            className="rounded-full border border-[#E8E6E3] px-3 py-1 text-xs font-medium text-[#111111] disabled:opacity-60"
+                            className="rounded-full border border-[#E5E5EA] px-3 py-1 text-xs font-medium text-[#1D1D1F] disabled:opacity-60"
                           >
                             Deny
                           </button>
@@ -2219,7 +2219,7 @@ function ManageTab() {
       </section>
 
       <section>
-        <h2 className="mb-4 text-[20px] font-semibold text-[#111111]">Duplicate a week</h2>
+        <h2 className="mb-4 text-[20px] font-semibold text-[#1D1D1F]">Duplicate a week</h2>
 
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
@@ -2268,8 +2268,8 @@ function ManageTab() {
           {dupSuccess && <p className="text-sm text-[#16A34A]">{dupSuccess}</p>}
 
           {dupConfirm ? (
-            <div className="rounded-xl bg-white p-4 shadow-sm border border-[#E8E6E3]">
-              <p className="text-sm text-[#111111]">
+            <div className="rounded-xl bg-white p-4 shadow-sm border border-[#E5E5EA]">
+              <p className="text-sm text-[#1D1D1F]">
                 Copy {dupConfirm.count} shift{dupConfirm.count === 1 ? '' : 's'} to the week of{' '}
                 {formatWeekRangeLabel(dupConfirm.destStart)}?
               </p>
@@ -2285,7 +2285,7 @@ function ManageTab() {
                   type="button"
                   onClick={handleConfirmCopy}
                   disabled={dupSaving}
-                  className="h-auto flex-1 rounded-full bg-[#111111] py-4 text-sm font-semibold text-white hover:bg-[#111111]/90 disabled:opacity-60"
+                  className="h-auto flex-1 rounded-full bg-[#1D1D1F] py-4 text-sm font-semibold text-white hover:bg-[#1D1D1F]/90 disabled:opacity-60"
                 >
                   {dupSaving
                     ? 'Copying…'
@@ -2298,7 +2298,7 @@ function ManageTab() {
                   variant="outline"
                   onClick={handleCancelCopy}
                   disabled={dupSaving}
-                  className="h-auto flex-1 rounded-full border-[#E8E6E3] py-4 text-sm font-semibold text-[#111111] shadow-none hover:bg-white"
+                  className="h-auto flex-1 rounded-full border-[#E5E5EA] py-4 text-sm font-semibold text-[#1D1D1F] shadow-none hover:bg-white"
                 >
                   Cancel
                 </Button>
@@ -2315,7 +2315,7 @@ function ManageTab() {
                 dupChecking ||
                 dupSourceShifts.length === 0
               }
-              className="h-auto w-full rounded-full bg-[#111111] py-4 text-base font-semibold text-white hover:bg-[#111111]/90 disabled:opacity-60"
+              className="h-auto w-full rounded-full bg-[#1D1D1F] py-4 text-base font-semibold text-white hover:bg-[#1D1D1F]/90 disabled:opacity-60"
             >
               {dupChecking ? 'Checking…' : 'Copy shifts'}
             </Button>
@@ -2324,7 +2324,7 @@ function ManageTab() {
       </section>
 
       <section>
-        <h2 className="mb-4 flex items-center gap-1.5 text-[20px] font-semibold text-[#111111]">
+        <h2 className="mb-4 flex items-center gap-1.5 text-[20px] font-semibold text-[#1D1D1F]">
           <Users size={16} strokeWidth={2.5} />
           Staff
         </h2>
@@ -2345,10 +2345,10 @@ function ManageTab() {
                   className="flex items-center justify-between gap-3 rounded-xl bg-white p-4 shadow-sm"
                 >
                   <div className="flex min-w-0 flex-1 items-center gap-1.5">
-                    <p className="truncate text-sm font-medium text-[#111111]">{nurse.full_name}</p>
+                    <p className="truncate text-sm font-medium text-[#1D1D1F]">{nurse.full_name}</p>
                     {nurse.credential && (
                       <>
-                        <span className="h-3 border-l border-[#E8E6E3]" />
+                        <span className="h-3 border-l border-[#E5E5EA]" />
                         <p className="text-xs text-[#9CA3AF]">{nurse.credential}</p>
                       </>
                     )}
@@ -2368,7 +2368,7 @@ function ManageTab() {
                     <select
                       value={nurse.home_unit ?? ''}
                       onChange={(e) => handleHomeUnitChange(nurse.id, e.target.value)}
-                      className="rounded-xl border border-[#E8E6E3] p-2 text-sm"
+                      className="rounded-xl border border-[#E5E5EA] p-2 text-sm"
                     >
                       <option value="" disabled>
                         Select unit
@@ -2516,7 +2516,7 @@ function StaffTab() {
 
   return (
     <div>
-      <h2 className="mb-4 flex items-center gap-1.5 text-[20px] font-semibold text-[#111111]">
+      <h2 className="mb-4 flex items-center gap-1.5 text-[20px] font-semibold text-[#1D1D1F]">
         <Users size={16} strokeWidth={2.5} />
         Staff
       </h2>
@@ -2532,7 +2532,7 @@ function StaffTab() {
 
             return (
               <li key={nurse.id}>
-                <div className="relative rounded-xl bg-white p-4 shadow-sm border border-[#E8E6E3]">
+                <div className="relative rounded-xl bg-white p-4 shadow-sm border border-[#E5E5EA]">
                   <button
                     type="button"
                     onClick={() => handleToggleEdit(nurse)}
@@ -2543,16 +2543,16 @@ function StaffTab() {
                   </button>
 
                   <div className="flex items-center gap-3 pr-6">
-                    <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#F8F7F5] text-xs font-semibold text-[#6B7280]">
+                    <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#F9F9FB] text-xs font-semibold text-[#6B7280]">
                       {getInitials(nurse.full_name)}
                     </div>
                     <div className="flex min-w-0 flex-1 items-center gap-1.5">
-                      <p className="truncate text-sm font-semibold text-[#111111]">
+                      <p className="truncate text-sm font-semibold text-[#1D1D1F]">
                         {nurse.full_name}
                       </p>
                       {nurse.credential && (
                         <>
-                          <span className="h-3 border-l border-[#E8E6E3]" />
+                          <span className="h-3 border-l border-[#E5E5EA]" />
                           <p className="text-xs text-[#9CA3AF]">{nurse.credential}</p>
                         </>
                       )}
@@ -2565,14 +2565,14 @@ function StaffTab() {
                 </div>
 
                 {isExpanded && editForm && (
-                  <div className="mt-2 flex flex-col gap-4 rounded-xl bg-white p-4 shadow-sm border border-[#E8E6E3]">
+                  <div className="mt-2 flex flex-col gap-4 rounded-xl bg-white p-4 shadow-sm border border-[#E5E5EA]">
                     <div className="flex flex-col gap-1.5">
                       <label className={labelClassName}>Email</label>
                       <input
                         type="email"
                         value={editForm.email}
                         onChange={(e) => handleFieldChange('email', e.target.value)}
-                        className="w-full rounded-xl border border-[#E8E6E3] p-2 text-sm"
+                        className="w-full rounded-xl border border-[#E5E5EA] p-2 text-sm"
                       />
                     </div>
 
@@ -2581,7 +2581,7 @@ function StaffTab() {
                       <select
                         value={editForm.home_unit}
                         onChange={(e) => handleFieldChange('home_unit', e.target.value)}
-                        className="w-full rounded-xl border border-[#E8E6E3] p-2 text-sm"
+                        className="w-full rounded-xl border border-[#E5E5EA] p-2 text-sm"
                       >
                         <option value="">Select unit</option>
                         <option value="Unit 1">Unit 1</option>
@@ -2596,7 +2596,7 @@ function StaffTab() {
                         type="text"
                         value={editForm.credential}
                         onChange={(e) => handleFieldChange('credential', e.target.value)}
-                        className="w-full rounded-xl border border-[#E8E6E3] p-2 text-sm"
+                        className="w-full rounded-xl border border-[#E5E5EA] p-2 text-sm"
                       />
                     </div>
 
@@ -2618,7 +2618,7 @@ function StaffTab() {
                         type="button"
                         onClick={() => handleSave(nurse)}
                         disabled={saving}
-                        className="rounded-full bg-[#111111] px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+                        className="rounded-full bg-[#1D1D1F] px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
                       >
                         {saving ? 'Saving…' : 'Save'}
                       </button>
@@ -2626,7 +2626,7 @@ function StaffTab() {
                         type="button"
                         onClick={handleCancelEdit}
                         disabled={saving}
-                        className="rounded-full border border-[#E8E6E3] px-4 py-2 text-sm font-medium text-[#111111] disabled:opacity-60"
+                        className="rounded-full border border-[#E5E5EA] px-4 py-2 text-sm font-medium text-[#1D1D1F] disabled:opacity-60"
                       >
                         Cancel
                       </button>
@@ -2669,7 +2669,7 @@ export default function Schedule({ user, role, initialTab = 'schedule' }) {
   return (
     <main className="mx-auto w-full max-w-md px-5 pt-[26px] pb-12">
       {tabs.length > 1 && (
-        <div className="mb-6 flex border-b border-[#E8E6E3]" role="tablist" aria-label="Schedule views">
+        <div className="mb-6 flex border-b border-[#E5E5EA]" role="tablist" aria-label="Schedule views">
           {tabs.map((tab) => (
             <button
               key={tab.id}
@@ -2680,7 +2680,7 @@ export default function Schedule({ user, role, initialTab = 'schedule' }) {
               className={cn(
                 'flex-1 border-b-2 px-2 py-3 text-sm font-medium transition-colors',
                 activeTab === tab.id
-                  ? 'border-[#111111] font-semibold text-[#111111]'
+                  ? 'border-[#1D1D1F] font-semibold text-[#1D1D1F]'
                   : 'border-transparent text-[#9CA3AF]',
               )}
             >

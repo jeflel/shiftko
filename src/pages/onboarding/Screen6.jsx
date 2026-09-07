@@ -52,7 +52,7 @@ export default function Screen6({ firstName = '', onFinish }) {
         className="mx-auto h-[140px] w-[140px]"
       />
 
-      <h1 className="text-center font-display text-[30px] font-semibold tracking-[-0.6px] text-[#003342]">
+      <h1 className="text-center text-[30px] font-semibold tracking-[-0.6px] text-[#003342]">
         You're all set{firstName ? `, ${firstName}` : ''}!
       </h1>
       <p className="mt-2 text-center text-[17px] tracking-[-0.34px] text-[#004458]">

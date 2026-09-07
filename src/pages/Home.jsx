@@ -487,8 +487,8 @@ export default function Home({ user, role, onGoToManage }) {
         onClick={() => setBellOpen(false)}
         className="fixed inset-0 z-10 cursor-default"
       />
-      <div className="absolute top-full right-0 z-20 mt-2 w-80 max-w-[80vw] rounded-xl border border-[#E8E6E3] bg-white shadow-sm">
-        <div className="flex items-center justify-between border-b border-[#E8E6E3] p-4">
+      <div className="absolute top-full right-0 z-20 mt-2 w-80 max-w-[80vw] rounded-xl border border-[#E5E5EA] bg-white shadow-sm">
+        <div className="flex items-center justify-between border-b border-[#E5E5EA] p-4">
           <p className="text-sm font-semibold text-ink">Notifications</p>
           <button
             type="button"
@@ -511,7 +511,7 @@ export default function Home({ user, role, onGoToManage }) {
               return (
                 <li
                   key={notification.id}
-                  className="flex items-start gap-2 border-b border-[#E8E6E3] p-4 last:border-b-0"
+                  className="flex items-start gap-2 border-b border-[#E5E5EA] p-4 last:border-b-0"
                 >
                   {isApproved ? (
                     <CheckCircle2
@@ -593,7 +593,7 @@ export default function Home({ user, role, onGoToManage }) {
 
             <div className="mt-8 flex items-center px-6 pr-[26px]">
               <h1
-                className="font-display text-[26px] font-bold"
+                className="text-[26px] font-bold"
                 style={{ color: '#EAFAFF' }}
               >
                 {weekdayLongFormatter.format(centeredCard.date)}
@@ -832,7 +832,7 @@ function CoordinatorSummary({ shifts, today, firstName, onGoToManage }) {
   return (
     <section>
       <p
-        className="font-display text-[26px] font-semibold"
+        className="text-[26px] font-semibold"
         style={{ letterSpacing: '-0.03em', lineHeight: '115%' }}
       >
         <span style={{ color: '#20748C' }}>{getGreeting()},</span>
@@ -886,7 +886,7 @@ function CoordinatorSummary({ shifts, today, firstName, onGoToManage }) {
           <ul className="flex flex-col gap-3">
             {unstaffedDates.map((date) => (
               <li key={formatLocalDateKey(date)}>
-                <div className="flex items-center gap-4 rounded-card bg-white p-4 shadow-sm border border-[#E8E6E3]">
+                <div className="flex items-center gap-4 rounded-card bg-white p-4 shadow-sm border border-[#E5E5EA]">
                   <div className="flex w-12 shrink-0 flex-col items-center justify-center gap-0.5 text-center">
                     <span className="text-xs font-medium tracking-wide text-[#9CA3AF] uppercase">
                       {weekdayFormatter.format(date)}

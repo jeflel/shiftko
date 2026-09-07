@@ -53,7 +53,7 @@ export function CalendarStrip({ selectedDateKey, onSelect, monthsAhead = 3 }) {
   }, [today, monthsAhead])
 
   return (
-    <div className="flex max-h-80 flex-col gap-4 overflow-y-auto rounded-xl border border-[#E8E6E3] p-3">
+    <div className="flex max-h-80 flex-col gap-4 overflow-y-auto rounded-xl border border-[#E5E5EA] p-3">
       <div className="sticky top-0 grid grid-cols-7 gap-1 bg-white pb-1 text-center text-xs font-medium uppercase tracking-wide text-[#9CA3AF]">
         {WEEKDAY_LABELS.map((label, i) => (
           <span key={i}>{label}</span>
@@ -64,7 +64,7 @@ export function CalendarStrip({ selectedDateKey, onSelect, monthsAhead = 3 }) {
         const cells = buildMonthCells(monthDate)
         return (
           <div key={monthDate.toISOString()} className="flex flex-col gap-2">
-            <p className="text-sm font-semibold text-[#111111]">
+            <p className="text-sm font-semibold text-[#1D1D1F]">
               {monthLabelFormatter.format(monthDate)}
             </p>
             <div className="grid grid-cols-7 gap-1">
@@ -84,8 +84,8 @@ export function CalendarStrip({ selectedDateKey, onSelect, monthsAhead = 3 }) {
                     className={cn(
                       'flex h-9 w-9 items-center justify-center rounded-full text-sm',
                       isPast && 'text-[#D1D5DB] line-through',
-                      !isPast && !isSelected && 'text-[#111111] hover:bg-[#F8F7F5]',
-                      isSelected && 'bg-[#111111] font-semibold text-white',
+                      !isPast && !isSelected && 'text-[#1D1D1F] hover:bg-[#F9F9FB]',
+                      isSelected && 'bg-[#1D1D1F] font-semibold text-white',
                       isToday && !isSelected && 'font-semibold',
                     )}
                   >

@@ -32,7 +32,7 @@ export default function Screen2({ onBack, onContinue }) {
         </div>
       </div>
 
-      <h1 className="mt-10 font-display text-[30px] font-semibold tracking-[-0.6px] text-[#003342]">
+      <h1 className="mt-10 text-[30px] font-semibold tracking-[-0.6px] text-[#003342]">
         What's your name?
       </h1>
       <p className="mt-3 text-[17px] tracking-[-0.34px] text-[#004458]">

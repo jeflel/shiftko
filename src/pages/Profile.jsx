@@ -115,7 +115,7 @@ export default function Profile({ user, onWorkspaceLeft }) {
   return (
     <main className="mx-auto w-full max-w-md px-5 pt-[26px] pb-12">
       <div className="flex items-center justify-between">
-        <h1 className="font-display text-[26px] font-semibold text-[#111111]">Profile</h1>
+        <h1 className="text-[26px] font-semibold text-[#111111]">Profile</h1>
         <div className="flex flex-col items-end gap-1">
           <Wordmark />
           <span className="rounded-full bg-[#E0F7FA] px-2 py-0.5 text-xs font-medium text-teal-mid">Beta</span>
@@ -125,7 +125,7 @@ export default function Profile({ user, onWorkspaceLeft }) {
       {/* Identity header */}
       {profile && (
         <div className="mt-8 flex items-center gap-4">
-          <div className="flex size-16 shrink-0 items-center justify-center rounded-full bg-[#F8F7F5] font-display text-xl font-semibold text-[#111111]">
+          <div className="flex size-16 shrink-0 items-center justify-center rounded-full bg-[#F8F7F5] text-xl font-semibold text-[#111111]">
             {initials(profile.full_name)}
           </div>
           <div className="min-w-0">

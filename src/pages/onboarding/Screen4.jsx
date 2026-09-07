@@ -23,7 +23,7 @@ export default function Screen4({ onBack, onContinue }) {
         </div>
       </div>
 
-      <h1 className="mt-10 font-display text-[30px] font-semibold tracking-[-0.6px] text-[#003342]">
+      <h1 className="mt-10 text-[30px] font-semibold tracking-[-0.6px] text-[#003342]">
         Where do you work?
       </h1>
       <p className="mt-3 text-[17px] tracking-[-0.34px] text-[#004458]">

@@ -27,7 +27,7 @@ export default function Screen0({ onGetStarted, onSignIn }) {
 
       <div className="flex flex-col items-center gap-6 px-6 pt-3 pb-10 text-center">
         <div className="flex flex-col items-center gap-4">
-          <h1 className="font-display text-[30px] leading-[1.1] font-semibold tracking-[-0.6px] text-[#004458]">
+          <h1 className="text-[30px] leading-[1.1] font-semibold tracking-[-0.6px] text-[#004458]">
             Built for <span className="italic">nurses</span>.
             <br />
             Made for your unit.

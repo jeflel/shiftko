@@ -178,7 +178,7 @@ export default function ShiftDetail({ shift, user, onBack }) {
 
         <div className="rounded-2xl bg-white p-5 shadow-sm">
           <div className="flex items-start justify-between gap-3">
-            <p className="text-2xl font-bold text-[#111111]">
+            <p className="text-2xl font-bold text-[#1D1D1F]">
               {formatShiftTimeRange(shift.starts_at, shift.ends_at)}
             </p>
             <ShiftPeriodPill period={period} />
@@ -188,7 +188,7 @@ export default function ShiftDetail({ shift, user, onBack }) {
             <p className="text-xs text-[#9CA3AF]">{shift.unit}</p>
             {credential && (
               <>
-                <span className="h-3 border-l border-[#E8E6E3]" />
+                <span className="h-3 border-l border-[#E5E5EA]" />
                 <p className="text-xs text-[#9CA3AF]">{credential}</p>
               </>
             )}
@@ -205,7 +205,7 @@ export default function ShiftDetail({ shift, user, onBack }) {
                 onClick={() => handleToggleOffer(false)}
                 disabled={offerSaving}
                 variant="outline"
-                className="h-auto w-full rounded-full border-[#E8E6E3] py-4 text-base font-semibold text-[#111111] shadow-none hover:bg-white disabled:opacity-60"
+                className="h-auto w-full rounded-full border-[#E5E5EA] py-4 text-base font-semibold text-[#1D1D1F] shadow-none hover:bg-white disabled:opacity-60"
               >
                 {offerSaving ? 'Withdrawing…' : 'Withdraw offer'}
               </Button>
@@ -214,7 +214,7 @@ export default function ShiftDetail({ shift, user, onBack }) {
                 type="button"
                 onClick={() => handleToggleOffer(true)}
                 disabled={offerSaving}
-                className="h-auto w-full rounded-full bg-[#111111] py-4 text-base font-semibold text-white hover:bg-[#111111]/90 disabled:opacity-60"
+                className="h-auto w-full rounded-full bg-[#1D1D1F] py-4 text-base font-semibold text-white hover:bg-[#1D1D1F]/90 disabled:opacity-60"
               >
                 {offerSaving ? 'Offering…' : 'Offer this shift'}
               </Button>
@@ -225,7 +225,7 @@ export default function ShiftDetail({ shift, user, onBack }) {
         )}
 
         <section className="mt-9">
-          <h2 className="mb-4 flex items-center gap-1.5 text-sm font-semibold text-[#111111]">
+          <h2 className="mb-4 flex items-center gap-1.5 text-sm font-semibold text-[#1D1D1F]">
             <Users size={14} strokeWidth={2.5} />
             Working with
           </h2>
@@ -245,14 +245,14 @@ export default function ShiftDetail({ shift, user, onBack }) {
               {coworkers.map((coworker) => (
                 <li
                   key={coworker.nurseId}
-                  className="flex items-center gap-3 border-b border-[#E8E6E3] py-3 last:border-b-0"
+                  className="flex items-center gap-3 border-b border-[#E5E5EA] py-3 last:border-b-0"
                 >
-                  <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#F8F7F5] text-xs font-semibold text-[#6B7280]">
+                  <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#F9F9FB] text-xs font-semibold text-[#6B7280]">
                     {getInitials(coworker.full_name)}
                   </div>
 
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-[#111111]">
+                    <p className="truncate text-sm font-medium text-[#1D1D1F]">
                       {coworker.full_name}
                     </p>
                     {coworker.credential && (

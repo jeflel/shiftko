@@ -17,7 +17,7 @@ function ShiftCard({ date, title, subtitle, pill, belowPill, trailing, onClick }
       type={isInteractive ? 'button' : undefined}
       onClick={onClick}
       className={cn(
-        'flex w-full items-center rounded-xl bg-white p-4 shadow-sm border border-[#E8E6E3]',
+        'flex w-full items-center rounded-xl bg-white p-4 shadow-sm border border-[#E5E5EA]',
         isInteractive && 'text-left transition-shadow active:shadow-none',
       )}
     >
@@ -25,17 +25,17 @@ function ShiftCard({ date, title, subtitle, pill, belowPill, trailing, onClick }
         <span className="text-xs font-medium tracking-wide text-[#9CA3AF] uppercase">
           {weekdayFormatter.format(date)}
         </span>
-        <span className="text-2xl font-bold text-[#111111]">{date.getDate()}</span>
+        <span className="text-2xl font-bold text-[#1D1D1F]">{date.getDate()}</span>
         <span className="text-xs font-medium tracking-wide text-[#9CA3AF] uppercase">
           {monthFormatter.format(date)}
         </span>
       </div>
 
-      <div className="mx-3 h-8 self-center border-l border-[#E8E6E3]" />
+      <div className="mx-3 h-8 self-center border-l border-[#E5E5EA]" />
 
       <div className="min-w-0 flex-1">
         <div className="flex items-center justify-between gap-3">
-          <p className="truncate text-sm font-semibold text-[#111111]">{title}</p>
+          <p className="truncate text-sm font-semibold text-[#1D1D1F]">{title}</p>
           {pill}
         </div>
         {subtitle}
@@ -203,7 +203,7 @@ export default function Pool({ user }) {
 
   return (
     <main className="mx-auto w-full max-w-md px-5 pt-[26px] pb-12">
-      <h1 className="mb-6 font-display text-[26px] font-semibold text-[#111111]">Pool</h1>
+      <h1 className="mb-6 text-[26px] font-semibold text-[#1D1D1F]">Pool</h1>
 
       {loading && <p className="text-sm text-[#6B7280]">Loading open shifts…</p>}
       {!loading && error && (
@@ -239,7 +239,7 @@ export default function Pool({ user }) {
                           <p className="truncate text-xs text-[#9CA3AF]">{shift.unit}</p>
                           {shift.nurse_id && (
                             <>
-                              <span className="h-3 border-l border-[#E8E6E3]" />
+                              <span className="h-3 border-l border-[#E5E5EA]" />
                               <p className="truncate text-xs text-[#9CA3AF]">
                                 Offered by {shift.profiles?.full_name ?? 'a nurse'}
                               </p>
@@ -255,7 +255,7 @@ export default function Pool({ user }) {
                               type="button"
                               onClick={() => handleWithdraw(shift)}
                               disabled={isWithdrawing}
-                              className="rounded-full border border-[#E8E6E3] px-4 py-1.5 text-sm text-[#111111] disabled:opacity-60"
+                              className="rounded-full border border-[#E5E5EA] px-4 py-1.5 text-sm text-[#1D1D1F] disabled:opacity-60"
                             >
                               {isWithdrawing ? 'Withdrawing…' : 'Withdraw'}
                             </button>
@@ -265,7 +265,7 @@ export default function Pool({ user }) {
                             type="button"
                             onClick={() => handleClaim(shift)}
                             disabled={isClaiming}
-                            className="h-auto rounded-full bg-[#111111] px-4 py-1.5 text-sm font-medium text-white hover:bg-[#111111]/90 disabled:opacity-60"
+                            className="h-auto rounded-full bg-[#1D1D1F] px-4 py-1.5 text-sm font-medium text-white hover:bg-[#1D1D1F]/90 disabled:opacity-60"
                           >
                             {isClaiming ? 'Requesting…' : 'Claim'}
                           </Button>
