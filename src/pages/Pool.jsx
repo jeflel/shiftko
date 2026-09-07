@@ -1,12 +1,11 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
-import { StatusPill } from '@/components/ui/pill'
+import { ShiftPeriodPill } from '@/components/ui/pill'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { formatShiftTimeRange } from '../lib/shiftFormat'
+import { formatShiftTimeRange, getShiftPeriod } from '../lib/shiftFormat'
 
 const weekdayFormatter = new Intl.DateTimeFormat(undefined, { weekday: 'short' })
-const monthFormatter = new Intl.DateTimeFormat(undefined, { month: 'short' })
 
 function ShiftCard({ date, title, subtitle, pill, belowPill, trailing, onClick }) {
   const isInteractive = typeof onClick === 'function'
@@ -17,31 +16,26 @@ function ShiftCard({ date, title, subtitle, pill, belowPill, trailing, onClick }
       type={isInteractive ? 'button' : undefined}
       onClick={onClick}
       className={cn(
-        'flex w-full items-center rounded-xl bg-white p-4 shadow-sm border border-[#E5E5EA]',
-        isInteractive && 'text-left transition-shadow active:shadow-none',
+        'flex w-full items-center gap-3 rounded-card border border-hairline bg-card-surface px-4 py-3.5 shadow-card-lift',
+        isInteractive && 'text-left transition-colors active:bg-press-state',
       )}
     >
-      <div className="flex w-12 shrink-0 flex-col items-center justify-center gap-0.5 text-center">
-        <span className="text-xs font-medium tracking-wide text-[#9CA3AF] uppercase">
+      <div className="flex w-[34px] shrink-0 flex-col items-center gap-0.5 text-center">
+        <span className="text-[11px] font-semibold tracking-[0.03em] text-ink-secondary uppercase">
           {weekdayFormatter.format(date)}
         </span>
-        <span className="text-2xl font-bold text-[#1D1D1F]">{date.getDate()}</span>
-        <span className="text-xs font-medium tracking-wide text-[#9CA3AF] uppercase">
-          {monthFormatter.format(date)}
-        </span>
+        <span className="text-xl leading-[1.1] font-semibold text-ink">{date.getDate()}</span>
       </div>
 
-      <div className="mx-3 h-8 self-center border-l border-[#E5E5EA]" />
+      <div className="h-full self-stretch border-l border-hairline" />
 
       <div className="min-w-0 flex-1">
-        <div className="flex items-center justify-between gap-3">
-          <p className="truncate text-sm font-semibold text-[#1D1D1F]">{title}</p>
-          {pill}
-        </div>
+        <p className="truncate text-sm font-semibold text-ink">{title}</p>
         {subtitle}
         {belowPill && <div className="mt-2">{belowPill}</div>}
       </div>
 
+      {pill && <div className="shrink-0">{pill}</div>}
       {trailing && <div className="ml-3 shrink-0">{trailing}</div>}
     </Comp>
   )
@@ -203,15 +197,15 @@ export default function Pool({ user }) {
 
   return (
     <main className="mx-auto w-full max-w-md px-5 pt-[26px] pb-12">
-      <h1 className="mb-6 text-[26px] font-semibold text-[#1D1D1F]">Pool</h1>
+      <h1 className="mb-6 text-[26px] font-semibold text-ink">Pool</h1>
 
-      {loading && <p className="text-sm text-[#6B7280]">Loading open shifts…</p>}
+      {loading && <p className="text-sm text-ink-secondary">Loading open shifts…</p>}
       {!loading && error && (
         <p className="text-sm text-red-700">Could not load open shifts: {error}</p>
       )}
 
       {!loading && !error && !homeUnit && (
-        <p className="text-sm text-[#6B7280]">
+        <p className="text-sm text-ink-secondary">
           Your home unit hasn&apos;t been set yet. Contact your coordinator.
         </p>
       )}
@@ -219,7 +213,7 @@ export default function Pool({ user }) {
       {!loading && !error && homeUnit && (
         <>
           {shifts.length === 0 ? (
-            <p className="text-sm text-[#6B7280]">No open shifts right now</p>
+            <p className="text-sm text-ink-secondary">No open shifts right now</p>
           ) : (
             <ul className="flex flex-col gap-3">
               {shifts.map((shift) => {
@@ -233,39 +227,34 @@ export default function Pool({ user }) {
                     <ShiftCard
                       date={new Date(shift.starts_at)}
                       title={formatShiftTimeRange(shift.starts_at, shift.ends_at)}
-                      pill={<StatusPill status="open" />}
+                      pill={<ShiftPeriodPill period={getShiftPeriod(shift.starts_at)} />}
                       subtitle={
-                        <div className="mt-1 flex items-center gap-1.5">
-                          <p className="truncate text-xs text-[#9CA3AF]">{shift.unit}</p>
-                          {shift.nurse_id && (
-                            <>
-                              <span className="h-3 border-l border-[#E5E5EA]" />
-                              <p className="truncate text-xs text-[#9CA3AF]">
-                                Offered by {shift.profiles?.full_name ?? 'a nurse'}
-                              </p>
-                            </>
-                          )}
-                        </div>
+                        <p className="mt-0.5 truncate text-xs text-ink-secondary">
+                          {shift.nurse_id
+                            ? `Offered by ${shift.profiles?.full_name ?? 'a nurse'}`
+                            : 'Open · unassigned'}
+                        </p>
                       }
                       trailing={
                         myClaim ? (
                           <div className="flex flex-col items-end gap-1">
-                            <span className="text-sm text-[#6B7280]">Requested</span>
-                            <button
+                            <span className="text-sm text-ink-secondary">Requested</span>
+                            <Button
                               type="button"
+                              variant="secondary"
+                              size="sm"
                               onClick={() => handleWithdraw(shift)}
                               disabled={isWithdrawing}
-                              className="rounded-full border border-[#E5E5EA] px-4 py-1.5 text-sm text-[#1D1D1F] disabled:opacity-60"
                             >
                               {isWithdrawing ? 'Withdrawing…' : 'Withdraw'}
-                            </button>
+                            </Button>
                           </div>
                         ) : (
                           <Button
                             type="button"
+                            size="sm"
                             onClick={() => handleClaim(shift)}
                             disabled={isClaiming}
-                            className="h-auto rounded-full bg-[#1D1D1F] px-4 py-1.5 text-sm font-medium text-white hover:bg-[#1D1D1F]/90 disabled:opacity-60"
                           >
                             {isClaiming ? 'Requesting…' : 'Claim'}
                           </Button>
@@ -274,7 +263,7 @@ export default function Pool({ user }) {
                     />
 
                     {claimCount > 0 && (
-                      <p className="mt-1.5 pl-1 text-xs text-[#9CA3AF]">
+                      <p className="mt-1.5 pl-1 text-xs text-ink-secondary">
                         {claimCount} nurse{claimCount === 1 ? '' : 's'} requested
                       </p>
                     )}

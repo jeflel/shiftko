@@ -125,8 +125,6 @@ export default function ShiftDetail({ shift, user, onBack }) {
 
       if (cancelled) return
 
-      console.log('raw coworkers data', data, fetchError)
-
       if (fetchError) {
         setError(fetchError.message)
         setCoworkers([])
@@ -170,31 +168,31 @@ export default function ShiftDetail({ shift, user, onBack }) {
         <button
           type="button"
           onClick={onBack}
-          className="mb-6 inline-flex items-center gap-1 text-sm font-medium text-[#6B7280]"
+          className="mb-6 inline-flex items-center gap-1 text-sm font-medium text-ink-secondary"
         >
           <ChevronLeft size={18} strokeWidth={2} />
           Back
         </button>
 
-        <div className="rounded-2xl bg-white p-5 shadow-sm">
+        <div className="rounded-card border border-hairline bg-white p-5 shadow-card-lift">
           <div className="flex items-start justify-between gap-3">
-            <p className="text-2xl font-bold text-[#1D1D1F]">
+            <p className="text-2xl font-bold text-ink">
               {formatShiftTimeRange(shift.starts_at, shift.ends_at)}
             </p>
             <ShiftPeriodPill period={period} />
           </div>
 
           <div className="mt-1 flex items-center gap-1.5">
-            <p className="text-xs text-[#9CA3AF]">{shift.unit}</p>
+            <p className="text-xs text-ink-secondary">{shift.unit}</p>
             {credential && (
               <>
-                <span className="h-3 border-l border-[#E5E5EA]" />
-                <p className="text-xs text-[#9CA3AF]">{credential}</p>
+                <span className="h-3 border-l border-hairline" />
+                <p className="text-xs text-ink-secondary">{credential}</p>
               </>
             )}
           </div>
 
-          <p className="mt-3 text-sm text-[#6B7280]">{formatShiftDate(shift.starts_at)}</p>
+          <p className="mt-3 text-sm text-ink-secondary">{formatShiftDate(shift.starts_at)}</p>
         </div>
 
         {canManageOffer && (
@@ -202,10 +200,10 @@ export default function ShiftDetail({ shift, user, onBack }) {
             {shiftState.is_offered ? (
               <Button
                 type="button"
+                variant="secondary"
                 onClick={() => handleToggleOffer(false)}
                 disabled={offerSaving}
-                variant="outline"
-                className="h-auto w-full rounded-full border-[#E5E5EA] py-4 text-base font-semibold text-[#1D1D1F] shadow-none hover:bg-white disabled:opacity-60"
+                className="h-auto w-full py-4 text-base"
               >
                 {offerSaving ? 'Withdrawing…' : 'Withdraw offer'}
               </Button>
@@ -214,7 +212,7 @@ export default function ShiftDetail({ shift, user, onBack }) {
                 type="button"
                 onClick={() => handleToggleOffer(true)}
                 disabled={offerSaving}
-                className="h-auto w-full rounded-full bg-[#1D1D1F] py-4 text-base font-semibold text-white hover:bg-[#1D1D1F]/90 disabled:opacity-60"
+                className="h-auto w-full py-4 text-base"
               >
                 {offerSaving ? 'Offering…' : 'Offer this shift'}
               </Button>
@@ -225,19 +223,19 @@ export default function ShiftDetail({ shift, user, onBack }) {
         )}
 
         <section className="mt-9">
-          <h2 className="mb-4 flex items-center gap-1.5 text-sm font-semibold text-[#1D1D1F]">
+          <h2 className="mb-4 flex items-center gap-1.5 text-sm font-semibold text-ink">
             <Users size={14} strokeWidth={2.5} />
             Working with
           </h2>
 
-          {loading && <p className="text-sm text-[#6B7280]">Loading coworkers…</p>}
+          {loading && <p className="text-sm text-ink-secondary">Loading coworkers…</p>}
 
           {!loading && error && (
             <p className="text-sm text-red-700">Could not load coworkers: {error}</p>
           )}
 
           {!loading && !error && coworkers.length === 0 && (
-            <p className="text-sm text-[#6B7280]">No coworkers on this shift</p>
+            <p className="text-sm text-ink-secondary">No coworkers on this shift</p>
           )}
 
           {!loading && !error && coworkers.length > 0 && (
@@ -245,22 +243,22 @@ export default function ShiftDetail({ shift, user, onBack }) {
               {coworkers.map((coworker) => (
                 <li
                   key={coworker.nurseId}
-                  className="flex items-center gap-3 border-b border-[#E5E5EA] py-3 last:border-b-0"
+                  className="flex items-center gap-3 border-b border-hairline py-3 last:border-b-0"
                 >
-                  <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#F9F9FB] text-xs font-semibold text-[#6B7280]">
+                  <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-page-ground text-xs font-semibold text-ink-secondary">
                     {getInitials(coworker.full_name)}
                   </div>
 
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-[#1D1D1F]">
+                    <p className="truncate text-sm font-medium text-ink">
                       {coworker.full_name}
                     </p>
                     {coworker.credential && (
-                      <p className="text-xs text-[#9CA3AF]">{coworker.credential}</p>
+                      <p className="text-xs text-ink-secondary">{coworker.credential}</p>
                     )}
                   </div>
 
-                  <p className="shrink-0 text-xs text-[#9CA3AF]">
+                  <p className="shrink-0 text-xs text-ink-secondary">
                     {formatShiftTimeRange(coworker.starts_at, coworker.ends_at)}
                   </p>
                 </li>
