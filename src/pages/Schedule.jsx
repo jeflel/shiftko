@@ -15,7 +15,7 @@ import {
   parsePresetTime,
   saveShiftPreset,
 } from '@/lib/savedShiftPresets'
-import { fetchMyPersonalEvents } from '@/lib/personalEvents'
+import { fetchMyPersonalEvents, fetchWorkspacePersonalEvents } from '@/lib/personalEvents'
 import {
   addLocalDays,
   diffInCalendarDays,
@@ -350,6 +350,30 @@ function CalendarDayShiftRow({ shift, credential, onClick }) {
   )
 }
 
+// Personal-event counterpart to CalendarDayShiftRow — same no-date-column
+// shape, dashed border + fixed "Personal" tag like MyPersonalEventRow.
+function CalendarDayPersonalEventRow({ event, onClick }) {
+  const meta = event.unit || event.name
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex w-full items-center gap-3 rounded-card border border-dashed border-hairline bg-card-surface px-4 py-3.5 text-left shadow-card-lift transition-colors duration-150 ease-out active:bg-press-state"
+    >
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-[14px] font-semibold text-ink">
+          {formatShiftTimeRange(event.starts_at, event.ends_at)}
+        </p>
+        {meta && <p className="truncate text-[12px] text-ink-secondary">{meta}</p>}
+      </div>
+      <div className="shrink-0">
+        <ShiftPeriodPill period="Personal" />
+      </div>
+    </button>
+  )
+}
+
 const CAL_WEEKDAY_LABELS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
 const calMonthLabelFormatter = new Intl.DateTimeFormat(undefined, { month: 'long', year: 'numeric' })
 const dayDetailFormatter = new Intl.DateTimeFormat(undefined, { weekday: 'short', month: 'short', day: 'numeric' })
@@ -386,6 +410,7 @@ function MonthCalendarView({
   selectedDayShifts,
   credential,
   onOpenShift,
+  onOpenPersonalEvent,
 }) {
   const todayKey = formatLocalDateKey(new Date())
   const cells = buildMonthGridDays(calendarMonth)
@@ -473,11 +498,17 @@ function MonthCalendarView({
           </div>
         ) : (
           <ul className="flex flex-col gap-2.5">
-            {selectedDayShifts.map((shift) => (
-              <li key={shift.id}>
-                <CalendarDayShiftRow shift={shift} credential={credential} onClick={() => onOpenShift(shift)} />
-              </li>
-            ))}
+            {selectedDayShifts.map((item) =>
+              item._kind === 'personal' ? (
+                <li key={`personal-${item.id}`}>
+                  <CalendarDayPersonalEventRow event={item} onClick={() => onOpenPersonalEvent(item)} />
+                </li>
+              ) : (
+                <li key={item.id}>
+                  <CalendarDayShiftRow shift={item} credential={credential} onClick={() => onOpenShift(item)} />
+                </li>
+              ),
+            )}
           </ul>
         )}
       </div>
@@ -586,12 +617,6 @@ function MyShiftsTab({ user, view, onChangeView }) {
     return () => { cancelled = true }
   }, [user.id])
 
-  // Calendar view (month grid + day-detail) stays shifts-only for now —
-  // personal events aren't wired into MonthCalendarView/CalendarDayShiftRow
-  // yet, and mixing them in here would route a personal-event tap into
-  // ShiftDetail, which expects an official shift's fields. List view below
-  // merges the two into combinedByDay instead.
-  const shiftsByDay = groupByDayKey(shifts, (shift) => shift.starts_at)
   const combinedItems = [
     ...shifts.map((shift) => ({ ...shift, _kind: 'shift' })),
     ...personalEvents.map((event) => ({ ...event, _kind: 'personal' })),
@@ -631,7 +656,7 @@ function MyShiftsTab({ user, view, onChangeView }) {
   if (loading) return <p className="text-sm text-ink-secondary">Loading shifts…</p>
   if (error) return <p className="text-sm text-red-700">Could not load shifts: {error}</p>
 
-  const selectedDayShifts = shiftsByDay[selectedCalendarDateKey] ?? []
+  const selectedDayShifts = combinedByDay[selectedCalendarDateKey] ?? []
 
   return (
     <div className="flex flex-col gap-4">
@@ -679,12 +704,13 @@ function MyShiftsTab({ user, view, onChangeView }) {
               return next
             })
           }}
-          shiftsByDay={shiftsByDay}
+          shiftsByDay={combinedByDay}
           selectedDateKey={selectedCalendarDateKey}
           onSelectDate={setSelectedCalendarDateKey}
           selectedDayShifts={selectedDayShifts}
           credential={credential}
           onOpenShift={setSelectedShift}
+          onOpenPersonalEvent={setSelectedPersonalEvent}
         />
       ) : (
         <>
@@ -784,6 +810,7 @@ function MyShiftsTab({ user, view, onChangeView }) {
 
 function TeamScheduleTab({ view, onChangeView }) {
   const [shifts, setShifts] = useState([])
+  const [personalEvents, setPersonalEvents] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
@@ -821,7 +848,28 @@ function TeamScheduleTab({ view, onChangeView }) {
     return () => { cancelled = true }
   }, [])
 
+  useEffect(() => {
+    let cancelled = false
+    const { start, end } = getFourWeekRange()
+
+    async function fetchTeamPersonalEvents() {
+      try {
+        const data = await fetchWorkspacePersonalEvents({ start, end })
+        // Team Schedule only shows personal events that carry a unit — a
+        // name-only event (no department) stays My-Shifts-only, per the
+        // personal-events visibility rule.
+        if (!cancelled) setPersonalEvents(data.filter((event) => event.unit))
+      } catch {
+        if (!cancelled) setPersonalEvents([])
+      }
+    }
+
+    fetchTeamPersonalEvents()
+    return () => { cancelled = true }
+  }, [])
+
   const shiftsByDay = groupByDayKey(shifts, (shift) => shift.starts_at)
+  const personalEventsByDay = groupByDayKey(personalEvents, (event) => event.starts_at)
   const days = getFourWeekDays()
 
   if (loading) return <p className="text-sm text-[#6B7280]">Loading team schedule…</p>
@@ -836,8 +884,9 @@ function TeamScheduleTab({ view, onChangeView }) {
       <ul className="flex flex-col gap-4">
       {days.map((day) => {
         const dayShifts = shiftsByDay[day.key] ?? []
+        const dayPersonalEvents = personalEventsByDay[day.key] ?? []
 
-        if (dayShifts.length === 0) {
+        if (dayShifts.length === 0 && dayPersonalEvents.length === 0) {
           return <DayOffRow key={day.key} date={day.date} text="No shifts" />
         }
 
@@ -849,6 +898,32 @@ function TeamScheduleTab({ view, onChangeView }) {
             <p className="mb-2 text-sm font-medium text-[#6B7280] uppercase">{dayHeaderLabel}</p>
 
             <div className="flex flex-col gap-3">
+              {dayPersonalEvents.map((event) => (
+                <div
+                  key={`personal-${event.id}`}
+                  className="rounded-xl bg-white p-4 shadow-sm border border-dashed border-[#E5E5EA]"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-sm font-semibold text-[#1D1D1F]">
+                      {formatShiftTimeRange(event.starts_at, event.ends_at)}
+                    </p>
+                    <ShiftPeriodPill period="Personal" />
+                  </div>
+                  <p className="mt-0.5 text-xs text-[#9CA3AF]">{event.unit}</p>
+
+                  <div className="mt-3 border-b border-[#E5E5EA]" />
+
+                  <div className="flex items-center gap-3 py-3">
+                    <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#F9F9FB] text-xs font-semibold text-[#6B7280]">
+                      {getInitials(event.profiles?.full_name)}
+                    </div>
+                    <p className="truncate text-sm font-medium text-[#1D1D1F]">
+                      {event.profiles?.full_name ?? 'A teammate'}
+                    </p>
+                  </div>
+                </div>
+              ))}
+
               {timeSlots.map((slotShifts) => {
                 const [firstShift] = slotShifts
                 const period = getShiftPeriod(firstShift.starts_at)
