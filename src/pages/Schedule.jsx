@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { AlertTriangle, Calendar, ChevronLeft, List, Pencil, Sun, Sunset, Moon, X, Trash2, Users } from 'lucide-react'
+import { AlertTriangle, Calendar, ChevronLeft, ChevronRight, List, Pencil, Sun, Sunset, Moon, X, Trash2, Users } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import ShiftDetail from './ShiftDetail'
 import { ShiftPeriodPill, StatusPill } from '@/components/ui/pill'
@@ -170,24 +170,6 @@ function getWeekDaysForOffset(offset) {
 // Full-screen stub — the real month-grid Calendar View is deliberately deferred.
 // This exists so the header's Calendar toggle has somewhere real to go instead of
 // being dead.
-function CalendarViewPlaceholder({ onBack }) {
-  return (
-    <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-card-surface px-5">
-      <button
-        type="button"
-        onClick={onBack}
-        className="absolute top-8 left-5 inline-flex items-center gap-1 text-sm font-medium text-ink-secondary"
-      >
-        <ChevronLeft size={18} strokeWidth={2} />
-        Back
-      </button>
-      <Calendar size={40} strokeWidth={1.5} className="mb-4 text-hairline" />
-      <p className="text-lg font-semibold text-ink">Calendar view</p>
-      <p className="mt-1 text-sm text-ink-secondary">Coming soon.</p>
-    </div>
-  )
-}
-
 // "My Shifts" / "Team Schedule" — shared between the nurse's own view toggle
 // (MyShiftsTab) and the coordinator's separate Team Schedule tab (TeamScheduleTab).
 function ScheduleViewToggle({ value, onChange }) {
@@ -206,19 +188,9 @@ function ScheduleViewToggle({ value, onChange }) {
 
 function ScheduleTab({ user }) {
   const [view, setView] = useState('mine')
-  const [showCalendarView, setShowCalendarView] = useState(false)
-
-  if (showCalendarView) {
-    return <CalendarViewPlaceholder onBack={() => setShowCalendarView(false)} />
-  }
 
   return view === 'mine' ? (
-    <MyShiftsTab
-      user={user}
-      onOpenCalendarView={() => setShowCalendarView(true)}
-      view={view}
-      onChangeView={setView}
-    />
+    <MyShiftsTab user={user} view={view} onChangeView={setView} />
   ) : (
     <TeamScheduleTab view={view} onChangeView={setView} />
   )
@@ -298,7 +270,180 @@ function getWeekGroupLabel(offset, weekStart) {
   return `Week of ${monthFormatter.format(weekStart)} ${weekStart.getDate()}`
 }
 
-function MyShiftsTab({ user, onOpenCalendarView, view, onChangeView }) {
+// Simpler shift row for the calendar's day-detail panel, per ScheduleCalendarMine.dc.html:
+// no date column (the day-detail label above already carries the date).
+function CalendarDayShiftRow({ shift, credential, onClick }) {
+  const period = getShiftPeriod(shift.starts_at)
+  const isPending = shift.status === 'pending'
+  const isOffered = shift.is_offered === true
+  const metaParts = [shift.unit, credential].filter(Boolean)
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex w-full items-center gap-3 rounded-card border border-hairline bg-card-surface px-4 py-3.5 text-left shadow-card-lift transition-colors duration-150 ease-out active:bg-press-state"
+    >
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-[14px] font-semibold text-ink">
+          {formatShiftTimeRange(shift.starts_at, shift.ends_at)}
+        </p>
+        {metaParts.length > 0 && (
+          <p className="truncate text-[12px] text-ink-secondary">{metaParts.join(' · ')}</p>
+        )}
+        {(isPending || isOffered) && (
+          <div className="mt-1">
+            {isPending ? (
+              <StatusPill status="pending" label="Pending" />
+            ) : (
+              <StatusPill status="open" label="Offered" />
+            )}
+          </div>
+        )}
+      </div>
+      <div className="shrink-0">
+        <ShiftPeriodPill period={period} />
+      </div>
+    </button>
+  )
+}
+
+const CAL_WEEKDAY_LABELS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
+const calMonthLabelFormatter = new Intl.DateTimeFormat(undefined, { month: 'long', year: 'numeric' })
+const dayDetailFormatter = new Intl.DateTimeFormat(undefined, { weekday: 'short', month: 'short', day: 'numeric' })
+
+// Sunday-first month grid, padded with leading/trailing blanks to full weeks —
+// same shape as calendar-strip.jsx's buildMonthCells, kept separate since this
+// one only needs the Date (no dateKey/inCurrentMonth bookkeeping).
+function buildMonthGridDays(monthDate) {
+  const year = monthDate.getFullYear()
+  const month = monthDate.getMonth()
+  const firstOfMonth = new Date(year, month, 1)
+  const daysInMonth = new Date(year, month + 1, 0).getDate()
+  const leadingBlanks = firstOfMonth.getDay()
+
+  const cells = []
+  for (let i = 0; i < leadingBlanks; i += 1) cells.push(null)
+  for (let day = 1; day <= daysInMonth; day += 1) cells.push(new Date(year, month, day))
+  while (cells.length % 7 !== 0) cells.push(null)
+  return cells
+}
+
+// Month-grid Calendar view per ScheduleCalendarMine.dc.html — the "My Shifts"
+// variant only; the Team Schedule equivalent (ScheduleCalendar.dc.html) is out
+// of scope, same boundary as the rest of TeamScheduleTab in the Reskin Plan.
+// Shift-density dots only reflect whatever MyShiftsTab already fetched
+// (+/-8 weeks from today) — a month navigated further out shows no dots even
+// if shifts exist there, since this view doesn't do its own fetch.
+function MonthCalendarView({
+  calendarMonth,
+  onChangeMonth,
+  shiftsByDay,
+  selectedDateKey,
+  onSelectDate,
+  selectedDayShifts,
+  credential,
+  onOpenShift,
+}) {
+  const todayKey = formatLocalDateKey(new Date())
+  const cells = buildMonthGridDays(calendarMonth)
+  const selectedDate = new Date(`${selectedDateKey}T00:00:00`)
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-2.5 rounded-card border border-hairline bg-card-surface p-3.5 shadow-card-lift">
+        <div className="flex items-center justify-between">
+          <p className="text-[15px] font-bold text-ink">{calMonthLabelFormatter.format(calendarMonth)}</p>
+          <div className="flex gap-1">
+            <button
+              type="button"
+              aria-label="Previous month"
+              onClick={() => onChangeMonth(-1)}
+              className="flex size-6 items-center justify-center rounded-control-sm border border-hairline text-ink-secondary"
+            >
+              <ChevronLeft size={13} strokeWidth={2} />
+            </button>
+            <button
+              type="button"
+              aria-label="Next month"
+              onClick={() => onChangeMonth(1)}
+              className="flex size-6 items-center justify-center rounded-control-sm border border-hairline text-ink-secondary"
+            >
+              <ChevronRight size={13} strokeWidth={2} />
+            </button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-7">
+          {CAL_WEEKDAY_LABELS.map((label) => (
+            <span
+              key={label}
+              className="text-center text-[11px] font-semibold tracking-wide text-ink-secondary uppercase"
+            >
+              {label}
+            </span>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-7 gap-y-2">
+          {cells.map((date, index) => {
+            if (!date) return <div key={`blank-${index}`} />
+
+            const dateKey = formatLocalDateKey(date)
+            const isToday = dateKey === todayKey
+            const isSelected = dateKey === selectedDateKey
+            const dotCount = Math.min((shiftsByDay[dateKey] ?? []).length, 3)
+
+            return (
+              <button
+                key={dateKey}
+                type="button"
+                onClick={() => onSelectDate(dateKey)}
+                className={cn(
+                  'flex flex-col items-center gap-[3px] rounded-[10px] py-0.5',
+                  isSelected && 'bg-press-state',
+                )}
+              >
+                <span
+                  className={cn(
+                    'flex size-[26px] items-center justify-center rounded-full text-[13px] font-semibold',
+                    isToday ? 'bg-teal-foreground text-white' : 'text-ink',
+                  )}
+                >
+                  {date.getDate()}
+                </span>
+                <div className="flex h-1.5 gap-0.5">
+                  {Array.from({ length: dotCount }).map((_, dotIndex) => (
+                    <span key={dotIndex} className="size-[5px] rounded-full bg-ink-tertiary" />
+                  ))}
+                </div>
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-2.5">
+        <p className="text-[14px] font-bold text-ink">{dayDetailFormatter.format(selectedDate)}</p>
+        {selectedDayShifts.length === 0 ? (
+          <div className="rounded-card border border-dashed border-hairline px-4 py-4 text-center text-[13px] text-ink-secondary">
+            Day off
+          </div>
+        ) : (
+          <ul className="flex flex-col gap-2.5">
+            {selectedDayShifts.map((shift) => (
+              <li key={shift.id}>
+                <CalendarDayShiftRow shift={shift} credential={credential} onClick={() => onOpenShift(shift)} />
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function MyShiftsTab({ user, view, onChangeView }) {
   const [shifts, setShifts] = useState([])
   const [credential, setCredential] = useState(null)
   const [homeUnit, setHomeUnit] = useState(null)
@@ -307,6 +452,14 @@ function MyShiftsTab({ user, onOpenCalendarView, view, onChangeView }) {
   const [selectedShift, setSelectedShift] = useState(null)
   const [refreshKey, setRefreshKey] = useState(0)
   const [showAddPanel, setShowAddPanel] = useState(false)
+  const [contentView, setContentView] = useState('list')
+  const [calendarMonth, setCalendarMonth] = useState(() => {
+    const d = new Date()
+    d.setDate(1)
+    d.setHours(0, 0, 0, 0)
+    return d
+  })
+  const [selectedCalendarDateKey, setSelectedCalendarDateKey] = useState(() => formatLocalDateKey(new Date()))
 
   const weekMarkerRefs = useRef({})
   const hasScrolledInitiallyRef = useRef(false)
@@ -403,23 +556,35 @@ function MyShiftsTab({ user, onOpenCalendarView, view, onChangeView }) {
   if (loading) return <p className="text-sm text-ink-secondary">Loading shifts…</p>
   if (error) return <p className="text-sm text-red-700">Could not load shifts: {error}</p>
 
+  const selectedDayShifts = shiftsByDay[selectedCalendarDateKey] ?? []
+
   return (
     <div className="flex flex-col gap-4">
       <div className="sticky top-0 z-10 -mx-5 flex flex-col gap-4 border-b border-hairline bg-page-ground px-5 pt-3 pb-4">
         <div className="flex items-center justify-between">
           <h1 className="text-[22px] font-bold tracking-[-0.01em] text-ink">Schedule</h1>
           <div className="flex gap-1 rounded-[11px] bg-track-neutral p-[3px]">
-            <span
-              className="flex h-[26px] w-[30px] items-center justify-center rounded-[7px] bg-card-surface text-ink"
-              aria-hidden="true"
-            >
-              <List size={15} strokeWidth={1.75} />
-            </span>
             <button
               type="button"
-              onClick={onOpenCalendarView}
+              onClick={() => setContentView('list')}
+              aria-label="List view"
+              aria-pressed={contentView === 'list'}
+              className={cn(
+                'flex h-[26px] w-[30px] items-center justify-center rounded-[7px]',
+                contentView === 'list' ? 'bg-card-surface text-ink' : 'text-ink-secondary',
+              )}
+            >
+              <List size={15} strokeWidth={1.75} />
+            </button>
+            <button
+              type="button"
+              onClick={() => setContentView('calendar')}
               aria-label="Calendar view"
-              className="flex h-[26px] w-[30px] items-center justify-center rounded-[7px] text-ink-secondary"
+              aria-pressed={contentView === 'calendar'}
+              className={cn(
+                'flex h-[26px] w-[30px] items-center justify-center rounded-[7px]',
+                contentView === 'calendar' ? 'bg-card-surface text-ink' : 'text-ink-secondary',
+              )}
             >
               <Calendar size={15} strokeWidth={1.75} />
             </button>
@@ -429,65 +594,86 @@ function MyShiftsTab({ user, onOpenCalendarView, view, onChangeView }) {
         <ScheduleViewToggle value={view} onChange={onChangeView} />
       </div>
 
-      {showAddPanel ? (
-        <AddMyShiftPanel
-          userId={user.id}
-          homeUnit={homeUnit}
-          onClose={() => setShowAddPanel(false)}
-          onSaved={() => {
-            setShowAddPanel(false)
-            setRefreshKey((k) => k + 1)
+      {contentView === 'calendar' ? (
+        <MonthCalendarView
+          calendarMonth={calendarMonth}
+          onChangeMonth={(delta) => {
+            setCalendarMonth((current) => {
+              const next = new Date(current)
+              next.setMonth(next.getMonth() + delta)
+              return next
+            })
           }}
+          shiftsByDay={shiftsByDay}
+          selectedDateKey={selectedCalendarDateKey}
+          onSelectDate={setSelectedCalendarDateKey}
+          selectedDayShifts={selectedDayShifts}
+          credential={credential}
+          onOpenShift={setSelectedShift}
         />
       ) : (
-        <Button type="button" variant="secondary" onClick={() => setShowAddPanel(true)} className="w-full">
-          + Add a shift
-        </Button>
+        <>
+          {showAddPanel ? (
+            <AddMyShiftPanel
+              userId={user.id}
+              homeUnit={homeUnit}
+              onClose={() => setShowAddPanel(false)}
+              onSaved={() => {
+                setShowAddPanel(false)
+                setRefreshKey((k) => k + 1)
+              }}
+            />
+          ) : (
+            <Button type="button" variant="secondary" onClick={() => setShowAddPanel(true)} className="w-full">
+              + Add a shift
+            </Button>
+          )}
+
+          <div className="flex flex-col gap-5">
+            {weekOffsets.map((offset) => {
+              const days = getWeekDaysForOffset(offset)
+              const hasAnyShift = days.some((date) => (shiftsByDay[formatLocalDateKey(date)] ?? []).length > 0)
+              if (!hasAnyShift && Math.abs(offset) > 1) return null
+
+              return (
+                <div
+                  key={offset}
+                  ref={(el) => { weekMarkerRefs.current[offset] = el }}
+                  className="flex flex-col gap-2.5"
+                >
+                  <p className="text-[12px] font-semibold tracking-wide text-ink-secondary uppercase">
+                    {getWeekGroupLabel(offset, days[0])}
+                  </p>
+                  <ul className="flex flex-col gap-2.5">
+                    {days.map((date) => {
+                      const key = formatLocalDateKey(date)
+                      const dayShifts = shiftsByDay[key] ?? []
+
+                      if (dayShifts.length === 0) {
+                        return <MyDayOffRow key={key} date={date} />
+                      }
+
+                      return dayShifts.map((shift) => {
+                        const isPast = new Date(shift.ends_at).getTime() < Date.now()
+                        return (
+                          <li key={shift.id}>
+                            <MyShiftRow
+                              shift={shift}
+                              credential={credential}
+                              isPast={isPast}
+                              onClick={() => setSelectedShift(shift)}
+                            />
+                          </li>
+                        )
+                      })
+                    })}
+                  </ul>
+                </div>
+              )
+            })}
+          </div>
+        </>
       )}
-
-      <div className="flex flex-col gap-5">
-        {weekOffsets.map((offset) => {
-          const days = getWeekDaysForOffset(offset)
-          const hasAnyShift = days.some((date) => (shiftsByDay[formatLocalDateKey(date)] ?? []).length > 0)
-          if (!hasAnyShift && Math.abs(offset) > 1) return null
-
-          return (
-            <div
-              key={offset}
-              ref={(el) => { weekMarkerRefs.current[offset] = el }}
-              className="flex flex-col gap-2.5"
-            >
-              <p className="text-[12px] font-semibold tracking-wide text-ink-secondary uppercase">
-                {getWeekGroupLabel(offset, days[0])}
-              </p>
-              <ul className="flex flex-col gap-2.5">
-                {days.map((date) => {
-                  const key = formatLocalDateKey(date)
-                  const dayShifts = shiftsByDay[key] ?? []
-
-                  if (dayShifts.length === 0) {
-                    return <MyDayOffRow key={key} date={date} />
-                  }
-
-                  return dayShifts.map((shift) => {
-                    const isPast = new Date(shift.ends_at).getTime() < Date.now()
-                    return (
-                      <li key={shift.id}>
-                        <MyShiftRow
-                          shift={shift}
-                          credential={credential}
-                          isPast={isPast}
-                          onClick={() => setSelectedShift(shift)}
-                        />
-                      </li>
-                    )
-                  })
-                })}
-              </ul>
-            </div>
-          )
-        })}
-      </div>
     </div>
   )
 }
