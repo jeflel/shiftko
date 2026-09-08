@@ -405,27 +405,29 @@ function MyShiftsTab({ user, onOpenCalendarView, view, onChangeView }) {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-[22px] font-bold tracking-[-0.01em] text-ink">Schedule</h1>
-        <div className="flex gap-1 rounded-[11px] bg-track-neutral p-[3px]">
-          <span
-            className="flex h-[26px] w-[30px] items-center justify-center rounded-[7px] bg-card-surface text-ink"
-            aria-hidden="true"
-          >
-            <List size={15} strokeWidth={1.75} />
-          </span>
-          <button
-            type="button"
-            onClick={onOpenCalendarView}
-            aria-label="Calendar view"
-            className="flex h-[26px] w-[30px] items-center justify-center rounded-[7px] text-ink-secondary"
-          >
-            <Calendar size={15} strokeWidth={1.75} />
-          </button>
+      <div className="sticky top-0 z-10 -mx-5 flex flex-col gap-4 border-b border-hairline bg-page-ground px-5 pt-3 pb-4">
+        <div className="flex items-center justify-between">
+          <h1 className="text-[22px] font-bold tracking-[-0.01em] text-ink">Schedule</h1>
+          <div className="flex gap-1 rounded-[11px] bg-track-neutral p-[3px]">
+            <span
+              className="flex h-[26px] w-[30px] items-center justify-center rounded-[7px] bg-card-surface text-ink"
+              aria-hidden="true"
+            >
+              <List size={15} strokeWidth={1.75} />
+            </span>
+            <button
+              type="button"
+              onClick={onOpenCalendarView}
+              aria-label="Calendar view"
+              className="flex h-[26px] w-[30px] items-center justify-center rounded-[7px] text-ink-secondary"
+            >
+              <Calendar size={15} strokeWidth={1.75} />
+            </button>
+          </div>
         </div>
-      </div>
 
-      <ScheduleViewToggle value={view} onChange={onChangeView} />
+        <ScheduleViewToggle value={view} onChange={onChangeView} />
+      </div>
 
       {showAddPanel ? (
         <AddMyShiftPanel
