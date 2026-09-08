@@ -197,21 +197,26 @@ export default function Pool({ user }) {
 
   return (
     <main className="mx-auto w-full max-w-md px-5 pt-[26px] pb-12">
-      <h1 className="mb-6 text-[26px] font-semibold text-ink">Pool</h1>
+      <h1 className="mb-1 text-[26px] font-semibold text-ink">Pool</h1>
 
-      {loading && <p className="text-sm text-ink-secondary">Loading open shifts…</p>}
+      {loading && <p className="mb-6 text-sm text-ink-secondary">Loading open shifts…</p>}
       {!loading && error && (
-        <p className="text-sm text-red-700">Could not load open shifts: {error}</p>
+        <p className="mb-6 text-sm text-red-700">Could not load open shifts: {error}</p>
       )}
 
       {!loading && !error && !homeUnit && (
-        <p className="text-sm text-ink-secondary">
+        <p className="mb-6 text-sm text-ink-secondary">
           Your home unit hasn&apos;t been set yet. Contact your coordinator.
         </p>
       )}
 
       {!loading && !error && homeUnit && (
         <>
+          <p className="mb-6 text-sm text-ink-secondary">
+            <span className="font-semibold text-ink">{shifts.length} open</span> across{' '}
+            {homeUnit} · coordinator-posted opens and coworker offers together, tap to claim
+          </p>
+
           {shifts.length === 0 ? (
             <p className="text-sm text-ink-secondary">No open shifts right now</p>
           ) : (
