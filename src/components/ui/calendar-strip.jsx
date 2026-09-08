@@ -53,8 +53,8 @@ export function CalendarStrip({ selectedDateKey, onSelect, monthsAhead = 3 }) {
   }, [today, monthsAhead])
 
   return (
-    <div className="flex max-h-80 flex-col gap-4 overflow-y-auto rounded-xl border border-[#E5E5EA] p-3">
-      <div className="sticky top-0 grid grid-cols-7 gap-1 bg-white pb-1 text-center text-xs font-medium uppercase tracking-wide text-[#9CA3AF]">
+    <div className="flex max-h-80 flex-col gap-4 overflow-y-auto rounded-control border border-hairline p-3">
+      <div className="sticky top-0 grid grid-cols-7 gap-1 bg-card-surface pb-1 text-center text-xs font-medium tracking-wide text-ink-secondary uppercase">
         {WEEKDAY_LABELS.map((label, i) => (
           <span key={i}>{label}</span>
         ))}
@@ -64,7 +64,7 @@ export function CalendarStrip({ selectedDateKey, onSelect, monthsAhead = 3 }) {
         const cells = buildMonthCells(monthDate)
         return (
           <div key={monthDate.toISOString()} className="flex flex-col gap-2">
-            <p className="text-sm font-semibold text-[#1D1D1F]">
+            <p className="text-sm font-semibold text-ink">
               {monthLabelFormatter.format(monthDate)}
             </p>
             <div className="grid grid-cols-7 gap-1">
@@ -83,10 +83,10 @@ export function CalendarStrip({ selectedDateKey, onSelect, monthsAhead = 3 }) {
                     onClick={() => onSelect(cell.dateKey)}
                     className={cn(
                       'flex h-9 w-9 items-center justify-center rounded-full text-sm',
-                      isPast && 'text-[#D1D5DB] line-through',
-                      !isPast && !isSelected && 'text-[#1D1D1F] hover:bg-[#F9F9FB]',
-                      isSelected && 'bg-[#1D1D1F] font-semibold text-white',
-                      isToday && !isSelected && 'font-semibold',
+                      isPast && 'text-hairline line-through',
+                      !isPast && !isSelected && 'text-ink hover:bg-press-state',
+                      isSelected && 'bg-teal-foreground font-semibold text-white',
+                      isToday && !isSelected && 'font-semibold text-teal-foreground',
                     )}
                   >
                     {cell.date.getDate()}
