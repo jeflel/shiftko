@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import {
   Calendar,
+  CalendarPlus,
   Users,
   AlertTriangle,
   CheckCircle2,
@@ -12,6 +13,7 @@ import {
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import ShiftDetail from './ShiftDetail'
+import PersonalEventPanel from '@/components/PersonalEventPanel'
 import { Wordmark } from '@/components/ui/wordmark'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -122,9 +124,10 @@ function ShiftProgress({ shift }) {
   )
 }
 
-// Action list: Claim Shifts (net-new per the Reskin Plan, links to the Pool tab) plus
-// the most recent notification, if any. Per DESIGN.md's Action Row spec.
-function ActionList({ openCount, homeUnit, notification, onGoToPool, onOpenNotification }) {
+// Action list: Claim Shifts (net-new per the Reskin Plan, links to the Pool tab),
+// Add a Shift (opens the Personal Event panel), plus the most recent
+// notification, if any. Per DESIGN.md's Action Row spec.
+function ActionList({ openCount, homeUnit, notification, onGoToPool, onAddPersonalEvent, onOpenNotification }) {
   const isNegative = notification?.type === 'claim_denied'
   const NotifIcon = isNegative ? AlertTriangle : CheckCircle2
 
@@ -149,6 +152,22 @@ function ActionList({ openCount, homeUnit, notification, onGoToPool, onOpenNotif
             {openCount}
           </span>
         )}
+        <ChevronRight size={16} strokeWidth={2} className="shrink-0 text-chevron-muted" />
+      </button>
+
+      <div className="ml-[60px] h-px bg-hairline" />
+      <button
+        type="button"
+        onClick={onAddPersonalEvent}
+        className={cn('flex items-center gap-3 px-4 py-3.5 text-left transition-colors active:bg-press-state', !notification && 'rounded-b-card')}
+      >
+        <span className="flex size-8 shrink-0 items-center justify-center rounded-control bg-teal-tint text-teal-foreground">
+          <CalendarPlus size={17} strokeWidth={1.9} />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold text-ink">Add a Shift</p>
+          <p className="truncate text-xs text-ink-secondary">Log a shift you're working</p>
+        </div>
         <ChevronRight size={16} strokeWidth={2} className="shrink-0 text-chevron-muted" />
       </button>
 
@@ -347,6 +366,7 @@ export default function Home({ user, role, onGoToManage, onGoToPool }) {
   const [error, setError] = useState(null)
   const [selectedShift, setSelectedShift] = useState(null)
   const [bellOpen, setBellOpen] = useState(false)
+  const [showAddPersonalEvent, setShowAddPersonalEvent] = useState(false)
 
   const isCoordinator = role === 'coordinator'
 
@@ -607,6 +627,7 @@ export default function Home({ user, role, onGoToManage, onGoToPool }) {
                   homeUnit={homeUnit}
                   notification={latestNotification}
                   onGoToPool={onGoToPool}
+                  onAddPersonalEvent={() => setShowAddPersonalEvent(true)}
                   onOpenNotification={handleOpenNotification}
                 />
 
@@ -658,6 +679,14 @@ export default function Home({ user, role, onGoToManage, onGoToPool }) {
           </div>
         )}
       </main>
+
+      {showAddPersonalEvent && (
+        <PersonalEventPanel
+          userId={user.id}
+          onClose={() => setShowAddPersonalEvent(false)}
+          onSaved={() => setShowAddPersonalEvent(false)}
+        />
+      )}
     </div>
   )
 }

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { AlertTriangle, Calendar, ChevronLeft, ChevronRight, List, Pencil, Sun, Sunset, Moon, X, Trash2, Users } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import ShiftDetail from './ShiftDetail'
+import PersonalEventPanel from '@/components/PersonalEventPanel'
 import { ShiftPeriodPill, StatusPill } from '@/components/ui/pill'
 import { Button } from '@/components/ui/button'
 import { CalendarStrip } from '@/components/ui/calendar-strip'
@@ -14,6 +15,7 @@ import {
   parsePresetTime,
   saveShiftPreset,
 } from '@/lib/savedShiftPresets'
+import { fetchMyPersonalEvents } from '@/lib/personalEvents'
 import {
   addLocalDays,
   diffInCalendarDays,
@@ -263,6 +265,46 @@ function MyShiftRow({ shift, credential, isPast, onClick }) {
   )
 }
 
+// Personal event row — same card shape as MyShiftRow but a dashed border
+// and a fixed "Personal" tag instead of the shift's own period, per
+// ScheduleList.dc.html. Meta line is the event's unit if it has one,
+// otherwise its free-text name.
+function MyPersonalEventRow({ event, isPast, onClick }) {
+  const date = new Date(event.starts_at)
+  const meta = event.unit || event.name
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        'flex w-full items-center gap-3 rounded-card border border-dashed border-hairline bg-card-surface px-4 py-3.5 text-left shadow-card-lift transition-colors duration-150 ease-out active:bg-press-state',
+        isPast && 'opacity-45',
+      )}
+    >
+      <div className="flex w-[34px] shrink-0 flex-col items-center">
+        <span className="text-[11px] font-semibold tracking-wide text-ink-secondary uppercase">
+          {weekdayFormatter.format(date)}
+        </span>
+        <span className="text-[20px] leading-tight font-semibold text-ink">{date.getDate()}</span>
+      </div>
+
+      <div className="h-full min-h-9 w-px shrink-0 self-stretch bg-hairline" aria-hidden="true" />
+
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-[14px] font-semibold text-ink">
+          {formatShiftTimeRange(event.starts_at, event.ends_at)}
+        </p>
+        {meta && <p className="truncate text-[12px] text-ink-secondary">{meta}</p>}
+      </div>
+
+      <div className="shrink-0">
+        <ShiftPeriodPill period="Personal" />
+      </div>
+    </button>
+  )
+}
+
 function getWeekGroupLabel(offset, weekStart) {
   if (offset === 0) return 'This Week'
   if (offset === 1) return 'Next Week'
@@ -450,6 +492,8 @@ function MyShiftsTab({ user, view, onChangeView }) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [selectedShift, setSelectedShift] = useState(null)
+  const [personalEvents, setPersonalEvents] = useState([])
+  const [selectedPersonalEvent, setSelectedPersonalEvent] = useState(null)
   const [refreshKey, setRefreshKey] = useState(0)
   const [showAddPanel, setShowAddPanel] = useState(false)
   const [contentView, setContentView] = useState('list')
@@ -503,6 +547,27 @@ function MyShiftsTab({ user, view, onChangeView }) {
 
   useEffect(() => {
     let cancelled = false
+    const currentSunday = getSundayWeekStart(new Date())
+    const start = new Date(currentSunday)
+    start.setDate(start.getDate() - MAX_WEEKS_BACK * 7)
+    const end = new Date(currentSunday)
+    end.setDate(end.getDate() + (MAX_WEEKS_FORWARD + 1) * 7)
+
+    async function fetchMyPersonalEventsForRange() {
+      try {
+        const data = await fetchMyPersonalEvents(user.id, { start, end })
+        if (!cancelled) setPersonalEvents(data)
+      } catch {
+        if (!cancelled) setPersonalEvents([])
+      }
+    }
+
+    fetchMyPersonalEventsForRange()
+    return () => { cancelled = true }
+  }, [user.id, refreshKey])
+
+  useEffect(() => {
+    let cancelled = false
 
     async function fetchCredential() {
       const { data } = await supabase
@@ -521,7 +586,17 @@ function MyShiftsTab({ user, view, onChangeView }) {
     return () => { cancelled = true }
   }, [user.id])
 
+  // Calendar view (month grid + day-detail) stays shifts-only for now —
+  // personal events aren't wired into MonthCalendarView/CalendarDayShiftRow
+  // yet, and mixing them in here would route a personal-event tap into
+  // ShiftDetail, which expects an official shift's fields. List view below
+  // merges the two into combinedByDay instead.
   const shiftsByDay = groupByDayKey(shifts, (shift) => shift.starts_at)
+  const combinedItems = [
+    ...shifts.map((shift) => ({ ...shift, _kind: 'shift' })),
+    ...personalEvents.map((event) => ({ ...event, _kind: 'personal' })),
+  ]
+  const combinedByDay = groupByDayKey(combinedItems, (item) => item.starts_at)
 
   const weekOffsets = []
   for (let offset = -MAX_WEEKS_BACK; offset <= MAX_WEEKS_FORWARD; offset += 1) {
@@ -632,7 +707,7 @@ function MyShiftsTab({ user, view, onChangeView }) {
           <div className="flex flex-col gap-5">
             {weekOffsets.map((offset) => {
               const days = getWeekDaysForOffset(offset)
-              const hasAnyShift = days.some((date) => (shiftsByDay[formatLocalDateKey(date)] ?? []).length > 0)
+              const hasAnyShift = days.some((date) => (combinedByDay[formatLocalDateKey(date)] ?? []).length > 0)
               if (!hasAnyShift && Math.abs(offset) > 1) return null
 
               return (
@@ -647,21 +722,34 @@ function MyShiftsTab({ user, view, onChangeView }) {
                   <ul className="flex flex-col gap-2.5">
                     {days.map((date) => {
                       const key = formatLocalDateKey(date)
-                      const dayShifts = shiftsByDay[key] ?? []
+                      const dayItems = combinedByDay[key] ?? []
 
-                      if (dayShifts.length === 0) {
+                      if (dayItems.length === 0) {
                         return <MyDayOffRow key={key} date={date} />
                       }
 
-                      return dayShifts.map((shift) => {
-                        const isPast = new Date(shift.ends_at).getTime() < Date.now()
+                      return dayItems.map((item) => {
+                        const isPast = new Date(item.ends_at).getTime() < Date.now()
+
+                        if (item._kind === 'personal') {
+                          return (
+                            <li key={`personal-${item.id}`}>
+                              <MyPersonalEventRow
+                                event={item}
+                                isPast={isPast}
+                                onClick={() => setSelectedPersonalEvent(item)}
+                              />
+                            </li>
+                          )
+                        }
+
                         return (
-                          <li key={shift.id}>
+                          <li key={item.id}>
                             <MyShiftRow
-                              shift={shift}
+                              shift={item}
                               credential={credential}
                               isPast={isPast}
-                              onClick={() => setSelectedShift(shift)}
+                              onClick={() => setSelectedShift(item)}
                             />
                           </li>
                         )
@@ -673,6 +761,22 @@ function MyShiftsTab({ user, view, onChangeView }) {
             })}
           </div>
         </>
+      )}
+
+      {selectedPersonalEvent && (
+        <PersonalEventPanel
+          userId={user.id}
+          event={selectedPersonalEvent}
+          onClose={() => setSelectedPersonalEvent(null)}
+          onSaved={() => {
+            setSelectedPersonalEvent(null)
+            setRefreshKey((k) => k + 1)
+          }}
+          onDeleted={() => {
+            setSelectedPersonalEvent(null)
+            setRefreshKey((k) => k + 1)
+          }}
+        />
       )}
     </div>
   )

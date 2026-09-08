@@ -1,4 +1,4 @@
-import { Sun, Sunset, Moon, Circle, Clock, CheckCircle2, XCircle } from 'lucide-react'
+import { Sun, Sunset, Moon, Pencil, Circle, Clock, CheckCircle2, XCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 // Period Tag and Neutral Tag per DESIGN.md (shiftko-design-v2-visual-pass-dup).
@@ -9,6 +9,10 @@ const PERIOD_CONFIG = {
   Day: { label: 'Day', icon: Sun },
   Evening: { label: 'Evening', icon: Sunset },
   Night: { label: 'Night', icon: Moon },
+  // Personal events always show this tag instead of Day/Evening/Night,
+  // regardless of what time of day they fall in — per ScheduleList.dc.html,
+  // it's what marks a row as self-logged rather than official.
+  Personal: { label: 'Personal', icon: Pencil },
 }
 
 const STATUS_CONFIG = {
