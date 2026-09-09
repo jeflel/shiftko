@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import {
   Calendar,
   CalendarPlus,
+  Clock,
   Users,
   AlertTriangle,
   CheckCircle2,
@@ -9,6 +10,9 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
+  Sun,
+  Sunset,
+  Moon,
   Waves,
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
@@ -17,7 +21,6 @@ import PersonalEventPanel from '@/components/PersonalEventPanel'
 import { Wordmark } from '@/components/ui/wordmark'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { ShiftPeriodPill } from '@/components/ui/pill'
 import { cn } from '@/lib/utils'
 import {
   formatLocalDateKey,
@@ -63,22 +66,24 @@ function notificationTitle(type) {
 }
 
 // Today hero card: the shift the nurse is on today, or "No shift today". Per
-// DESIGN.md's Today Hero + Shift Progress spec (Main.dc.html).
+// DESIGN.md's Today Hero + Shift Progress spec (Main.dc.html), reskinned per
+// MainHorizontalTiles.dc.html (home-linear-light) — pulled up over the
+// gradient hero, deep-teal time readout, colored period tag.
 function TodayHero({ todaysShift, credential }) {
   const period = todaysShift ? getShiftPeriod(todaysShift.starts_at) : null
 
   return (
-    <div className="flex flex-col gap-2.5 rounded-card border border-hairline bg-white p-4 shadow-card-lift">
+    <div className="-mt-9 flex flex-col gap-2.5 rounded-card border border-hairline bg-white p-4 shadow-card-lift">
       <div className="flex items-center justify-between">
         <span className="text-xs font-semibold tracking-[0.05em] text-ink-secondary uppercase">
           Today
         </span>
-        {period && <ShiftPeriodPill period={period} />}
+        {period && <PeriodTag period={period} />}
       </div>
 
       {todaysShift ? (
         <>
-          <p className="text-[25px] font-bold tracking-[-0.01em] text-ink">
+          <p className="text-[25px] font-bold tracking-[-0.01em] text-status-deep">
             {formatShiftTimeRange(todaysShift.starts_at, todaysShift.ends_at)}
           </p>
           <p className="text-[13px] text-ink-secondary">
@@ -124,78 +129,98 @@ function ShiftProgress({ shift }) {
   )
 }
 
-// Action list: Claim Shifts (net-new per the Reskin Plan, links to the Pool tab),
-// Add a Shift (opens the Personal Event panel), plus the most recent
-// notification, if any. Per DESIGN.md's Action Row spec.
-function ActionList({ openCount, homeUnit, notification, onGoToPool, onAddPersonalEvent, onOpenNotification }) {
-  const isNegative = notification?.type === 'claim_denied'
-  const NotifIcon = isNegative ? AlertTriangle : CheckCircle2
-
+// Section header with an optional "View All" link, shared by the Request
+// Activity / Upcoming Shifts / Weekly Progress sections below.
+function SectionHeader({ title, onViewAll, children }) {
   return (
-    <div className="flex flex-col rounded-card border border-hairline bg-white shadow-card-lift">
-      <button
-        type="button"
-        onClick={onGoToPool}
-        className="flex items-center gap-3 rounded-t-card px-4 py-3.5 text-left transition-colors active:bg-press-state"
-      >
-        <span className="flex size-8 shrink-0 items-center justify-center rounded-control bg-teal-tint text-teal-foreground">
-          <Waves size={17} strokeWidth={1.9} />
-        </span>
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-ink">Claim Shifts</p>
-          <p className="truncate text-xs text-ink-secondary">
-            {openCount} open{homeUnit ? ` on ${homeUnit}` : ''}
-          </p>
-        </div>
-        {openCount > 0 && (
-          <span className="flex h-[18px] min-w-[18px] shrink-0 items-center justify-center rounded-control bg-urgency-red px-1.5 text-[11px] font-semibold text-white">
-            {openCount}
-          </span>
-        )}
-        <ChevronRight size={16} strokeWidth={2} className="shrink-0 text-chevron-muted" />
-      </button>
+    <div className="flex items-center justify-between px-1">
+      <span className="text-[16px] font-semibold tracking-[-0.01em] text-ink">{title}</span>
+      {children ??
+        (onViewAll && (
+          <button
+            type="button"
+            onClick={onViewAll}
+            className="text-xs font-semibold text-teal-foreground"
+          >
+            View All
+          </button>
+        ))}
+    </div>
+  )
+}
 
-      <div className="ml-[60px] h-px bg-hairline" />
+// Quick-action row: Add a Shift (opens the Personal Event panel) and Claim
+// Shifts (net-new per the Reskin Plan, links to the Pool tab), as two
+// icon-left horizontal tiles side by side. Per MainHorizontalTiles.dc.html
+// (home-linear-light, shiftko-design-v2-visual-pass-dup) — replaces the
+// earlier full-width stacked ActionList.
+function QuickActionTiles({ openCount, onGoToPool, onAddPersonalEvent }) {
+  return (
+    <div className="-mt-1 flex gap-2">
       <button
         type="button"
         onClick={onAddPersonalEvent}
-        className={cn('flex items-center gap-3 px-4 py-3.5 text-left transition-colors active:bg-press-state', !notification && 'rounded-b-card')}
+        data-testid="home-add-shift-row"
+        className="flex flex-1 items-center gap-2 rounded-card border border-hairline bg-white px-3 py-2.5 text-left shadow-card-lift transition-colors active:bg-press-state"
       >
         <span className="flex size-8 shrink-0 items-center justify-center rounded-control bg-teal-tint text-teal-foreground">
           <CalendarPlus size={17} strokeWidth={1.9} />
         </span>
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-ink">Add a Shift</p>
-          <p className="truncate text-xs text-ink-secondary">Log a shift you're working</p>
-        </div>
-        <ChevronRight size={16} strokeWidth={2} className="shrink-0 text-chevron-muted" />
+        <span className="min-w-0 flex-1">
+          <p className="truncate text-[13px] font-semibold text-ink">Add a Shift</p>
+          <p className="truncate text-[11px] text-ink-secondary">Log a shift</p>
+        </span>
       </button>
 
-      {notification && (
-        <>
-          <div className="ml-[60px] h-px bg-hairline" />
-          <button
-            type="button"
-            onClick={() => onOpenNotification(notification)}
-            className="flex items-center gap-3 rounded-b-card px-4 py-3.5 text-left transition-colors active:bg-press-state"
-          >
-            <span
-              className={cn(
-                'flex size-8 shrink-0 items-center justify-center rounded-control',
-                isNegative ? 'bg-press-state text-ink-secondary' : 'bg-teal-tint text-teal-foreground',
-              )}
-            >
-              <NotifIcon size={17} strokeWidth={1.75} />
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold text-ink">{notificationTitle(notification.type)}</p>
-              <p className="truncate text-xs text-ink-secondary">{notification.message}</p>
-            </div>
-            <ChevronRight size={16} strokeWidth={2} className="shrink-0 text-chevron-muted" />
-          </button>
-        </>
-      )}
+      <button
+        type="button"
+        onClick={onGoToPool}
+        data-testid="home-claim-shifts-row"
+        className="relative flex flex-1 items-center gap-2 rounded-card border border-hairline bg-white px-3 py-2.5 text-left shadow-card-lift transition-colors active:bg-press-state"
+      >
+        {openCount > 0 && (
+          <span className="absolute top-2.5 right-2.5 flex h-4 min-w-4 shrink-0 items-center justify-center rounded-control-sm bg-urgency-red px-1 text-[10px] font-semibold text-white">
+            {openCount}
+          </span>
+        )}
+        <span className="flex size-8 shrink-0 items-center justify-center rounded-control bg-teal-tint text-teal-foreground">
+          <Waves size={17} strokeWidth={1.9} />
+        </span>
+        <span className="min-w-0 flex-1">
+          <p className="truncate text-[13px] font-semibold text-ink">Claim Shifts</p>
+          <p className="truncate text-[11px] text-ink-secondary">{openCount} open</p>
+        </span>
+      </button>
     </div>
+  )
+}
+
+// Latest notification, shown as a single teal-tinted tile. Per
+// MainHorizontalTiles.dc.html's "Request Activity" section (status-tile).
+function RequestActivity({ notification, onOpen }) {
+  const isNegative = notification.type === 'claim_denied'
+  const NotifIcon = isNegative ? AlertTriangle : CheckCircle2
+
+  return (
+    <button
+      type="button"
+      onClick={() => onOpen(notification)}
+      data-testid="home-notification-row"
+      className={cn(
+        'flex items-center gap-2 rounded-card border p-3 text-left shadow-card-lift transition-colors',
+        isNegative
+          ? 'border-hairline bg-white active:bg-press-state'
+          : 'border-teal bg-teal-tint active:bg-teal-tint/70',
+      )}
+    >
+      <span className="flex size-8 shrink-0 items-center justify-center rounded-control bg-teal-tint text-teal-foreground">
+        <NotifIcon size={17} strokeWidth={1.75} />
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="text-[13px] font-semibold text-ink">{notificationTitle(notification.type)}</p>
+        <p className="truncate text-[11px] text-ink-secondary">{notification.message}</p>
+      </div>
+    </button>
   )
 }
 
@@ -207,6 +232,7 @@ function UpcomingShiftRow({ shift, isFirst, isLast, onSelectShift }) {
     <button
       type="button"
       onClick={() => onSelectShift(shift)}
+      data-testid="home-upcoming-shift-row"
       className={cn(
         'flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors active:bg-press-state',
         isFirst && 'rounded-t-card',
@@ -231,12 +257,12 @@ function UpcomingShiftRow({ shift, isFirst, isLast, onSelectShift }) {
         <p className="truncate text-xs text-ink-secondary">{shift.unit}</p>
       </div>
 
-      <ShiftPeriodPill period={period} />
+      <PeriodTag period={period} />
     </button>
   )
 }
 
-function ThisWeekReport({ shifts, weekOffset, onChangeWeekOffset }) {
+function WeeklyProgress({ shifts, weekOffset, onChangeWeekOffset }) {
   const { start, end } = getWeekBounds(weekOffset)
   const weekShifts = shifts.filter((shift) => {
     const startsAt = new Date(shift.starts_at)
@@ -254,10 +280,7 @@ function ThisWeekReport({ shifts, weekOffset, onChangeWeekOffset }) {
 
   return (
     <section className="flex flex-col gap-2.5">
-      <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold tracking-[0.05em] text-ink-secondary uppercase">
-          This Week
-        </span>
+      <SectionHeader title="Weekly Progress">
         <div className="flex gap-1">
           <button
             type="button"
@@ -276,12 +299,15 @@ function ThisWeekReport({ shifts, weekOffset, onChangeWeekOffset }) {
             <ChevronRight size={13} strokeWidth={2} />
           </button>
         </div>
-      </div>
+      </SectionHeader>
 
       <div className="flex items-stretch rounded-card border border-hairline bg-white p-4 shadow-card-lift">
-        <div className="flex flex-1 flex-col gap-2.5">
-          <span className="text-[11px] font-semibold tracking-[0.04em] text-ink-secondary uppercase">
-            Shifts
+        <div className="flex flex-1 flex-col gap-2">
+          <span className="flex items-center gap-1.5 text-[12px] font-medium tracking-[-0.01em] text-ink-secondary">
+            <span className="flex size-[22px] shrink-0 items-center justify-center rounded-control-sm bg-teal-tint text-teal-foreground">
+              <Calendar size={13} strokeWidth={1.75} />
+            </span>
+            Shifts worked
           </span>
           <p className="text-[22px] leading-none font-bold tracking-[-0.01em] text-ink">
             {shiftCount}
@@ -297,9 +323,12 @@ function ThisWeekReport({ shifts, weekOffset, onChangeWeekOffset }) {
 
         <div className="mx-5 my-px w-px shrink-0 bg-hairline" />
 
-        <div className="flex flex-1 flex-col gap-2.5">
-          <span className="text-[11px] font-semibold tracking-[0.04em] text-ink-secondary uppercase">
-            Hours
+        <div className="flex flex-1 flex-col gap-2">
+          <span className="flex items-center gap-1.5 text-[12px] font-medium tracking-[-0.01em] text-ink-secondary">
+            <span className="flex size-[22px] shrink-0 items-center justify-center rounded-control-sm bg-stat-hours-tint text-stat-hours-fg">
+              <Clock size={13} strokeWidth={1.75} />
+            </span>
+            Hours worked
           </span>
           <p className="text-[22px] leading-none font-bold tracking-[-0.01em] text-ink">
             {totalHours}
@@ -307,7 +336,7 @@ function ThisWeekReport({ shifts, weekOffset, onChangeWeekOffset }) {
           </p>
           <div className="h-1.5 overflow-hidden rounded-full bg-track-neutral">
             <div
-              className="h-full rounded-full bg-teal"
+              className="h-full rounded-full bg-stat-hours-fg"
               style={{ width: `${Math.min(100, (totalHours / hoursTarget) * 100)}%` }}
             />
           </div>
@@ -338,6 +367,43 @@ function getFirstName(fullName) {
   return firstName.endsWith('.') ? firstName : `${firstName}.`
 }
 
+function getInitials(fullName) {
+  if (!fullName) return null
+  const parts = fullName.trim().split(/\s+/)
+  const first = parts[0]?.[0] ?? ''
+  const last = parts.length > 1 ? parts[parts.length - 1][0] : ''
+  return (first + last).toUpperCase() || null
+}
+
+// Colored Day/Evening/Night tag for the Home hero reskin. Deliberately
+// local to Home.jsx rather than a change to ui/pill.jsx's ShiftPeriodPill —
+// the rest of the app keeps the two-color rule (icon + gray text only);
+// this screen's full-color port was approved 2026-09-09.
+const PERIOD_TAG_CONFIG = {
+  Day: { icon: Sun, bg: 'bg-period-day-bg', fg: 'text-period-day-fg' },
+  Evening: { icon: Sunset, bg: 'bg-period-evening-bg', fg: 'text-period-evening-fg' },
+  Night: { icon: Moon, bg: 'bg-period-night-bg', fg: 'text-period-night-fg' },
+}
+
+function PeriodTag({ period }) {
+  const config = PERIOD_TAG_CONFIG[period]
+  if (!config) return null
+  const Icon = config.icon
+
+  return (
+    <span
+      className={cn(
+        'inline-flex shrink-0 items-center gap-1 rounded-control-sm py-1 pr-2 pl-1.5 text-[11px] font-semibold',
+        config.bg,
+        config.fg,
+      )}
+    >
+      <Icon size={12} strokeWidth={2} />
+      {period}
+    </span>
+  )
+}
+
 function formatRelativeTime(isoString) {
   const diffMinutes = Math.floor((Date.now() - new Date(isoString).getTime()) / 60000)
 
@@ -354,7 +420,7 @@ function formatRelativeTime(isoString) {
   return `${diffWeeks} week${diffWeeks === 1 ? '' : 's'} ago`
 }
 
-export default function Home({ user, role, onGoToManage, onGoToPool }) {
+export default function Home({ user, role, onGoToManage, onGoToPool, onGoToSchedule }) {
   const [fullName, setFullName] = useState(null)
   const [credential, setCredential] = useState(null)
   const [homeUnit, setHomeUnit] = useState(null)
@@ -513,6 +579,7 @@ export default function Home({ user, role, onGoToManage, onGoToPool }) {
   const todayLabel = todayLabelFormatter.format(today)
   const firstName = getFirstName(fullName)
   const nurseFirstName = fullName?.trim().split(' ')[0] ?? null
+  const initials = getInitials(fullName)
   const todaysShift = shifts.find((shift) => isSameLocalDay(new Date(shift.starts_at), today))
   const upcomingShifts = shifts.filter(
     (shift) => isWithinNextSevenDays(shift.starts_at) && shift.id !== todaysShift?.id,
@@ -596,69 +663,88 @@ export default function Home({ user, role, onGoToManage, onGoToPool }) {
             </p>
           </div>
         ) : (
-          <div className="flex flex-1 flex-col gap-5 px-5 pt-10">
-            <div className="flex items-center justify-between">
-              <Wordmark />
-
-              <div className="relative shrink-0">
-                <button
-                  type="button"
-                  onClick={handleBellClick}
-                  aria-label="Notifications"
-                  className="flex size-8 items-center justify-center rounded-control border border-hairline bg-white text-ink-tertiary"
+          <div className="flex flex-1 flex-col">
+            <div className="flex flex-col gap-4 bg-gradient-to-b from-hero-gradient-start to-hero-gradient-end px-5 pt-10 pb-11">
+              <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2">
+                <span
+                  aria-hidden={!initials}
+                  className="flex size-9 shrink-0 items-center justify-center justify-self-start rounded-control border border-white/30 bg-white/20 text-xs font-semibold tracking-[0.02em] text-white"
                 >
-                  <Bell size={18} strokeWidth={1.75} />
-                </button>
+                  {initials}
+                </span>
 
-                {notificationDropdown}
+                <div className="flex items-center justify-center justify-self-center gap-1.5">
+                  <Wordmark size={16} className="text-white" />
+                  <span className="rounded-full border border-white/30 bg-white/20 px-[7px] py-[2px] text-[9px] font-bold tracking-[0.04em] text-white uppercase">
+                    Beta
+                  </span>
+                </div>
+
+                <div className="relative shrink-0 justify-self-end">
+                  <button
+                    type="button"
+                    onClick={handleBellClick}
+                    aria-label="Notifications"
+                    data-testid="home-bell-button"
+                    className="flex size-9 items-center justify-center rounded-control border border-white/30 bg-white/20 text-white"
+                  >
+                    <Bell size={18} strokeWidth={1.75} />
+                  </button>
+
+                  {notificationDropdown}
+                </div>
               </div>
+
+              <p className="ml-1 text-lg font-medium tracking-[-0.01em] text-white">
+                {getGreeting()}{nurseFirstName ? `, ${nurseFirstName}` : ''}
+              </p>
             </div>
 
-            <p className="text-base font-medium text-ink-secondary">
-              {getGreeting()}{nurseFirstName ? `, ${nurseFirstName}` : ''}
-            </p>
+            <div className="flex flex-1 flex-col gap-5 px-5 pt-0 pb-10">
+              {!loading && !error && (
+                <>
+                  <TodayHero todaysShift={todaysShift} credential={credential} />
 
-            {!loading && !error && (
-              <>
-                <TodayHero todaysShift={todaysShift} credential={credential} />
+                  <QuickActionTiles
+                    openCount={openCount}
+                    onGoToPool={onGoToPool}
+                    onAddPersonalEvent={() => setShowAddPersonalEvent(true)}
+                  />
 
-                <ActionList
-                  openCount={openCount}
-                  homeUnit={homeUnit}
-                  notification={latestNotification}
-                  onGoToPool={onGoToPool}
-                  onAddPersonalEvent={() => setShowAddPersonalEvent(true)}
-                  onOpenNotification={handleOpenNotification}
-                />
+                  {latestNotification && (
+                    <section className="flex flex-col gap-2.5">
+                      <SectionHeader title="Request Activity" onViewAll={handleBellClick} />
+                      <RequestActivity notification={latestNotification} onOpen={handleOpenNotification} />
+                    </section>
+                  )}
 
-                {upcomingShifts.length > 0 && (
-                  <section className="flex flex-col gap-2.5">
-                    <span className="text-xs font-semibold tracking-[0.05em] text-ink-secondary uppercase">
-                      Upcoming
-                    </span>
-                    <div className="rounded-card border border-hairline bg-white shadow-card-lift">
-                      {upcomingShifts.map((shift, index) => (
-                        <div key={shift.id}>
-                          {index > 0 && <div className="ml-[73px] h-px bg-hairline" />}
-                          <UpcomingShiftRow
-                            shift={shift}
-                            isFirst={index === 0}
-                            isLast={index === upcomingShifts.length - 1}
-                            onSelectShift={setSelectedShift}
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  </section>
-                )}
+                  {upcomingShifts.length > 0 && (
+                    <section className="flex flex-col gap-2.5">
+                      <SectionHeader title="Upcoming Shifts" onViewAll={onGoToSchedule} />
+                      <div className="rounded-card border border-hairline bg-white shadow-card-lift">
+                        {upcomingShifts.map((shift, index) => (
+                          <div key={shift.id}>
+                            {index > 0 && <div className="ml-[73px] h-px bg-hairline" />}
+                            <UpcomingShiftRow
+                              shift={shift}
+                              isFirst={index === 0}
+                              isLast={index === upcomingShifts.length - 1}
+                              onSelectShift={setSelectedShift}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </section>
+                  )}
 
-                <ThisWeekReport
-                  shifts={shifts}
-                  weekOffset={weekOffset}
-                  onChangeWeekOffset={setWeekOffset}
-                />
-              </>
-            )}
+                  <WeeklyProgress
+                    shifts={shifts}
+                    weekOffset={weekOffset}
+                    onChangeWeekOffset={setWeekOffset}
+                  />
+                </>
+              )}
+            </div>
           </div>
         )}
 
@@ -793,6 +879,7 @@ function CoordinatorSummary({ shifts, today, firstName, onGoToManage }) {
       <Button
         type="button"
         onClick={onGoToManage}
+        data-testid="home-go-to-manage"
         className="mt-9 h-auto w-full rounded-full bg-ink py-4 text-base font-semibold text-white hover:bg-ink/90"
       >
         Go to Manage

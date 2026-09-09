@@ -82,6 +82,11 @@ function App() {
     setActiveTab('pool')
   }
 
+  function handleGoToSchedule() {
+    setScheduleInitialTab('schedule')
+    setActiveTab('schedule')
+  }
+
   if (loading) {
     return (
       <div className="flex h-screen w-screen items-center justify-center bg-white">
@@ -110,6 +115,7 @@ function App() {
             role={role}
             onGoToManage={handleGoToManage}
             onGoToPool={handleGoToPool}
+            onGoToSchedule={handleGoToSchedule}
           />
         )}
         {activeTab === 'schedule' && (

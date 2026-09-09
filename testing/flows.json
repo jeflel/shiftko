@@ -1,0 +1,194 @@
+{
+  "$comment": "Flow map for Chrome-driven automation of the Shiftko app (no URL routing exists — App.jsx holds all navigation as in-memory state, so every flow below starts from a specific base app state; see README.md for how to get there). Keep this file hand-in-sync with data-testid attributes in src/: whenever a flow's UI changes, update the testid in the component AND the matching step here in the same change.",
+  "flows": {
+    "sign-in": {
+      "description": "Sign in with an existing account.",
+      "assumesBaseState": "Signed out, app showing Screen0 (the initial 'Built for nurses' welcome screen).",
+      "steps": [
+        {
+          "action": "click",
+          "testid": "screen0-sign-in",
+          "note": "Screen0's 'I already have an account' button. Sets App's authView to 'signin', which renders <Auth initialView=\"signin\">."
+        },
+        {
+          "action": "fill",
+          "testid": "auth-email-input",
+          "value": "<test account email>",
+          "note": "Auth.jsx sign-in form email field."
+        },
+        {
+          "action": "fill",
+          "testid": "auth-password-input",
+          "value": "<test account password>",
+          "note": "Auth.jsx sign-in form password field."
+        },
+        {
+          "action": "click",
+          "testid": "auth-submit",
+          "note": "Submits supabase.auth.signInWithPassword. On success, session is set and App renders Home (or another tab) via BottomNav; on failure an inline error message appears above this button (no testid on the error text)."
+        }
+      ]
+    },
+    "sign-up": {
+      "description": "Create a new account.",
+      "assumesBaseState": "Signed out, app showing Screen0.",
+      "steps": [
+        {
+          "action": "click",
+          "testid": "screen0-get-started",
+          "note": "Screen0's 'Get Started' button. Sets App's authView to 'signup', which renders <Auth initialView=\"signup\">. NOTE: src/pages/onboarding/OnboardingFlow.jsx (Screen2-6, ScreenCredential) is NOT wired into App.jsx today — it is dead code — so sign-up goes straight from Screen0 to the Auth form, not through any onboarding screens."
+        },
+        {
+          "action": "fill",
+          "testid": "auth-email-input",
+          "value": "<new account email>",
+          "note": "Auth.jsx sign-up form email field."
+        },
+        {
+          "action": "fill",
+          "testid": "auth-password-input",
+          "value": "<new account password>",
+          "note": "Auth.jsx sign-up form password field."
+        },
+        {
+          "action": "click",
+          "testid": "auth-submit",
+          "note": "Submits supabase.auth.signUp with role 'nurse'. If Supabase requires email confirmation, the view swaps to a plain 'Check your email to confirm your account' message (no testid there). Otherwise the session is set immediately and App renders Home."
+        }
+      ]
+    },
+    "claim-shift": {
+      "description": "Claim an open shift from the Pool.",
+      "assumesBaseState": "Signed in as a nurse, on the Home tab, with at least one open shift in the pool for the nurse's home unit.",
+      "steps": [
+        {
+          "action": "click",
+          "testid": "home-claim-shifts-row",
+          "note": "Home's QuickActionTiles 'Claim Shifts' tile. Calls App's onGoToPool, which sets activeTab to 'pool' directly (no nav-pool click needed)."
+        },
+        {
+          "action": "click",
+          "testid": "pool-claim-shift",
+          "note": "Pool.jsx's per-row Claim button. IMPORTANT: as of the current code, Pool's shift rows (ShiftCard) are NOT clickable/navigable to ShiftDetail — only this Claim/Withdraw button is interactive, so this flow does not pass through ShiftDetail. Multiple open shifts share this same testid; scope to a specific row (e.g. via read_page/get_page_text) if more than one is open. On success the row shows 'Requested' plus a pool-withdraw-claim button; on failure (race with another nurse) an inline 'This shift is no longer available.' message appears."
+        }
+      ]
+    },
+    "add-personal-event": {
+      "description": "Log a personal/self-scheduled shift from Home.",
+      "assumesBaseState": "Signed in, on the Home tab.",
+      "steps": [
+        {
+          "action": "click",
+          "testid": "home-add-shift-row",
+          "note": "Home's QuickActionTiles 'Add a Shift' tile. Opens the PersonalEventPanel bottom sheet over Home."
+        },
+        {
+          "action": "click",
+          "testid": "personal-event-department-none",
+          "note": "Optional. Switches the Department segmented control from the default 'Set Department' to 'No Department', which reveals a free-text event-name field instead of the unit <select>. Skip this step to keep the default department mode (unit defaults to 'Unit 1')."
+        },
+        {
+          "action": "fill",
+          "testid": "personal-event-name-input",
+          "value": "Weekend job at Peninsula Landscaping",
+          "note": "Only rendered/required when 'No Department' is selected above. If you skipped that step, fill personal-event-unit-select instead (a <select>, not a fill target for text automation — pick an option value)."
+        },
+        {
+          "action": "fill",
+          "testid": "personal-event-start-time",
+          "value": "18:00",
+          "note": "Time input; defaults to 18:00 already so this step is optional."
+        },
+        {
+          "action": "fill",
+          "testid": "personal-event-end-time",
+          "value": "22:00",
+          "note": "Time input; defaults to 22:00 already so this step is optional."
+        },
+        {
+          "action": "click",
+          "testid": "personal-event-save",
+          "note": "Saves via createPersonalEvent (lib/personalEvents.js). Date defaults to today (calendar-day-<today> in CalendarStrip is pre-selected, no click needed) unless changed. On success the panel closes and Home's onSaved fires (no visible confirmation banner)."
+        }
+      ]
+    },
+    "view-schedule": {
+      "description": "Open the Schedule tab and note its sub-tabs/views.",
+      "assumesBaseState": "Signed in, any tab.",
+      "steps": [
+        {
+          "action": "click",
+          "testid": "nav-schedule",
+          "note": "BottomNav tab. For a nurse (role !== 'coordinator'), Schedule renders ScheduleTab directly — there's only one top-level pseudo-tab so no schedule-tab-* bar is shown. For a coordinator, a top tab bar appears with testids schedule-tab-team, schedule-tab-manage, schedule-tab-staff (Team Schedule / Manage / Staff)."
+        },
+        {
+          "action": "click",
+          "testid": "schedule-view-team",
+          "note": "Nurse-only. ScheduleTab renders one persistent header (title, list/calendar toggle, and this My Shifts / Team Schedule segmented control — testids schedule-view-mine, schedule-view-team; defaults to schedule-view-mine) above whichever sub-tab body is active, so switching never remounts or hides the header — only the body below swaps and shows its own loading state. Not present for a coordinator, who instead uses schedule-tab-team from the previous step (that screen has its own separate top tab bar and header, not this one)."
+        },
+        {
+          "action": "click",
+          "testid": "schedule-content-view-calendar",
+          "note": "Toggles between list (schedule-content-view-list, default) and month-calendar (schedule-content-view-calendar) rendering of the same shift/personal-event data. This is ONE shared state across both My Shifts and Team Schedule (owned by ScheduleTab's persistent header) — switching sub-tabs keeps whichever of list/calendar was already selected, it doesn't reset. Team Schedule's calendar day-detail rows show whose shift each row is (name + credential, or 'Open · tap to claim'), since it spans every nurse."
+        },
+        {
+          "action": "click",
+          "testid": "calendar-day-<YYYY-MM-DD>",
+          "note": "Optional — only once the calendar toggle above is active. Selects a day cell in the month grid (MonthCalendarGrid, shared by both My Shifts and Team Schedule's calendar view) and updates the day-detail panel below it. Compute the target date as YYYY-MM-DD and substitute it, e.g. calendar-day-2026-09-12. Same testid convention as the CalendarStrip date picker elsewhere in the app (see README.md) — never mounted at the same time, so no ambiguity."
+        }
+      ]
+    },
+    "sign-out": {
+      "description": "Sign out of the app.",
+      "assumesBaseState": "Signed in, any tab.",
+      "steps": [
+        {
+          "action": "click",
+          "testid": "nav-more",
+          "note": "BottomNav 'Profile' tab (id 'more')."
+        },
+        {
+          "action": "click",
+          "testid": "profile-sign-out",
+          "note": "Calls supabase.auth.signOut(). App's onAuthStateChange listener clears the session and the app falls back to Screen0 (authView resets are not needed since session becomes null)."
+        }
+      ]
+    },
+    "coordinator-post-shift": {
+      "description": "Post an open (unassigned) shift as a coordinator. Fully wired in Schedule.jsx's ManageTab.",
+      "assumesBaseState": "Signed in as a coordinator (role === 'coordinator'), on the Home or any tab.",
+      "steps": [
+        {
+          "action": "click",
+          "testid": "nav-schedule",
+          "note": "BottomNav tab. Coordinators land on the 'team' sub-tab by default."
+        },
+        {
+          "action": "click",
+          "testid": "schedule-tab-manage",
+          "note": "Switches to the Manage sub-tab, which shows the 'Post a shift' form at the top."
+        },
+        {
+          "action": "click",
+          "testid": "schedule-manage-unassigned-checkbox",
+          "note": "Checks 'Leave unassigned (open shift)', which clears/disables the Nurse select — the resulting shift lands in the Pool for any nurse on the unit to claim. Skip this step to instead pick a nurse from the (untestid'd) Nurse <select>."
+        },
+        {
+          "action": "click",
+          "testid": "schedule-manage-shift-preset-day",
+          "note": "Selects the 'Day' shift preset (7:00 AM-3:30 PM). Also the default value, but click to be explicit; other options are schedule-manage-shift-preset-evening and schedule-manage-shift-preset-night."
+        },
+        {
+          "action": "click",
+          "testid": "calendar-day-<today's date, YYYY-MM-DD>",
+          "note": "REQUIRED — the form's date starts empty, so a date must be picked from the CalendarStrip before submitting will succeed. Compute today's local date as YYYY-MM-DD and substitute it into this testid, e.g. calendar-day-2026-09-08. Any future date's cell works the same way: calendar-day-<that date>."
+        },
+        {
+          "action": "click",
+          "testid": "schedule-manage-post-shift",
+          "note": "Submits the shift. On success shows a 'Shift posted successfully.' message and the new shift appears under the 'Recent shifts' list below."
+        }
+      ]
+    }
+  }
+}

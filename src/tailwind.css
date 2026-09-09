@@ -20,6 +20,23 @@
   --color-urgency-red: #d9291c;
   --color-chevron-muted: #c7c7cc;
   --color-selection-ink: #10222a;
+
+  /* Home hero reskin (MainHorizontalTiles.dc.html, home-linear-light,
+     shiftko-design-v2-visual-pass-dup) — full-color port approved 2026-09-09,
+     used on the nurse Home screen only; the rest of the app keeps the
+     two-color rule. */
+  --color-hero-gradient-start: #5dc7e6;
+  --color-hero-gradient-end: #0aa2cf;
+  --color-status-deep: #004458;
+  --color-period-day-bg: #fdf3d8;
+  --color-period-day-fg: #a85a0f;
+  --color-period-evening-bg: #dbf9e2;
+  --color-period-evening-fg: #1e7373;
+  --color-period-night-bg: #ffc9fa;
+  --color-period-night-fg: #5132ae;
+  --color-stat-hours-tint: rgba(38, 139, 139, 0.15);
+  --color-stat-hours-fg: #268b8b;
+
   --radius-card: 14px;
   --radius-button: 12px;
   --radius-control: 9px;
