@@ -14,13 +14,14 @@ import {
   Sunset,
   Moon,
   Waves,
+  Hourglass,
+  CheckSquare,
+  SquarePlus,
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import ShiftDetail from './ShiftDetail'
 import PersonalEventPanel from '@/components/PersonalEventPanel'
 import { Wordmark } from '@/components/ui/wordmark'
-import { Card } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import {
   formatLocalDateKey,
@@ -32,11 +33,6 @@ import {
 
 const weekdayFormatter = new Intl.DateTimeFormat(undefined, { weekday: 'short' })
 const monthFormatter = new Intl.DateTimeFormat(undefined, { month: 'short' })
-const todayLabelFormatter = new Intl.DateTimeFormat(undefined, {
-  weekday: 'long',
-  month: 'long',
-  day: 'numeric',
-})
 
 // "Sep 7 – Sep 13" — end is the exclusive day after the week, so the
 // displayed range ends one day earlier.
@@ -91,13 +87,10 @@ function TodayHero({ todaysShift, credential }) {
 
       {todaysShift ? (
         <>
-          <p className="text-[25px] font-bold tracking-[-0.01em] text-status-deep">
+          <p className="text-[25px] font-semibold tracking-[-0.02em] text-status-deep">
             {formatShiftTimeRange(todaysShift.starts_at, todaysShift.ends_at)}
           </p>
-          <p className="text-[13px] text-ink-secondary">
-            {[todaysShift.unit, credential].filter(Boolean).join(' · ')}
-          </p>
-          <ShiftProgress shift={todaysShift} />
+          <ShiftProgress shift={todaysShift} unit={todaysShift.unit} credential={credential} />
         </>
       ) : (
         <p className="text-[15px] text-ink-secondary">No shift today</p>
@@ -106,7 +99,9 @@ function TodayHero({ todaysShift, credential }) {
   )
 }
 
-function ShiftProgress({ shift }) {
+// Per the mockup, the shift's unit/credential live in the progress row's
+// right-hand column (status-sub), not as their own line under the time.
+function ShiftProgress({ shift, unit, credential }) {
   const [now, setNow] = useState(() => Date.now())
 
   useEffect(() => {
@@ -120,6 +115,7 @@ function ShiftProgress({ shift }) {
   const elapsedMinutes = (clampedNow - start) / 60000
   const remainingMinutes = (end - clampedNow) / 60000
   const percent = Math.round((elapsedMinutes / ((end - start) / 60000)) * 100)
+  const unitLine = [unit, credential].filter(Boolean).join(' · ')
 
   return (
     <div className="mt-1 flex flex-col gap-1.5">
@@ -129,10 +125,14 @@ function ShiftProgress({ shift }) {
           style={{ width: `${percent}%` }}
         />
       </div>
-      <p className="text-xs text-ink-secondary">
-        <span className="font-semibold text-ink">{formatHM(elapsedMinutes)}</span> in ·{' '}
-        {formatHM(remainingMinutes)} left
-      </p>
+      <div className="flex items-center justify-between gap-2">
+        <p className="flex items-center gap-1 text-xs text-ink-secondary">
+          <Hourglass size={12} strokeWidth={2} className="shrink-0 text-teal-foreground" />
+          <span className="font-semibold text-ink">{formatHM(elapsedMinutes)}</span> in ·{' '}
+          {formatHM(remainingMinutes)} left
+        </p>
+        {unitLine && <p className="shrink-0 text-[13px] text-ink-secondary">{unitLine}</p>}
+      </div>
     </div>
   )
 }
@@ -318,9 +318,9 @@ function WeeklyProgress({ shifts, weekOffset, onChangeWeekOffset }) {
               </span>
               Shifts worked
             </span>
-            <p className="text-[22px] leading-none font-bold tracking-[-0.01em] text-ink">
+            <p className="text-[26px] leading-none font-semibold tracking-[-0.02em] text-ink">
               {shiftCount}
-              <span className="ml-1.5 text-sm font-medium text-ink-secondary">/{shiftsTarget}</span>
+              <span className="ml-1.5 text-[15px] font-medium text-ink-secondary">/{shiftsTarget}</span>
             </p>
             <div className="h-1.5 overflow-hidden rounded-full bg-track-neutral">
               <div
@@ -339,9 +339,9 @@ function WeeklyProgress({ shifts, weekOffset, onChangeWeekOffset }) {
               </span>
               Hours worked
             </span>
-            <p className="text-[22px] leading-none font-bold tracking-[-0.01em] text-ink">
+            <p className="text-[26px] leading-none font-semibold tracking-[-0.02em] text-ink">
               {totalHours}
-              <span className="ml-1.5 text-sm font-medium text-ink-secondary">/{hoursTarget}</span>
+              <span className="ml-1.5 text-[15px] font-medium text-ink-secondary">/{hoursTarget}</span>
             </p>
             <div className="h-1.5 overflow-hidden rounded-full bg-track-neutral">
               <div
@@ -372,12 +372,6 @@ function getSummaryRange() {
   const end = new Date(start)
   end.setDate(end.getDate() + 8)
   return { start, end }
-}
-
-function getFirstName(fullName) {
-  if (!fullName) return null
-  const firstName = fullName.trim().split(' ')[0]
-  return firstName.endsWith('.') ? firstName : `${firstName}.`
 }
 
 function getInitials(fullName) {
@@ -440,6 +434,7 @@ export default function Home({ user, role, onGoToManage, onGoToPool, onGoToSched
   const [shifts, setShifts] = useState([])
   const [notifications, setNotifications] = useState([])
   const [openCount, setOpenCount] = useState(0)
+  const [pendingApprovalsCount, setPendingApprovalsCount] = useState(0)
   const [weekOffset, setWeekOffset] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -461,7 +456,7 @@ export default function Home({ user, role, onGoToManage, onGoToPool, onGoToSched
             const { start, end } = getSummaryRange()
             return supabase
               .from('shifts')
-              .select('id, unit, nurse_id, starts_at, ends_at')
+              .select('id, unit, nurse_id, starts_at, ends_at, status')
               .gte('starts_at', start.toISOString())
               .lt('starts_at', end.toISOString())
               .order('starts_at', { ascending: true })
@@ -530,7 +525,29 @@ export default function Home({ user, role, onGoToManage, onGoToPool, onGoToSched
   }, [user.id, isCoordinator])
 
   useEffect(() => {
-    if (isCoordinator || !homeUnit) {
+    if (isCoordinator) {
+      setOpenCount(0)
+      let cancelled = false
+
+      async function fetchPendingApprovals() {
+        const { count } = await supabase
+          .from('shift_claims')
+          .select('id', { count: 'exact', head: true })
+          .eq('status', 'pending')
+
+        if (!cancelled) setPendingApprovalsCount(count ?? 0)
+      }
+
+      fetchPendingApprovals()
+
+      return () => {
+        cancelled = true
+      }
+    }
+
+    setPendingApprovalsCount(0)
+
+    if (!homeUnit) {
       setOpenCount(0)
       return
     }
@@ -589,8 +606,6 @@ export default function Home({ user, role, onGoToManage, onGoToPool, onGoToSched
   }
 
   const today = new Date()
-  const todayLabel = todayLabelFormatter.format(today)
-  const firstName = getFirstName(fullName)
   const nurseFirstName = fullName?.trim().split(' ')[0] ?? null
   const initials = getInitials(fullName)
   const todaysShift = shifts.find((shift) => isSameLocalDay(new Date(shift.starts_at), today))
@@ -664,118 +679,112 @@ export default function Home({ user, role, onGoToManage, onGoToPool, onGoToSched
   return (
     <div className="flex min-h-screen w-full flex-col bg-page-ground">
       <main className="mx-auto flex w-full max-w-md flex-1 flex-col pb-12">
-        {isCoordinator ? (
-          <div className="shrink-0 px-5 pt-10">
-            <div className="flex items-center justify-between">
-              <Wordmark />
-            </div>
+        <div className="flex flex-1 flex-col">
+          <div className="flex flex-col gap-4 bg-gradient-to-b from-hero-gradient-start to-hero-gradient-end px-5 pt-10 pb-11">
+            <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2">
+              <span
+                aria-hidden={!initials}
+                className="flex size-9 shrink-0 items-center justify-center justify-self-start rounded-control border border-white/30 bg-white/20 text-xs font-semibold tracking-[0.02em] text-white"
+              >
+                {initials}
+              </span>
 
-            <p className="mt-1 flex items-center gap-1.5 text-sm font-medium text-teal-dark">
-              <span className="size-1.5 shrink-0 rounded-full bg-[#F97316]" />
-              {todayLabel}
-            </p>
-          </div>
-        ) : (
-          <div className="flex flex-1 flex-col">
-            <div className="flex flex-col gap-4 bg-gradient-to-b from-hero-gradient-start to-hero-gradient-end px-5 pt-10 pb-11">
-              <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2">
-                <span
-                  aria-hidden={!initials}
-                  className="flex size-9 shrink-0 items-center justify-center justify-self-start rounded-control border border-white/30 bg-white/20 text-xs font-semibold tracking-[0.02em] text-white"
-                >
-                  {initials}
+              <div className="flex items-center justify-center justify-self-center gap-1.5">
+                <Wordmark size={16} className="text-white" />
+                <span className="rounded-full border border-white/30 bg-white/20 px-[7px] py-[2px] text-[9px] font-bold tracking-[0.04em] text-white uppercase">
+                  Beta
                 </span>
+              </div>
 
-                <div className="flex items-center justify-center justify-self-center gap-1.5">
-                  <Wordmark size={16} className="text-white" />
-                  <span className="rounded-full border border-white/30 bg-white/20 px-[7px] py-[2px] text-[9px] font-bold tracking-[0.04em] text-white uppercase">
-                    Beta
-                  </span>
-                </div>
-
-                <div className="relative shrink-0 justify-self-end">
-                  <button
-                    type="button"
-                    onClick={handleBellClick}
-                    aria-label="Notifications"
-                    data-testid="home-bell-button"
+              <div className="relative shrink-0 justify-self-end">
+                {isCoordinator ? (
+                  <span
+                    aria-hidden="true"
                     className="flex size-9 items-center justify-center rounded-control border border-white/30 bg-white/20 text-white"
                   >
                     <Bell size={18} strokeWidth={1.75} />
-                  </button>
+                  </span>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      onClick={handleBellClick}
+                      aria-label="Notifications"
+                      data-testid="home-bell-button"
+                      className="flex size-9 items-center justify-center rounded-control border border-white/30 bg-white/20 text-white"
+                    >
+                      <Bell size={18} strokeWidth={1.75} />
+                    </button>
 
-                  {notificationDropdown}
-                </div>
+                    {notificationDropdown}
+                  </>
+                )}
               </div>
-
-              <p className="ml-1 text-lg font-medium tracking-[-0.01em] text-white">
-                {getGreeting()}{nurseFirstName ? `, ${nurseFirstName}` : ''}
-              </p>
             </div>
 
-            <div className="flex flex-1 flex-col gap-5 px-5 pt-0 pb-10">
-              {!loading && !error && (
-                <>
-                  <TodayHero todaysShift={todaysShift} credential={credential} />
-
-                  <QuickActionTiles
-                    openCount={openCount}
-                    onGoToPool={onGoToPool}
-                    onAddPersonalEvent={() => setShowAddPersonalEvent(true)}
-                  />
-
-                  {latestNotification && (
-                    <section className="flex flex-col gap-2.5">
-                      <SectionHeader title="Request Activity" onViewAll={handleBellClick} />
-                      <RequestActivity notification={latestNotification} onOpen={handleOpenNotification} />
-                    </section>
-                  )}
-
-                  {upcomingShifts.length > 0 && (
-                    <section className="flex flex-col gap-2.5">
-                      <SectionHeader title="Upcoming Shifts" onViewAll={onGoToSchedule} />
-                      <div className="rounded-card border border-hairline bg-white shadow-card-lift">
-                        {upcomingShifts.map((shift, index) => (
-                          <div key={shift.id}>
-                            {index > 0 && <div className="ml-[73px] h-px bg-hairline" />}
-                            <UpcomingShiftRow
-                              shift={shift}
-                              isFirst={index === 0}
-                              isLast={index === upcomingShifts.length - 1}
-                              onSelectShift={setSelectedShift}
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    </section>
-                  )}
-
-                  <WeeklyProgress
-                    shifts={shifts}
-                    weekOffset={weekOffset}
-                    onChangeWeekOffset={setWeekOffset}
-                  />
-                </>
-              )}
-            </div>
+            <p className="ml-1 text-lg font-medium tracking-[-0.01em] text-white">
+              {getGreeting()}{nurseFirstName ? `, ${nurseFirstName}` : ''}
+            </p>
           </div>
-        )}
+
+          <div className="flex flex-1 flex-col gap-5 px-5 pt-0 pb-10">
+            {!loading && !error && isCoordinator && (
+              <CoordinatorHomeContent
+                shifts={shifts}
+                today={today}
+                pendingApprovalsCount={pendingApprovalsCount}
+                onGoToManage={onGoToManage}
+              />
+            )}
+
+            {!loading && !error && !isCoordinator && (
+              <>
+                <TodayHero todaysShift={todaysShift} credential={credential} />
+
+                <QuickActionTiles
+                  openCount={openCount}
+                  onGoToPool={onGoToPool}
+                  onAddPersonalEvent={() => setShowAddPersonalEvent(true)}
+                />
+
+                {latestNotification && (
+                  <section className="flex flex-col gap-2.5">
+                    <SectionHeader title="Request Activity" onViewAll={handleBellClick} />
+                    <RequestActivity notification={latestNotification} onOpen={handleOpenNotification} />
+                  </section>
+                )}
+
+                {upcomingShifts.length > 0 && (
+                  <section className="flex flex-col gap-2.5">
+                    <SectionHeader title="Upcoming Shifts" onViewAll={onGoToSchedule} />
+                    <div className="rounded-card border border-hairline bg-white shadow-card-lift">
+                      {upcomingShifts.map((shift, index) => (
+                        <div key={shift.id}>
+                          {index > 0 && <div className="ml-[73px] h-px bg-hairline" />}
+                          <UpcomingShiftRow
+                            shift={shift}
+                            isFirst={index === 0}
+                            isLast={index === upcomingShifts.length - 1}
+                            onSelectShift={setSelectedShift}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                )}
+
+                <WeeklyProgress
+                  shifts={shifts}
+                  weekOffset={weekOffset}
+                  onChangeWeekOffset={setWeekOffset}
+                />
+              </>
+            )}
+          </div>
+        </div>
 
         {!loading && error && (
           <p className="mt-6 px-5 text-sm text-red-700">Could not load home data: {error}</p>
-        )}
-
-        {!loading && !error && isCoordinator && (
-          <div className="flex flex-1 flex-col mt-[30px]">
-            <div className="px-5">
-              <CoordinatorSummary
-                shifts={shifts}
-                today={today}
-                firstName={firstName}
-                onGoToManage={onGoToManage}
-              />
-            </div>
-          </div>
         )}
       </main>
 
@@ -790,9 +799,17 @@ export default function Home({ user, role, onGoToManage, onGoToPool, onGoToSched
   )
 }
 
-function CoordinatorSummary({ shifts, today, firstName, onGoToManage }) {
+// Coordinator Home body, per CoordinatorHome.dc.html (home-linear-light) —
+// the coordinator counterpart to the nurse TodayHero/QuickActionTiles/
+// WeeklyProgress stack above, sharing the same gradient header.
+function CoordinatorHomeContent({ shifts, today, pendingApprovalsCount, onGoToManage }) {
   const todayShifts = shifts.filter((shift) => isSameLocalDay(new Date(shift.starts_at), today))
-  const uniqueNursesToday = new Set(todayShifts.map((shift) => shift.nurse_id)).size
+  const staffedTodayShifts = todayShifts.filter(
+    (shift) => shift.status !== 'open' && shift.status !== 'pending',
+  )
+  const gapsToday = todayShifts.length - staffedTodayShifts.length
+  const uniqueNursesToday = new Set(staffedTodayShifts.map((shift) => shift.nurse_id)).size
+  const uniqueUnitsToday = new Set(todayShifts.map((shift) => shift.unit).filter(Boolean)).size
 
   const { start } = getSummaryRange()
   const scheduledDayKeys = new Set(
@@ -807,96 +824,237 @@ function CoordinatorSummary({ shifts, today, firstName, onGoToManage }) {
     }
   }
 
-  const hasUnstaffed = unstaffedDates.length > 0
+  return (
+    <>
+      <CoverageHero
+        totalToday={todayShifts.length}
+        staffedToday={staffedTodayShifts.length}
+        gapsToday={gapsToday}
+        nursesScheduled={uniqueNursesToday}
+        unitsCount={uniqueUnitsToday}
+      />
+
+      <CoordinatorStatRow
+        shiftsToday={todayShifts.length}
+        approvals={pendingApprovalsCount}
+        unstaffed={unstaffedDates.length}
+      />
+
+      <CoordinatorQuickActions pendingApprovalsCount={pendingApprovalsCount} onGoToManage={onGoToManage} />
+
+      {unstaffedDates.length > 0 && (
+        <section className="flex flex-col gap-2.5">
+          <SectionHeader title="Coverage Gaps" onViewAll={onGoToManage} />
+          <div className="rounded-card border border-hairline bg-white shadow-card-lift">
+            {unstaffedDates.map((date, index) => (
+              <div key={formatLocalDateKey(date)}>
+                {index > 0 && <div className="ml-[73px] h-px bg-hairline" />}
+                <CoverageGapRow date={date} />
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+    </>
+  )
+}
+
+function CoverageHero({ totalToday, staffedToday, gapsToday, nursesScheduled, unitsCount }) {
+  const hasGaps = gapsToday > 0
+  const percent = totalToday > 0 ? Math.round((staffedToday / totalToday) * 100) : 100
 
   return (
-    <section>
-      <p
-        className="text-[26px] font-semibold"
-        style={{ letterSpacing: '-0.03em', lineHeight: '115%' }}
-      >
-        <span style={{ color: '#20748C' }}>{getGreeting()},</span>
-        {firstName && <span style={{ color: '#7CB9CA' }}> {firstName}</span>}
-      </p>
-
-      <div className="mt-6 grid grid-cols-3 gap-3">
-        <Card className="gap-2 rounded-card border-none bg-surface p-5 text-center shadow-none">
-          <Calendar className="mx-auto text-[#9CA3AF]" size={20} strokeWidth={2} />
-          <p className="text-3xl font-bold text-ink">{todayShifts.length}</p>
-          <p className="text-xs tracking-wide text-[#9CA3AF] uppercase">Shifts today</p>
-        </Card>
-
-        <Card className="gap-2 rounded-card border-none bg-surface p-5 text-center shadow-none">
-          <Users className="mx-auto text-[#9CA3AF]" size={20} strokeWidth={2} />
-          <p className="text-3xl font-bold text-ink">{uniqueNursesToday}</p>
-          <p className="text-xs tracking-wide text-[#9CA3AF] uppercase">Nurses scheduled</p>
-        </Card>
-
-        <Card
+    <div className="-mt-9 flex flex-col gap-2.5 rounded-card border border-hairline bg-white p-4 shadow-card-lift">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-semibold tracking-[0.05em] text-ink-secondary uppercase">
+          Today&rsquo;s coverage
+        </span>
+        <span
           className={cn(
-            'gap-2 rounded-card border-none p-5 text-center shadow-none',
-            hasUnstaffed ? 'bg-[#FEF9C3]' : 'bg-surface',
+            'inline-flex shrink-0 items-center gap-1 rounded-control-sm py-1 pr-2 pl-1.5 text-[11px] font-semibold',
+            hasGaps ? 'bg-period-warn-bg text-period-warn-fg' : 'bg-period-good-bg text-period-good-fg',
           )}
         >
-          <AlertTriangle
-            className={cn('mx-auto', hasUnstaffed ? 'text-[#CA8A04]' : 'text-[#9CA3AF]')}
-            size={20}
-            strokeWidth={2}
-          />
-          <p className={cn('text-3xl font-bold', hasUnstaffed ? 'text-[#92400E]' : 'text-ink')}>
-            {unstaffedDates.length}
-          </p>
-          <p
-            className={cn(
-              'text-xs tracking-wide uppercase',
-              hasUnstaffed ? 'text-[#A16207]' : 'text-[#9CA3AF]',
-            )}
-          >
-            Unstaffed days
-          </p>
-        </Card>
+          {hasGaps ? (
+            <AlertTriangle size={12} strokeWidth={2} />
+          ) : (
+            <CheckCircle2 size={12} strokeWidth={2} />
+          )}
+          {hasGaps ? `${gapsToday} Gap${gapsToday === 1 ? '' : 's'}` : 'Fully staffed'}
+        </span>
       </div>
 
-      {hasUnstaffed && (
-        <div className="mt-7">
-          <h2 className="mb-3 flex items-center gap-1.5 text-sm font-semibold text-ink">
-            <AlertTriangle className="text-[#D97706]" size={16} strokeWidth={2.5} />
-            Coverage gaps
-          </h2>
-          <ul className="flex flex-col gap-3">
-            {unstaffedDates.map((date) => (
-              <li key={formatLocalDateKey(date)}>
-                <div className="flex items-center gap-4 rounded-card bg-white p-4 shadow-sm border border-[#E5E5EA]">
-                  <div className="flex w-12 shrink-0 flex-col items-center justify-center gap-0.5 text-center">
-                    <span className="text-xs font-medium tracking-wide text-[#9CA3AF] uppercase">
-                      {weekdayFormatter.format(date)}
-                    </span>
-                    <span className="text-2xl font-bold text-ink">{date.getDate()}</span>
-                    <span className="text-xs font-medium tracking-wide text-[#9CA3AF] uppercase">
-                      {monthFormatter.format(date)}
-                    </span>
-                  </div>
-
-                  <div className="h-12 w-px shrink-0 bg-line" />
-
-                  <p className="min-w-0 flex-1 text-sm text-[#6B7280]">No shifts scheduled</p>
-
-                  <AlertTriangle className="shrink-0 text-[#D97706]" size={14} strokeWidth={2.5} />
-                </div>
-              </li>
-            ))}
-          </ul>
-        </div>
+      {totalToday > 0 ? (
+        <>
+          <p className="text-[25px] font-semibold tracking-[-0.02em] text-status-deep">
+            {staffedToday}{' '}
+            <span className="text-[15px] font-medium text-ink-secondary">
+              of {totalToday} shifts staffed
+            </span>
+          </p>
+          <div className="mt-1 flex flex-col gap-1.5">
+            <div className="h-1.5 w-full overflow-hidden rounded-full bg-track-neutral">
+              <div
+                className="h-full rounded-full bg-teal transition-[width] duration-500"
+                style={{ width: `${percent}%` }}
+              />
+            </div>
+            <div className="flex items-center justify-between gap-2">
+              <p className="flex items-center gap-1 text-xs text-ink-secondary">
+                <Users size={12} strokeWidth={2} className="shrink-0 text-teal-foreground" />
+                <span className="font-semibold text-ink">{nursesScheduled}</span> nurses scheduled
+              </p>
+              <p className="shrink-0 text-[13px] text-ink-secondary">
+                {unitsCount} unit{unitsCount === 1 ? '' : 's'}
+              </p>
+            </div>
+          </div>
+        </>
+      ) : (
+        <p className="text-[15px] text-ink-secondary">No shifts scheduled today</p>
       )}
+    </div>
+  )
+}
 
-      <Button
+function CoordinatorStatRow({ shiftsToday, approvals, unstaffed }) {
+  const hasUnstaffed = unstaffed > 0
+
+  return (
+    <div className="-mt-1 flex gap-2">
+      <div className="flex flex-1 flex-col gap-2 rounded-card border border-hairline bg-white px-2.5 py-3 shadow-card-lift">
+        <span className="flex size-[26px] items-center justify-center rounded-[7px] bg-teal-tint text-teal-foreground">
+          <Clock size={14} strokeWidth={1.75} />
+        </span>
+        <span className="text-[22px] leading-none font-semibold tracking-[-0.02em] text-ink">
+          {shiftsToday}
+        </span>
+        <span className="text-[11px] leading-tight tracking-[-0.01em] text-ink-secondary">
+          Shifts today
+        </span>
+      </div>
+
+      <div className="flex flex-1 flex-col gap-2 rounded-card border border-hairline bg-white px-2.5 py-3 shadow-card-lift">
+        <span className="flex size-[26px] items-center justify-center rounded-[7px] bg-teal-tint text-teal-foreground">
+          <CheckSquare size={14} strokeWidth={1.75} />
+        </span>
+        <span className="text-[22px] leading-none font-semibold tracking-[-0.02em] text-ink">
+          {approvals}
+        </span>
+        <span className="text-[11px] leading-tight tracking-[-0.01em] text-ink-secondary">
+          Approvals
+        </span>
+      </div>
+
+      <div className="flex flex-1 flex-col gap-2 rounded-card border border-hairline bg-white px-2.5 py-3 shadow-card-lift">
+        <span
+          className={cn(
+            'flex size-[26px] items-center justify-center rounded-[7px]',
+            hasUnstaffed ? 'bg-period-warn-bg text-period-warn-fg' : 'bg-teal-tint text-teal-foreground',
+          )}
+        >
+          <AlertTriangle size={14} strokeWidth={1.75} />
+        </span>
+        <span
+          className={cn(
+            'text-[22px] leading-none font-semibold tracking-[-0.02em]',
+            hasUnstaffed ? 'text-period-warn-fg' : 'text-ink',
+          )}
+        >
+          {unstaffed}
+        </span>
+        <span className="text-[11px] leading-tight tracking-[-0.01em] text-ink-secondary">
+          Unstaffed
+        </span>
+      </div>
+    </div>
+  )
+}
+
+// Approvals / Post Shift / Manage — all route into the Manage tab for now
+// (there's no dedicated Approvals screen or a way to deep-link Manage's post
+// form yet; see LINEAR_LIGHT_ROLLOUT.md's Coordinator Manage flow entry).
+function CoordinatorQuickActions({ pendingApprovalsCount, onGoToManage }) {
+  return (
+    <div className="flex gap-2">
+      <button
         type="button"
         onClick={onGoToManage}
-        data-testid="home-go-to-manage"
-        className="mt-9 h-auto w-full rounded-full bg-ink py-4 text-base font-semibold text-white hover:bg-ink/90"
+        data-testid="home-approvals-tile"
+        className="relative flex flex-1 flex-col items-center gap-1.5 rounded-card border border-hairline bg-white px-2 py-2.5 text-center shadow-card-lift transition-colors active:bg-press-state"
       >
-        Go to Manage
-      </Button>
-    </section>
+        {pendingApprovalsCount > 0 && (
+          <span className="absolute top-2.5 right-2.5 flex h-4 min-w-4 shrink-0 items-center justify-center rounded-control-sm bg-urgency-red px-1 text-[10px] font-semibold text-white">
+            {pendingApprovalsCount}
+          </span>
+        )}
+        <span className="flex size-8 shrink-0 items-center justify-center rounded-control bg-teal-tint text-teal-foreground">
+          <CheckSquare size={17} strokeWidth={1.9} />
+        </span>
+        <span>
+          <p className="text-[12px] font-medium text-ink">Approvals</p>
+          <p className="text-[11px] text-ink-secondary">{pendingApprovalsCount} waiting</p>
+        </span>
+      </button>
+
+      <button
+        type="button"
+        onClick={onGoToManage}
+        data-testid="home-post-shift-tile"
+        className="flex flex-1 flex-col items-center gap-1.5 rounded-card border border-hairline bg-white px-2 py-2.5 text-center shadow-card-lift transition-colors active:bg-press-state"
+      >
+        <span className="flex size-8 shrink-0 items-center justify-center rounded-control bg-teal-tint text-teal-foreground">
+          <SquarePlus size={17} strokeWidth={1.9} />
+        </span>
+        <span>
+          <p className="text-[12px] font-medium text-ink">Post Shift</p>
+          <p className="text-[11px] text-ink-secondary">Open a slot</p>
+        </span>
+      </button>
+
+      <button
+        type="button"
+        onClick={onGoToManage}
+        data-testid="home-manage-tile"
+        className="flex flex-1 flex-col items-center gap-1.5 rounded-card border border-hairline bg-white px-2 py-2.5 text-center shadow-card-lift transition-colors active:bg-press-state"
+      >
+        <span className="flex size-8 shrink-0 items-center justify-center rounded-control bg-teal-tint text-teal-foreground">
+          <Calendar size={17} strokeWidth={1.9} />
+        </span>
+        <span>
+          <p className="text-[12px] font-medium text-ink">Manage</p>
+          <p className="text-[11px] text-ink-secondary">Roster &amp; shifts</p>
+        </span>
+      </button>
+    </div>
+  )
+}
+
+// Coverage-gap row: reuses the shift-list/date-col pattern from Upcoming
+// Shifts, but the live data only knows a day has zero shifts scheduled (not
+// which unit/period is short-staffed, per the mockup's fictional detail) —
+// see LINEAR_LIGHT_ROLLOUT.md for the Departments/staffing-pattern work that
+// would make a per-unit gap callout possible.
+function CoverageGapRow({ date }) {
+  return (
+    <div className="flex w-full items-center gap-3 px-4 py-3.5">
+      <div className="flex w-8 shrink-0 flex-col items-center text-center">
+        <span className="text-[11px] font-semibold tracking-[0.03em] text-ink-secondary uppercase">
+          {weekdayFormatter.format(date)}
+        </span>
+        <span className="text-[19px] leading-[1.15] font-semibold text-ink">{date.getDate()}</span>
+      </div>
+
+      <div className="h-full self-stretch border-l border-hairline" />
+
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-[12px] text-period-warn-fg">No nurse assigned</p>
+      </div>
+
+      <span className="inline-flex shrink-0 items-center gap-1 rounded-control-sm bg-period-warn-bg py-1 pr-2 pl-1.5 text-[11px] font-semibold text-period-warn-fg">
+        <AlertTriangle size={12} strokeWidth={2} />
+        Unstaffed
+      </span>
+    </div>
   )
 }

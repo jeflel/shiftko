@@ -29,19 +29,29 @@
   --color-hero-gradient-end: #0aa2cf;
   --color-status-deep: #004458;
   --color-period-day-bg: #fdf3d8;
-  --color-period-day-fg: #a85a0f;
+  --color-period-day-fg: #c96f15;
   --color-period-evening-bg: #dbf9e2;
-  --color-period-evening-fg: #1e7373;
-  --color-period-night-bg: #ffc9fa;
+  --color-period-evening-fg: #268b8b;
+  --color-period-night-bg: #f5dffa;
   --color-period-night-fg: #5132ae;
+  --color-period-good-bg: #dbf9e2;
+  --color-period-good-fg: #268b8b;
+  --color-period-warn-bg: #fde4e1;
+  --color-period-warn-fg: #b42318;
   --color-stat-hours-tint: rgba(38, 139, 139, 0.15);
   --color-stat-hours-fg: #268b8b;
 
-  --radius-card: 14px;
+  /* Card radius/shadow — synced to the Linear Light system's now-canonical
+     values (rounded-16/soft rgba(53,87,97,.12) lift), established across the
+     Schedule/Claims/Swaps/Offer Shift/Coordinator Manage/Profile/Shift
+     Detail/Personal Events flows in home-linear-light/. Kept as the single
+     shared --radius-card/--shadow-card-lift tokens (not scoped to Home) so
+     every flow lands on one consistent card style as each is ported in turn. */
+  --radius-card: 16px;
   --radius-button: 12px;
   --radius-control: 9px;
   --radius-control-sm: 7px;
-  --shadow-card-lift: 0 6px 20px rgba(20, 20, 43, 0.08);
+  --shadow-card-lift: 0 5px 15px rgba(53, 87, 97, 0.12);
 
   /* Aliases for pre-v2 token names still referenced page-by-page —
      drop each alias once every reader of it is migrated (Reskin Plan Phase 3). */
