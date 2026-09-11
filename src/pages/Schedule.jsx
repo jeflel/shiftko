@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
-import { AlertTriangle, Calendar, ChevronLeft, ChevronRight, List, Pencil, Sun, Sunset, Moon, X, Trash2, Users } from 'lucide-react'
+import { AlertTriangle, Calendar, Check, ChevronLeft, ChevronRight, List, Pencil, Sun, Sunset, Moon, X, Trash2, Users } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import ShiftDetail from './ShiftDetail'
 import PersonalEventPanel from '@/components/PersonalEventPanel'
 import { ShiftPeriodPill, StatusPill } from '@/components/ui/pill'
+import { PeriodTag, ShiftStatusTag } from '@/components/ui/period-tag'
 import { Button } from '@/components/ui/button'
 import { CalendarStrip } from '@/components/ui/calendar-strip'
 import { SegmentedControl } from '@/components/ui/segmented-control'
@@ -34,6 +35,21 @@ import {
 const weekdayFormatter = new Intl.DateTimeFormat(undefined, { weekday: 'short' })
 const monthFormatter = new Intl.DateTimeFormat(undefined, { month: 'short' })
 
+// Linear Light grouped-list container (home-linear-light's .shift-list) —
+// one shared border/shadow/radius for a whole group of rows, `overflow-hidden`
+// clips the first/last row to the container's own rounded corners so
+// individual rows never need their own radius. Shared by every My Shifts /
+// Team Schedule list and calendar day-detail list in this file.
+const SHIFT_LIST_CLASSNAME =
+  'flex flex-col overflow-hidden rounded-card border border-hairline bg-card-surface shadow-card-lift'
+
+// `.shift-row-divider` — inset 73px when rows carry a date column (My Shifts
+// week lists), 16px when they don't (day-detail lists, Team Schedule list),
+// per the established Linear Light vocabulary.
+function ShiftListDivider({ inset = true }) {
+  return <div className={cn('h-px bg-hairline', inset ? 'ml-[73px]' : 'ml-4')} aria-hidden="true" />
+}
+
 function getInitials(fullName) {
   if (!fullName) return '?'
   const parts = fullName.trim().split(/\s+/)
@@ -45,18 +61,6 @@ function formatTimeAgo(claimedAt) {
   const diffMins = Math.max(0, Math.round((Date.now() - new Date(claimedAt).getTime()) / 60000))
   if (diffMins < 60) return `${diffMins} mins ago`
   return `${Math.round(diffMins / 60)} hrs ago`
-}
-
-function groupByTimeSlot(dayShifts) {
-  const groups = new Map()
-
-  for (const shift of dayShifts) {
-    const key = `${shift.starts_at}__${shift.ends_at}`
-    if (!groups.has(key)) groups.set(key, [])
-    groups.get(key).push(shift)
-  }
-
-  return Array.from(groups.values())
 }
 
 function formatWeekRangeLabel(weekStart) {
@@ -138,18 +142,6 @@ function ShiftCard({ date, title, subtitle, pill, belowPill, trailing, onClick, 
         {trailing && <div className="ml-1 shrink-0">{trailing}</div>}
       </Comp>
     </div>
-  )
-}
-
-function DayOffRow({ date, text }) {
-  return (
-    <li className="flex items-center gap-5">
-      <ShiftDateColumn date={date} />
-      <div className="flex h-[78px] w-full min-w-0 flex-1 items-center gap-2.5 pl-4">
-        <span className="h-[46px] w-1 shrink-0 self-center rounded-full bg-[#E9E9E9]" aria-hidden="true" />
-        <p className="text-sm font-medium text-[#ADADAD]">{text}</p>
-      </div>
-    </li>
   )
 }
 
@@ -242,23 +234,27 @@ function ScheduleTab({ user }) {
       {view === 'mine' ? (
         <MyShiftsTab user={user} contentView={contentView} />
       ) : (
-        <TeamScheduleTab onChangeView={setView} contentView={contentView} />
+        <TeamScheduleTab user={user} onChangeView={setView} contentView={contentView} />
       )}
     </div>
   )
 }
 
-// Nurse-scope day-off row per ScheduleList.dc.html: a single plain line, no
-// card, no accent bar — distinct from the shared DayOffRow used by
-// TeamScheduleTab, which keeps its own pre-existing look.
+// Nurse-scope day-off row per ScheduleList.dc.html — full date-col/divider
+// row layout like MyShiftRow (just muted "Day off" text, no tag), grouped
+// into the same .shift-list container as the week's other rows.
 function MyDayOffRow({ date }) {
   return (
-    <li className="flex items-center gap-3 px-3.5 py-1">
-      <span className="w-[34px] shrink-0 text-[11px] font-semibold tracking-wide text-ink-secondary uppercase">
-        {weekdayFormatter.format(date)} {date.getDate()}
-      </span>
-      <span className="text-[13px] text-ink-secondary">Day off</span>
-    </li>
+    <div className="flex w-full items-center gap-3 px-4 py-3.5">
+      <div className="flex w-[34px] shrink-0 flex-col items-center">
+        <span className="text-[11px] font-semibold tracking-wide text-ink-secondary uppercase">
+          {weekdayFormatter.format(date)}
+        </span>
+        <span className="text-[20px] leading-tight font-semibold text-ink">{date.getDate()}</span>
+      </div>
+      <div className="h-full min-h-9 w-px shrink-0 self-stretch bg-hairline" aria-hidden="true" />
+      <p className="text-[14px] font-medium text-ink-secondary">Day off</p>
+    </div>
   )
 }
 
@@ -278,7 +274,7 @@ function MyShiftRow({ shift, credential, isPast, onClick }) {
       onClick={onClick}
       data-testid="schedule-my-shift-row"
       className={cn(
-        'flex w-full items-center gap-3 rounded-card border border-hairline bg-card-surface px-4 py-3.5 text-left shadow-card-lift transition-colors duration-150 ease-out active:bg-press-state',
+        'flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors duration-150 ease-out active:bg-press-state',
         isPast && 'opacity-45',
       )}
     >
@@ -300,26 +296,25 @@ function MyShiftRow({ shift, credential, isPast, onClick }) {
         )}
         {(isPending || isOffered) && (
           <div className="mt-1">
-            {isPending ? (
-              <StatusPill status="pending" label="Pending" />
-            ) : (
-              <StatusPill status="open" label="Offered" />
-            )}
+            {isPending ? <ShiftStatusTag status="pending" /> : <ShiftStatusTag status="offered" />}
           </div>
         )}
       </div>
 
       <div className="shrink-0">
-        <ShiftPeriodPill period={period} />
+        <PeriodTag period={period} />
       </div>
     </button>
   )
 }
 
-// Personal event row — same card shape as MyShiftRow but a dashed border
-// and a fixed "Personal" tag instead of the shift's own period, per
-// ScheduleList.dc.html. Meta line is the event's unit if it has one,
-// otherwise its free-text name.
+// Personal event row — same row shape as MyShiftRow (grouped into the same
+// .shift-list container, no border of its own) with a fixed "Personal" tag
+// instead of the shift's own period, per ScheduleList.dc.html. Meta line is
+// the event's unit if it has one, otherwise its free-text name. No dashed
+// border — the colored Personal tag alone carries the distinction, per the
+// standing Linear Light rule (dashed borders on personal items were tried
+// and explicitly rejected).
 function MyPersonalEventRow({ event, isPast, onClick }) {
   const date = new Date(event.starts_at)
   const meta = event.unit || event.name
@@ -330,7 +325,7 @@ function MyPersonalEventRow({ event, isPast, onClick }) {
       onClick={onClick}
       data-testid="schedule-my-personal-event-row"
       className={cn(
-        'flex w-full items-center gap-3 rounded-card border border-dashed border-hairline bg-card-surface px-4 py-3.5 text-left shadow-card-lift transition-colors duration-150 ease-out active:bg-press-state',
+        'flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors duration-150 ease-out active:bg-press-state',
         isPast && 'opacity-45',
       )}
     >
@@ -351,7 +346,7 @@ function MyPersonalEventRow({ event, isPast, onClick }) {
       </div>
 
       <div className="shrink-0">
-        <ShiftPeriodPill period="Personal" />
+        <PeriodTag period="Personal" />
       </div>
     </button>
   )
@@ -376,7 +371,7 @@ function CalendarDayShiftRow({ shift, credential, onClick }) {
     <button
       type="button"
       onClick={onClick}
-      className="flex w-full items-center gap-3 rounded-card border border-hairline bg-card-surface px-4 py-3.5 text-left shadow-card-lift transition-colors duration-150 ease-out active:bg-press-state"
+      className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors duration-150 ease-out active:bg-press-state"
     >
       <div className="min-w-0 flex-1">
         <p className="truncate text-[14px] font-semibold text-ink">
@@ -387,23 +382,19 @@ function CalendarDayShiftRow({ shift, credential, onClick }) {
         )}
         {(isPending || isOffered) && (
           <div className="mt-1">
-            {isPending ? (
-              <StatusPill status="pending" label="Pending" />
-            ) : (
-              <StatusPill status="open" label="Offered" />
-            )}
+            {isPending ? <ShiftStatusTag status="pending" /> : <ShiftStatusTag status="offered" />}
           </div>
         )}
       </div>
       <div className="shrink-0">
-        <ShiftPeriodPill period={period} />
+        <PeriodTag period={period} />
       </div>
     </button>
   )
 }
 
 // Personal-event counterpart to CalendarDayShiftRow — same no-date-column
-// shape, dashed border + fixed "Personal" tag like MyPersonalEventRow.
+// shape, no dashed border (see MyPersonalEventRow), fixed "Personal" tag.
 function CalendarDayPersonalEventRow({ event, onClick }) {
   const meta = event.unit || event.name
 
@@ -411,7 +402,7 @@ function CalendarDayPersonalEventRow({ event, onClick }) {
     <button
       type="button"
       onClick={onClick}
-      className="flex w-full items-center gap-3 rounded-card border border-dashed border-hairline bg-card-surface px-4 py-3.5 text-left shadow-card-lift transition-colors duration-150 ease-out active:bg-press-state"
+      className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors duration-150 ease-out active:bg-press-state"
     >
       <div className="min-w-0 flex-1">
         <p className="truncate text-[14px] font-semibold text-ink">
@@ -420,7 +411,7 @@ function CalendarDayPersonalEventRow({ event, onClick }) {
         {meta && <p className="truncate text-[12px] text-ink-secondary">{meta}</p>}
       </div>
       <div className="shrink-0">
-        <ShiftPeriodPill period="Personal" />
+        <PeriodTag period="Personal" />
       </div>
     </button>
   )
@@ -441,7 +432,7 @@ function TeamCalendarDayShiftRow({ shift }) {
     : [displayName, displayCredential, shift.unit].filter(Boolean)
 
   return (
-    <div className="flex w-full items-center gap-3 rounded-card border border-hairline bg-card-surface px-4 py-3.5 shadow-card-lift">
+    <div className="flex w-full items-center gap-3 px-4 py-3.5">
       <div className="min-w-0 flex-1">
         <p className="truncate text-[14px] font-semibold text-ink">
           {formatShiftTimeRange(shift.starts_at, shift.ends_at)}
@@ -449,20 +440,22 @@ function TeamCalendarDayShiftRow({ shift }) {
         {metaParts.length > 0 && <p className="truncate text-[12px] text-ink-secondary">{metaParts.join(' · ')}</p>}
       </div>
       <div className="shrink-0">
-        {isOpen ? <StatusPill status="open" /> : isPending ? <StatusPill status="pending" /> : <ShiftPeriodPill period={period} />}
+        <PeriodTag period={period} />
       </div>
+      {isOpen && <ChevronRight size={15} strokeWidth={2} className="shrink-0 text-chevron-muted" aria-hidden="true" />}
     </div>
   )
 }
 
 // Team-scope counterpart to TeamCalendarDayShiftRow for personal events —
-// names whose event it is, since Team Schedule spans every nurse.
+// names whose event it is, since Team Schedule spans every nurse. No dashed
+// border (see MyPersonalEventRow).
 function TeamCalendarDayPersonalEventRow({ event }) {
   const ownerName = event.profiles?.full_name ?? 'A teammate'
   const meta = [ownerName, event.unit].filter(Boolean).join(' · ')
 
   return (
-    <div className="flex w-full items-center gap-3 rounded-card border border-dashed border-hairline bg-card-surface px-4 py-3.5 shadow-card-lift">
+    <div className="flex w-full items-center gap-3 px-4 py-3.5">
       <div className="min-w-0 flex-1">
         <p className="truncate text-[14px] font-semibold text-ink">
           {formatShiftTimeRange(event.starts_at, event.ends_at)}
@@ -470,8 +463,71 @@ function TeamCalendarDayPersonalEventRow({ event }) {
         {meta && <p className="truncate text-[12px] text-ink-secondary">{meta}</p>}
       </div>
       <div className="shrink-0">
-        <ShiftPeriodPill period="Personal" />
+        <PeriodTag period="Personal" />
       </div>
+    </div>
+  )
+}
+
+// Team Schedule list-view shift row per ScheduleListTeamLinearLight.dc.html —
+// flat one-row-per-shift (replaces the old per-time-slot grouped card with
+// nested avatar rows, so every list in the app shares the same .shift-card
+// shape). `isMatch` tints the row when this shift shares the viewer's own
+// unit + start/end time that day (see TeamScheduleTab's isMatch check).
+function TeamShiftRow({ shift, isMatch }) {
+  const period = getShiftPeriod(shift.starts_at)
+  const isOpen = shift.status === 'open'
+  const isPending = shift.status === 'pending'
+  const displayName = isPending ? (shift.claimant?.full_name ?? 'Pending claim') : shift.profiles?.full_name
+  const displayCredential = isPending ? shift.claimant?.credential : shift.profiles?.credential
+  const metaParts = isOpen
+    ? ['Open', shift.unit, 'tap to claim'].filter(Boolean)
+    : [displayName, displayCredential, shift.unit].filter(Boolean)
+
+  return (
+    <div className={cn('flex w-full items-center gap-3 px-4 py-3.5', isMatch && 'bg-[rgba(56,189,229,0.08)]')}>
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-[14px] font-semibold text-ink">
+          {formatShiftTimeRange(shift.starts_at, shift.ends_at)}
+        </p>
+        {metaParts.length > 0 && <p className="truncate text-[12px] text-ink-secondary">{metaParts.join(' · ')}</p>}
+      </div>
+      <div className="shrink-0">
+        <PeriodTag period={period} />
+      </div>
+      {isOpen && <ChevronRight size={15} strokeWidth={2} className="shrink-0 text-chevron-muted" aria-hidden="true" />}
+    </div>
+  )
+}
+
+// Team Schedule list-view personal-event row — flat counterpart to
+// TeamShiftRow, names whose event it is since Team Schedule spans every nurse.
+function TeamPersonalEventRow({ event }) {
+  const ownerName = event.profiles?.full_name ?? 'A teammate'
+  const meta = [ownerName, event.unit].filter(Boolean).join(' · ')
+
+  return (
+    <div className="flex w-full items-center gap-3 px-4 py-3.5">
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-[14px] font-semibold text-ink">
+          {formatShiftTimeRange(event.starts_at, event.ends_at)}
+        </p>
+        {meta && <p className="truncate text-[12px] text-ink-secondary">{meta}</p>}
+      </div>
+      <div className="shrink-0">
+        <PeriodTag period="Personal" />
+      </div>
+    </div>
+  )
+}
+
+// Inline note shown directly under a run of TeamShiftRow matches, per
+// ScheduleListTeamLinearLight.dc.html's ".match-note".
+function TeamMatchNote({ unit, startsAt, endsAt }) {
+  return (
+    <div className="flex items-center gap-1.5 px-4 py-1.5 text-[12px] font-semibold text-teal-foreground">
+      <Check size={12} strokeWidth={2} />
+      Same {unit}, {formatShiftTimeRange(startsAt, endsAt)} shift as you
     </div>
   )
 }
@@ -495,6 +551,34 @@ function buildMonthGridDays(monthDate) {
   for (let day = 1; day <= daysInMonth; day += 1) cells.push(new Date(year, month, day))
   while (cells.length % 7 !== 0) cells.push(null)
   return cells
+}
+
+// Per-period colored day-dots (ScheduleCalendarMine/ScheduleCalendarLinearLight)
+// replacing the old flat gray count-dots — day/evening/night are filled,
+// personal/open are rings. Capped at 3, first-seen order, since a day can
+// only show 3 dots' worth of room in the grid cell.
+const CAL_DOT_CLASSNAME = {
+  day: 'bg-period-day-fg',
+  evening: 'bg-period-evening-fg',
+  night: 'bg-period-night-fg',
+  personal: 'border border-period-personal-fg bg-transparent',
+  open: 'border-[1.4px] border-teal bg-white',
+}
+
+function getDayDots(items) {
+  const seen = []
+  for (const item of items) {
+    let dot
+    if (item._kind === 'personal') {
+      dot = 'personal'
+    } else if (item.status === 'open') {
+      dot = 'open'
+    } else {
+      dot = getShiftPeriod(item.starts_at).toLowerCase()
+    }
+    if (!seen.includes(dot)) seen.push(dot)
+  }
+  return seen.slice(0, 3)
 }
 
 // Month-grid calendar card (nav + weekday labels + day cells with shift-density
@@ -547,7 +631,7 @@ function MonthCalendarGrid({ calendarMonth, onChangeMonth, shiftsByDay, selected
           const dateKey = formatLocalDateKey(date)
           const isToday = dateKey === todayKey
           const isSelected = dateKey === selectedDateKey
-          const dotCount = Math.min((shiftsByDay[dateKey] ?? []).length, 3)
+          const dots = getDayDots(shiftsByDay[dateKey] ?? [])
 
           return (
             <button
@@ -568,9 +652,9 @@ function MonthCalendarGrid({ calendarMonth, onChangeMonth, shiftsByDay, selected
               >
                 {date.getDate()}
               </span>
-              <div className="flex h-1.5 gap-0.5">
-                {Array.from({ length: dotCount }).map((_, dotIndex) => (
-                  <span key={dotIndex} className="size-[5px] rounded-full bg-ink-tertiary" />
+              <div className="flex h-1.5 items-center gap-0.5">
+                {dots.map((dot) => (
+                  <span key={dot} className={cn('size-[5px] rounded-full', CAL_DOT_CLASSNAME[dot])} />
                 ))}
               </div>
             </button>
@@ -612,22 +696,21 @@ function MonthCalendarView({
       <div className="flex flex-col gap-2.5">
         <p className="text-[14px] font-bold text-ink">{dayDetailFormatter.format(selectedDate)}</p>
         {selectedDayShifts.length === 0 ? (
-          <div className="rounded-card border border-dashed border-hairline px-4 py-4 text-center text-[13px] text-ink-secondary">
+          <div className="rounded-card border border-hairline px-4 py-4 text-center text-[13px] text-ink-secondary">
             Day off
           </div>
         ) : (
-          <ul className="flex flex-col gap-2.5">
-            {selectedDayShifts.map((item) =>
-              item._kind === 'personal' ? (
-                <li key={`personal-${item.id}`}>
+          <ul className={SHIFT_LIST_CLASSNAME}>
+            {selectedDayShifts.map((item, index) => (
+              <li key={item._kind === 'personal' ? `personal-${item.id}` : item.id}>
+                {item._kind === 'personal' ? (
                   <CalendarDayPersonalEventRow event={item} onClick={() => onOpenPersonalEvent(item)} />
-                </li>
-              ) : (
-                <li key={item.id}>
+                ) : (
                   <CalendarDayShiftRow shift={item} credential={credential} onClick={() => onOpenShift(item)} />
-                </li>
-              ),
-            )}
+                )}
+                {index < selectedDayShifts.length - 1 && <ShiftListDivider inset={false} />}
+              </li>
+            ))}
           </ul>
         )}
       </div>
@@ -657,22 +740,21 @@ function TeamMonthCalendarView({ calendarMonth, onChangeMonth, shiftsByDay, sele
       <div className="flex flex-col gap-2.5">
         <p className="text-[14px] font-bold text-ink">{dayDetailFormatter.format(selectedDate)}</p>
         {selectedDayItems.length === 0 ? (
-          <div className="rounded-card border border-dashed border-hairline px-4 py-4 text-center text-[13px] text-ink-secondary">
+          <div className="rounded-card border border-hairline px-4 py-4 text-center text-[13px] text-ink-secondary">
             No shifts
           </div>
         ) : (
-          <ul className="flex flex-col gap-2.5">
-            {selectedDayItems.map((item) =>
-              item._kind === 'personal' ? (
-                <li key={`personal-${item.id}`}>
+          <ul className={SHIFT_LIST_CLASSNAME}>
+            {selectedDayItems.map((item, index) => (
+              <li key={item._kind === 'personal' ? `personal-${item.id}` : item.id}>
+                {item._kind === 'personal' ? (
                   <TeamCalendarDayPersonalEventRow event={item} />
-                </li>
-              ) : (
-                <li key={item.id}>
+                ) : (
                   <TeamCalendarDayShiftRow shift={item} />
-                </li>
-              ),
-            )}
+                )}
+                {index < selectedDayItems.length - 1 && <ShiftListDivider inset={false} />}
+              </li>
+            ))}
           </ul>
         )}
       </div>
@@ -875,6 +957,50 @@ function MyShiftsTab({ user, contentView }) {
               const hasAnyShift = days.some((date) => (combinedByDay[formatLocalDateKey(date)] ?? []).length > 0)
               if (!hasAnyShift && Math.abs(offset) > 1) return null
 
+              // Flatten the week's days into one row list so the whole week
+              // renders inside a single grouped .shift-list container (one
+              // shadow/border, row dividers between) instead of each row
+              // carrying its own card chrome.
+              const rows = []
+              days.forEach((date) => {
+                const key = formatLocalDateKey(date)
+                const dayItems = combinedByDay[key] ?? []
+
+                if (dayItems.length === 0) {
+                  rows.push({ key, node: <MyDayOffRow date={date} /> })
+                  return
+                }
+
+                dayItems.forEach((item) => {
+                  const isPast = new Date(item.ends_at).getTime() < Date.now()
+
+                  if (item._kind === 'personal') {
+                    rows.push({
+                      key: `personal-${item.id}`,
+                      node: (
+                        <MyPersonalEventRow
+                          event={item}
+                          isPast={isPast}
+                          onClick={() => setSelectedPersonalEvent(item)}
+                        />
+                      ),
+                    })
+                  } else {
+                    rows.push({
+                      key: item.id,
+                      node: (
+                        <MyShiftRow
+                          shift={item}
+                          credential={credential}
+                          isPast={isPast}
+                          onClick={() => setSelectedShift(item)}
+                        />
+                      ),
+                    })
+                  }
+                })
+              })
+
               return (
                 <div
                   key={offset}
@@ -884,42 +1010,13 @@ function MyShiftsTab({ user, contentView }) {
                   <p className="text-[12px] font-semibold tracking-wide text-ink-secondary uppercase">
                     {getWeekGroupLabel(offset, days[0])}
                   </p>
-                  <ul className="flex flex-col gap-2.5">
-                    {days.map((date) => {
-                      const key = formatLocalDateKey(date)
-                      const dayItems = combinedByDay[key] ?? []
-
-                      if (dayItems.length === 0) {
-                        return <MyDayOffRow key={key} date={date} />
-                      }
-
-                      return dayItems.map((item) => {
-                        const isPast = new Date(item.ends_at).getTime() < Date.now()
-
-                        if (item._kind === 'personal') {
-                          return (
-                            <li key={`personal-${item.id}`}>
-                              <MyPersonalEventRow
-                                event={item}
-                                isPast={isPast}
-                                onClick={() => setSelectedPersonalEvent(item)}
-                              />
-                            </li>
-                          )
-                        }
-
-                        return (
-                          <li key={item.id}>
-                            <MyShiftRow
-                              shift={item}
-                              credential={credential}
-                              isPast={isPast}
-                              onClick={() => setSelectedShift(item)}
-                            />
-                          </li>
-                        )
-                      })
-                    })}
+                  <ul className={SHIFT_LIST_CLASSNAME}>
+                    {rows.map((row, index) => (
+                      <li key={row.key}>
+                        {row.node}
+                        {index < rows.length - 1 && <ShiftListDivider />}
+                      </li>
+                    ))}
                   </ul>
                 </div>
               )
@@ -956,7 +1053,7 @@ function MyShiftsTab({ user, contentView }) {
 // Team Schedule/Manage/Staff and no wrapping header to defer to, so this tab
 // falls back to owning its own local list/calendar state and renders its own
 // (unsegmented) header for that toggle.
-function TeamScheduleTab({ onChangeView, contentView: contentViewProp }) {
+function TeamScheduleTab({ user, onChangeView, contentView: contentViewProp }) {
   const [shifts, setShifts] = useState([])
   const [personalEvents, setPersonalEvents] = useState([])
   const [loading, setLoading] = useState(true)
@@ -1063,116 +1160,64 @@ function TeamScheduleTab({ onChangeView, contentView: contentViewProp }) {
       {days.map((day) => {
         const dayShifts = shiftsByDay[day.key] ?? []
         const dayPersonalEvents = personalEventsByDay[day.key] ?? []
+        const dayHeaderLabel = `${weekdayFormatter.format(day.date)} ${day.date.getDate()} ${monthFormatter.format(day.date)}`
 
         if (dayShifts.length === 0 && dayPersonalEvents.length === 0) {
-          return <DayOffRow key={day.key} date={day.date} text="No shifts" />
+          return (
+            <li key={day.key} className="flex flex-col gap-2">
+              <p className="text-[12px] font-semibold tracking-wide text-ink-secondary uppercase">{dayHeaderLabel}</p>
+              <p className="px-1 text-[13px] text-ink-secondary">No shifts scheduled</p>
+            </li>
+          )
         }
 
-        const timeSlots = groupByTimeSlot(dayShifts)
-        const dayHeaderLabel = `${weekdayFormatter.format(day.date)} ${day.date.getDate()} ${monthFormatter.format(day.date)}`
+        // A shift "matches" the viewer's own shift that day when it shares
+        // the same unit and exact start/end time — highlighted per
+        // ScheduleListTeamLinearLight.dc.html's teal .match tint + note.
+        const myShift = dayShifts.find((shift) => shift.nurse_id === user?.id)
+        const isMatch = (shift) =>
+          Boolean(myShift) &&
+          shift.id !== myShift.id &&
+          shift.status !== 'open' &&
+          shift.status !== 'pending' &&
+          shift.unit === myShift.unit &&
+          shift.starts_at === myShift.starts_at &&
+          shift.ends_at === myShift.ends_at
+
+        const dayItems = [
+          ...dayPersonalEvents.map((event) => ({ ...event, _kind: 'personal' })),
+          ...dayShifts.map((shift) => ({ ...shift, _kind: 'shift' })),
+        ].sort((a, b) => new Date(a.starts_at) - new Date(b.starts_at))
 
         return (
           <li key={day.key}>
-            <p className="mb-2 text-sm font-medium text-[#6B7280] uppercase">{dayHeaderLabel}</p>
+            <p className="mb-2 text-[12px] font-semibold tracking-wide text-ink-secondary uppercase">
+              {dayHeaderLabel}
+            </p>
 
-            <div className="flex flex-col gap-3">
-              {dayPersonalEvents.map((event) => (
-                <div
-                  key={`personal-${event.id}`}
-                  className="rounded-xl bg-white p-4 shadow-sm border border-dashed border-[#E5E5EA]"
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <p className="text-sm font-semibold text-[#1D1D1F]">
-                      {formatShiftTimeRange(event.starts_at, event.ends_at)}
-                    </p>
-                    <ShiftPeriodPill period="Personal" />
-                  </div>
-                  <p className="mt-0.5 text-xs text-[#9CA3AF]">{event.unit}</p>
-
-                  <div className="mt-3 border-b border-[#E5E5EA]" />
-
-                  <div className="flex items-center gap-3 py-3">
-                    <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#F9F9FB] text-xs font-semibold text-[#6B7280]">
-                      {getInitials(event.profiles?.full_name)}
-                    </div>
-                    <p className="truncate text-sm font-medium text-[#1D1D1F]">
-                      {event.profiles?.full_name ?? 'A teammate'}
-                    </p>
-                  </div>
-                </div>
-              ))}
-
-              {timeSlots.map((slotShifts) => {
-                const [firstShift] = slotShifts
-                const period = getShiftPeriod(firstShift.starts_at)
-                const units = Array.from(new Set(slotShifts.map((shift) => shift.unit)))
+            <ul className={SHIFT_LIST_CLASSNAME}>
+              {dayItems.map((item, index) => {
+                const isLast = index === dayItems.length - 1
+                const match = item._kind === 'shift' && isMatch(item)
+                const next = dayItems[index + 1]
+                const nextIsMatch = !isLast && next._kind === 'shift' && isMatch(next)
+                const showNoteAfter = match && !nextIsMatch
 
                 return (
-                  <div
-                    key={`${firstShift.starts_at}__${firstShift.ends_at}`}
-                    className="rounded-xl bg-white p-4 shadow-sm border border-[#E5E5EA]"
-                  >
-                    <div className="flex items-center justify-between gap-3">
-                      <p className="text-sm font-semibold text-[#1D1D1F]">
-                        {formatShiftTimeRange(firstShift.starts_at, firstShift.ends_at)}
-                      </p>
-                      <ShiftPeriodPill period={period} />
-                    </div>
-                    <p className="mt-0.5 text-xs text-[#9CA3AF]">{units.join(', ')}</p>
-
-                    <div className="mt-3 border-b border-[#E5E5EA]" />
-
-                    <ul className="flex flex-col">
-                      {slotShifts.map((shift) => {
-                        if (shift.status === 'open') {
-                          return (
-                            <li
-                              key={shift.id}
-                              className="flex items-center justify-between border-b border-[#E5E5EA] py-3 last:border-b-0"
-                            >
-                              <p className="text-sm text-[#9CA3AF]">Open shift</p>
-                              <StatusPill status="open" />
-                            </li>
-                          )
-                        }
-
-                        const displayName =
-                          shift.status === 'pending'
-                            ? (shift.claimant?.full_name ?? 'Pending claim')
-                            : shift.profiles?.full_name
-                        const displayCredential =
-                          shift.status === 'pending'
-                            ? shift.claimant?.credential
-                            : shift.profiles?.credential
-
-                        return (
-                          <li
-                            key={shift.id}
-                            className="flex items-center gap-3 border-b border-[#E5E5EA] py-3 last:border-b-0"
-                          >
-                            <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#F9F9FB] text-xs font-semibold text-[#6B7280]">
-                              {getInitials(displayName)}
-                            </div>
-
-                            <div className="flex min-w-0 flex-1 items-center gap-1.5">
-                              <p className="truncate text-sm font-medium text-[#1D1D1F]">
-                                {displayName}
-                              </p>
-                              {displayCredential && (
-                                <>
-                                  <span className="h-3 border-l border-[#E5E5EA]" />
-                                  <p className="text-xs text-[#9CA3AF]">{displayCredential}</p>
-                                </>
-                              )}
-                            </div>
-                          </li>
-                        )
-                      })}
-                    </ul>
-                  </div>
+                  <li key={item._kind === 'personal' ? `personal-${item.id}` : item.id}>
+                    {item._kind === 'personal' ? (
+                      <TeamPersonalEventRow event={item} />
+                    ) : (
+                      <TeamShiftRow shift={item} isMatch={match} />
+                    )}
+                    {showNoteAfter && (
+                      <TeamMatchNote unit={myShift.unit} startsAt={myShift.starts_at} endsAt={myShift.ends_at} />
+                    )}
+                    {!isLast && <ShiftListDivider inset={false} />}
+                  </li>
                 )
               })}
-            </div>
+            </ul>
           </li>
         )
       })}
@@ -3103,7 +3148,7 @@ export default function Schedule({ user, role, initialTab = 'schedule' }) {
 
       <div role="tabpanel">
         {activeTab === 'schedule' && !isCoordinator && <ScheduleTab user={user} />}
-        {activeTab === 'team' && isCoordinator && <TeamScheduleTab />}
+        {activeTab === 'team' && isCoordinator && <TeamScheduleTab user={user} />}
         {activeTab === 'manage' && isCoordinator && <ManageTab />}
         {activeTab === 'staff' && isCoordinator && <StaffTab />}
       </div>

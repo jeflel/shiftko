@@ -10,9 +10,6 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
-  Sun,
-  Sunset,
-  Moon,
   Waves,
   Hourglass,
   CheckSquare,
@@ -22,6 +19,7 @@ import { supabase } from '../lib/supabase'
 import ShiftDetail from './ShiftDetail'
 import PersonalEventPanel from '@/components/PersonalEventPanel'
 import { Wordmark } from '@/components/ui/wordmark'
+import { PeriodTag } from '@/components/ui/period-tag'
 import { cn } from '@/lib/utils'
 import {
   formatLocalDateKey,
@@ -380,35 +378,6 @@ function getInitials(fullName) {
   const first = parts[0]?.[0] ?? ''
   const last = parts.length > 1 ? parts[parts.length - 1][0] : ''
   return (first + last).toUpperCase() || null
-}
-
-// Colored Day/Evening/Night tag for the Home hero reskin. Deliberately
-// local to Home.jsx rather than a change to ui/pill.jsx's ShiftPeriodPill,
-// since the rest of the app keeps the two-color rule (icon + gray text only);
-// this screen's full-color port was approved 2026-09-09.
-const PERIOD_TAG_CONFIG = {
-  Day: { icon: Sun, bg: 'bg-period-day-bg', fg: 'text-period-day-fg' },
-  Evening: { icon: Sunset, bg: 'bg-period-evening-bg', fg: 'text-period-evening-fg' },
-  Night: { icon: Moon, bg: 'bg-period-night-bg', fg: 'text-period-night-fg' },
-}
-
-function PeriodTag({ period }) {
-  const config = PERIOD_TAG_CONFIG[period]
-  if (!config) return null
-  const Icon = config.icon
-
-  return (
-    <span
-      className={cn(
-        'inline-flex shrink-0 items-center gap-1 rounded-control-sm py-1 pr-2 pl-1.5 text-[11px] font-semibold',
-        config.bg,
-        config.fg,
-      )}
-    >
-      <Icon size={12} strokeWidth={2} />
-      {period}
-    </span>
-  )
 }
 
 function formatRelativeTime(isoString) {

@@ -59,8 +59,37 @@ kept in sync with this file's Status section.
   gradient) with `CoverageHero`, `CoordinatorStatRow`,
   `CoordinatorQuickActions`, `CoverageGapRow`, per `CoordinatorHome.dc.html`.
   Now shares the same gradient header as nurse Home.
-- [ ] Schedule, My Shifts (list and calendar views)
-- [ ] Schedule, Team Schedule (list and calendar views)
+- [x] **Schedule, My Shifts + Team Schedule** (`src/pages/Schedule.jsx`),
+  2026-09-11. Both list and calendar views, both sub-tabs:
+  - New shared `src/components/ui/period-tag.jsx`: colored `PeriodTag`
+    (Day/Evening/Night/Personal, extracted from Home's original local one
+    now that Schedule needs it too) and `ShiftStatusTag` (pending/offered
+    chips, not in any mockup, restyled to match rather than left on the old
+    two-color pill). `ui/pill.jsx` untouched — still used by ShiftDetail/Pool.
+  - Added `--color-period-personal-bg/fg` (`#e4ecfe`/`#3556c7`) token pair.
+  - Every shift/day-off/personal-event row that used to carry its own
+    border+shadow+radius now folds into one shared `.shift-list`-style
+    grouped container per week/day (new `SHIFT_LIST_CLASSNAME`/
+    `ShiftListDivider` helpers) with row dividers between — matches the
+    Linear Light grouped-list pattern used everywhere else.
+  - Dropped `border-dashed` from every personal-event row (My Shifts list,
+    My Shifts calendar, Team Schedule calendar) per the standing
+    no-dashed-borders-for-personal rule.
+  - `MyDayOffRow` upgraded from a condensed one-liner to the full
+    date-col/divider row layout, matching the day-off rule established in
+    Claims/Swaps.
+  - Calendar day-dots recolored from flat gray count-dots to per-period
+    colored dots (day/evening/night filled, personal/open as rings), capped
+    at 3 (new `getDayDots`/`CAL_DOT_CLASSNAME`).
+  - Team Schedule's list flattened from per-time-slot nested-avatar cards to
+    one flat `.shift-card` row per shift/person (removed now-dead
+    `groupByTimeSlot`/`DayOffRow`), matching every other list in the app.
+    Added the mockup's teal `.match` highlight + inline "Same Unit X, time
+    as you" note (`TeamMatchNote`) for a team shift matching the viewer's
+    own unit+time that day — required threading `user` into `TeamScheduleTab`
+    (both call sites) since it had none before.
+  - Team Schedule's zero-shift days now show a plain muted "No shifts
+    scheduled" line instead of the old accent-bar `DayOffRow` card.
 - [ ] Claims / Pool (`ClaimShiftsLinearLight`, `ClaimStatusList/Pending/ApprovedLinearLight`)
 - [ ] Swaps (net-new: no live backend or UI exists at all yet)
 - [ ] Offer Shift (`PostShiftLinearLight`, `OfferShiftConfirm/Status/Claimed/PickedUpLinearLight`)
@@ -110,6 +139,23 @@ kept in sync with this file's Status section.
 - **Approvals count** comes from `shift_claims` where `status = 'pending'`
   (same table/status `Schedule.jsx`'s `ManageTab` already queries for its
   pending-claims list). Reuse this query, don't invent a new one.
+- **`ShiftStatusTag`'s "offered" color is invented**, not from any mockup —
+  none of the 4 Schedule screens show a pending/offered chip at all. Kept
+  neutral gray (no established color exists for it anywhere in the app) so
+  it doesn't imply a status meaning that isn't real. Revisit if a future
+  flow (e.g. Offer Shift) establishes a real color for "offered".
+- **Team Schedule's zero-shift-day text ("No shifts scheduled") is
+  genericized**, not the mockup's literal "No other shifts scheduled at
+  Burlingame" — the workspace name isn't threaded into `TeamScheduleTab` as
+  data, and hardcoding "Burlingame" would break for any other workspace.
+  Revisit if workspace name becomes available there.
+- **Match-highlight logic added net-new**: `TeamScheduleTab` had no `user`
+  prop before this pass (needed it for nothing). Now threaded through both
+  call sites (nested nurse case in `ScheduleTab`, standalone coordinator
+  case in `Schedule()`) so a team shift can be compared against the
+  viewer's own same-day shift (same unit + exact start/end = match, only
+  against non-open/non-pending shifts). No-ops harmlessly for coordinators,
+  who don't have shifts of their own to match against.
 
 ## Open product decisions (carried over from `HANDOFF.md`, still relevant)
 

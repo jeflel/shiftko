@@ -21,10 +21,11 @@
   --color-chevron-muted: #c7c7cc;
   --color-selection-ink: #10222a;
 
-  /* Home hero reskin (MainHorizontalTiles.dc.html, home-linear-light,
-     shiftko-design-v2-visual-pass-dup), full-color port approved 2026-09-09,
-     used on the nurse Home screen only; the rest of the app keeps the
-     two-color rule. */
+  /* Colored period tags, from the Linear Light home-linear-light source
+     (shiftko-design-v2-visual-pass-dup). Full-color port approved 2026-09-09,
+     first used on Home only; now shared by every Linear-Light-ported screen
+     (Home, Schedule) via components/ui/period-tag.jsx. Screens not yet
+     ported (ShiftDetail, Pool) keep the old two-color rule via ui/pill.jsx. */
   --color-hero-gradient-start: #5dc7e6;
   --color-hero-gradient-end: #0aa2cf;
   --color-status-deep: #004458;
@@ -34,6 +35,8 @@
   --color-period-evening-fg: #268b8b;
   --color-period-night-bg: #f5dffa;
   --color-period-night-fg: #5132ae;
+  --color-period-personal-bg: #e4ecfe;
+  --color-period-personal-fg: #3556c7;
   --color-period-good-bg: #dbf9e2;
   --color-period-good-fg: #268b8b;
   --color-period-warn-bg: #fde4e1;
