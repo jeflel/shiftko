@@ -121,7 +121,9 @@ function App() {
         {activeTab === 'schedule' && (
           <Schedule user={session.user} role={role} initialTab={scheduleInitialTab} />
         )}
-        {activeTab === 'pool' && <Pool user={session.user} />}
+        {activeTab === 'pool' && (
+          <Pool user={session.user} onGoToSchedule={handleGoToSchedule} />
+        )}
         {activeTab === 'more' && (
           <Profile user={session.user} onWorkspaceLeft={() => setWorkspaceId(null)} />
         )}

@@ -1,47 +1,38 @@
 import { useEffect, useState } from 'react'
+import { ListChecks } from 'lucide-react'
 import { supabase } from '../lib/supabase'
-import { ShiftPeriodPill } from '@/components/ui/pill'
+import { PeriodTag } from '@/components/ui/period-tag'
 import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
+import { SHIFT_LIST_CLASSNAME, ShiftListDivider } from '@/components/ui/shift-list'
+import ClaimStatusList from './ClaimStatusList'
 import { formatShiftTimeRange, getShiftPeriod } from '../lib/shiftFormat'
 
 const weekdayFormatter = new Intl.DateTimeFormat(undefined, { weekday: 'short' })
 
-function ShiftCard({ date, title, subtitle, pill, belowPill, trailing, onClick }) {
-  const isInteractive = typeof onClick === 'function'
-  const Comp = isInteractive ? 'button' : 'div'
-
+function ShiftCard({ date, title, subtitle, pill, trailing }) {
   return (
-    <Comp
-      type={isInteractive ? 'button' : undefined}
-      onClick={onClick}
-      className={cn(
-        'flex w-full items-center gap-3 rounded-card border border-hairline bg-card-surface px-4 py-3.5 shadow-card-lift',
-        isInteractive && 'text-left transition-colors active:bg-press-state',
-      )}
-    >
-      <div className="flex w-[34px] shrink-0 flex-col items-center gap-0.5 text-center">
-        <span className="text-[11px] font-semibold tracking-[0.03em] text-ink-secondary uppercase">
+    <div className="flex w-full items-center gap-3 px-4 py-3.5">
+      <div className="flex w-8 shrink-0 flex-col items-center">
+        <span className="text-[11px] font-medium tracking-[0.03em] text-[#85969B] uppercase">
           {weekdayFormatter.format(date)}
         </span>
-        <span className="text-xl leading-[1.1] font-semibold text-ink">{date.getDate()}</span>
+        <span className="text-[19px] leading-[1.15] font-medium text-ink">{date.getDate()}</span>
       </div>
 
       <div className="h-full self-stretch border-l border-hairline" />
 
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-semibold text-ink">{title}</p>
+        <p className="truncate text-[13px] font-medium text-ink">{title}</p>
         {subtitle}
-        {belowPill && <div className="mt-2">{belowPill}</div>}
       </div>
 
       {pill && <div className="shrink-0">{pill}</div>}
-      {trailing && <div className="ml-3 shrink-0">{trailing}</div>}
-    </Comp>
+      {trailing && <div className="ml-1 shrink-0">{trailing}</div>}
+    </div>
   )
 }
 
-export default function Pool({ user }) {
+export default function Pool({ user, onGoToSchedule }) {
   const [shifts, setShifts] = useState([])
   const [claims, setClaims] = useState([])
   const [homeUnit, setHomeUnit] = useState(undefined)
@@ -50,6 +41,7 @@ export default function Pool({ user }) {
   const [claimingId, setClaimingId] = useState(null)
   const [withdrawingId, setWithdrawingId] = useState(null)
   const [unavailableId, setUnavailableId] = useState(null)
+  const [showClaimStatus, setShowClaimStatus] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -195,9 +187,30 @@ export default function Pool({ user }) {
     }
   }
 
+  if (showClaimStatus) {
+    return (
+      <ClaimStatusList
+        user={user}
+        onBack={() => setShowClaimStatus(false)}
+        onGoToSchedule={onGoToSchedule}
+      />
+    )
+  }
+
   return (
     <main className="mx-auto w-full max-w-md px-5 pt-[26px] pb-12">
-      <h1 className="mb-1 text-[26px] font-semibold text-ink">Pool</h1>
+      <div className="mb-1 flex items-center justify-between">
+        <h1 className="text-[26px] font-semibold text-ink">Pool</h1>
+        <button
+          type="button"
+          onClick={() => setShowClaimStatus(true)}
+          aria-label="Claim status"
+          data-testid="pool-claim-status-button"
+          className="flex size-9 shrink-0 items-center justify-center rounded-control border border-hairline bg-card-surface text-ink-secondary"
+        >
+          <ListChecks size={18} strokeWidth={1.75} />
+        </button>
+      </div>
 
       {loading && <p className="mb-6 text-sm text-ink-secondary">Loading open shifts…</p>}
       {!loading && error && (
@@ -220,8 +233,8 @@ export default function Pool({ user }) {
           {shifts.length === 0 ? (
             <p className="text-sm text-ink-secondary">No open shifts right now</p>
           ) : (
-            <ul className="flex flex-col gap-3">
-              {shifts.map((shift) => {
+            <ul className={SHIFT_LIST_CLASSNAME}>
+              {shifts.map((shift, index) => {
                 const myClaim = claims.find((c) => c.shift_id === shift.id && c.nurse_id === user.id)
                 const claimCount = claims.filter((c) => c.shift_id === shift.id).length
                 const isClaiming = claimingId === shift.id
@@ -232,18 +245,30 @@ export default function Pool({ user }) {
                     <ShiftCard
                       date={new Date(shift.starts_at)}
                       title={formatShiftTimeRange(shift.starts_at, shift.ends_at)}
-                      pill={<ShiftPeriodPill period={getShiftPeriod(shift.starts_at)} />}
+                      pill={<PeriodTag period={getShiftPeriod(shift.starts_at)} />}
                       subtitle={
-                        <p className="mt-0.5 truncate text-xs text-ink-secondary">
-                          {shift.nurse_id
-                            ? `Offered by ${shift.profiles?.full_name ?? 'a nurse'}`
-                            : 'Open · unassigned'}
-                        </p>
+                        unavailableId === shift.id ? (
+                          <p className="mt-0.5 truncate text-xs text-red-700">
+                            This shift is no longer available.
+                          </p>
+                        ) : (
+                          <p className="mt-0.5 truncate text-xs text-ink-secondary">
+                            {shift.nurse_id
+                              ? `Offered by ${shift.profiles?.full_name ?? 'a nurse'}`
+                              : 'Open · unassigned'}
+                            {claimCount > 0 && (
+                              <>
+                                {' '}
+                                · {claimCount} nurse{claimCount === 1 ? '' : 's'} requested
+                              </>
+                            )}
+                          </p>
+                        )
                       }
                       trailing={
                         myClaim ? (
                           <div className="flex flex-col items-end gap-1">
-                            <span className="text-sm text-ink-secondary">Requested</span>
+                            <span className="text-xs font-medium text-ink-secondary">Requested</span>
                             <Button
                               type="button"
                               variant="secondary"
@@ -269,17 +294,7 @@ export default function Pool({ user }) {
                       }
                     />
 
-                    {claimCount > 0 && (
-                      <p className="mt-1.5 pl-1 text-xs text-ink-secondary">
-                        {claimCount} nurse{claimCount === 1 ? '' : 's'} requested
-                      </p>
-                    )}
-
-                    {unavailableId === shift.id && (
-                      <p className="mt-1.5 pl-1 text-xs text-red-700">
-                        This shift is no longer available.
-                      </p>
-                    )}
+                    {index < shifts.length - 1 && <ShiftListDivider />}
                   </li>
                 )
               })}

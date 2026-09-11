@@ -90,7 +90,58 @@ kept in sync with this file's Status section.
     (both call sites) since it had none before.
   - Team Schedule's zero-shift days now show a plain muted "No shifts
     scheduled" line instead of the old accent-bar `DayOffRow` card.
-- [ ] Claims / Pool (`ClaimShiftsLinearLight`, `ClaimStatusList/Pending/ApprovedLinearLight`)
+- [x] **Claims / Pool** (`src/pages/Pool.jsx`, new `ClaimStatusList.jsx`/
+  `ClaimStatusDetail.jsx`), 2026-09-11. Restyled Pool and built the My
+  Claims Status list + detail screens, which had no live equivalent before
+  this pass:
+  - Pool converted to the grouped `shift-list`/`shift-card` container with
+    `PeriodTag`, matching `ClaimShiftsLinearLight.dc.html`. Kept the
+    existing inline Claim/Withdraw buttons rather than the mockup's
+    chevron-only/push-to-detail model (mockup treats Pool as a pushed
+    screen; live Pool is the tab root and its inline actions are already
+    tested, and this is a visual pass, not a behavior change).
+  - New `src/components/ui/nav-row.jsx` (`NavRow`): first live build of the
+    `.back-btn`/`.nav-row` pushed-screen header. ShiftDetail should adopt
+    this when it's ported instead of its current plain back button.
+  - New `src/components/ui/status-tag.jsx` (`ClaimStatusTag`):
+    pending/approved/denied pills. Pending reuses `--color-teal-tint`/
+    `--color-teal-foreground` exactly; added new exact tokens for approved
+    (`--color-status-approved-bg/fg`, `#dcf3e1`/`#1f8a4c`) and denied
+    (`--color-status-denied-bg/fg`, `#fbe4e1`/`#b23b3b`) rather than reuse
+    the close-but-different `period-good`/`period-warn` pair.
+  - Extracted `SHIFT_LIST_CLASSNAME`/`ShiftListDivider` out of
+    `Schedule.jsx` into shared `src/components/ui/shift-list.jsx` once Pool
+    and Claim Status needed the same grouped-list container a third place;
+    `Schedule.jsx` now imports it instead of defining it locally.
+  - New `ClaimStatusList.jsx`: Pending/Resolved sections from `shift_claims`
+    for the signed-in nurse, joined to `shifts`.
+  - New `ClaimStatusDetail.jsx`: 3-step stepper + hero-card, branching by
+    status. Pending shows the mockup's explainer card + "Cancel Claim"
+    (same delete as Pool's withdraw). Approved shows "Approved by your
+    coordinator" + "Back to Schedule" (wired to the existing
+    `onGoToSchedule` callback, threaded through `App.jsx` → `Pool` →
+    `ClaimStatusList` → `ClaimStatusDetail`).
+  - **Denied has no mockup at all**, so this extends the Approved screen's
+    shape: stepper's third step and progress bar turn red instead of
+    reaching "Approved", status banner reads "Not approved. The shift
+    stayed open", and the real `denial_message` column (already written by
+    `Schedule.jsx`'s coordinator approve/deny flow) is shown in an
+    explainer card instead of a fabricated coworker-row. Button is "Done"
+    (returns to the list) rather than the invented "Back to Pool" from the
+    original plan, which is simpler and doesn't imply a destination that
+    isn't actually wired.
+  - Entry point to Claim Status is a new icon-button next to the "Pool"
+    title (no mockup shows where this lives, since Pool and Claim Status
+    were designed as unrelated screens); pushes `ClaimStatusList` as a
+    fixed full-screen overlay (`fixed inset-0 z-[100]`, same convention as
+    `ShiftDetail.jsx`'s existing overlay), hiding the tabbar to match every
+    pushed screen in the mockup set.
+  - Verified signed in as both nurse (`maria.santos@relay-test.com`) and
+    coordinator (`jefleangelo@gmail.com`): claimed a shift, approved one
+    claim and denied another as coordinator, confirmed all three detail
+    states (pending/approved/denied) render correctly for both the nurse
+    who claimed and (via `alex.ramirez@shiftko.test`, which already had a
+    long claim history) a second nurse.
 - [ ] Swaps (net-new: no live backend or UI exists at all yet)
 - [ ] Offer Shift (`PostShiftLinearLight`, `OfferShiftConfirm/Status/Claimed/PickedUpLinearLight`)
 - [ ] Coordinator Manage / Approvals / Staff Roster / Departments / Duplicate Week

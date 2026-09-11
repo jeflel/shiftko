@@ -44,6 +44,16 @@
   --color-stat-hours-tint: rgba(38, 139, 139, 0.15);
   --color-stat-hours-fg: #268b8b;
 
+  /* Claim status pill, from ClaimStatusListLinearLight.dc.html. "pending"
+     reuses --color-teal-tint/--color-teal-foreground exactly (same value);
+     approved/denied are their own tokens rather than reusing the close-but-
+     different period-good/period-warn pair, which were added for coverage-
+     gap states, not this pill. */
+  --color-status-approved-bg: #dcf3e1;
+  --color-status-approved-fg: #1f8a4c;
+  --color-status-denied-bg: #fbe4e1;
+  --color-status-denied-fg: #b23b3b;
+
   /* Card radius/shadow, synced to the Linear Light system's now-canonical
      values (rounded-16/soft rgba(53,87,97,.12) lift), established across the
      Schedule/Claims/Swaps/Offer Shift/Coordinator Manage/Profile/Shift
