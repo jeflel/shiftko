@@ -4,7 +4,7 @@
   --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI',
     system-ui, sans-serif;
 
-  /* v2 design tokens — see DESIGN.md in shiftko-design-v2-visual-pass-dup */
+  /* v2 design tokens, see DESIGN.md in shiftko-design-v2-visual-pass-dup */
   --color-page-ground: #f9f9fb;
   --color-card-surface: #ffffff;
   --color-ink: #1d1d1f;
@@ -22,7 +22,7 @@
   --color-selection-ink: #10222a;
 
   /* Home hero reskin (MainHorizontalTiles.dc.html, home-linear-light,
-     shiftko-design-v2-visual-pass-dup) — full-color port approved 2026-09-09,
+     shiftko-design-v2-visual-pass-dup), full-color port approved 2026-09-09,
      used on the nurse Home screen only; the rest of the app keeps the
      two-color rule. */
   --color-hero-gradient-start: #5dc7e6;
@@ -41,7 +41,7 @@
   --color-stat-hours-tint: rgba(38, 139, 139, 0.15);
   --color-stat-hours-fg: #268b8b;
 
-  /* Card radius/shadow — synced to the Linear Light system's now-canonical
+  /* Card radius/shadow, synced to the Linear Light system's now-canonical
      values (rounded-16/soft rgba(53,87,97,.12) lift), established across the
      Schedule/Claims/Swaps/Offer Shift/Coordinator Manage/Profile/Shift
      Detail/Personal Events flows in home-linear-light/. Kept as the single
@@ -53,7 +53,7 @@
   --radius-control-sm: 7px;
   --shadow-card-lift: 0 5px 15px rgba(53, 87, 97, 0.12);
 
-  /* Aliases for pre-v2 token names still referenced page-by-page —
+  /* Aliases for pre-v2 token names still referenced page-by-page,
      drop each alias once every reader of it is migrated (Reskin Plan Phase 3). */
   --color-surface: var(--color-page-ground);
   --color-line: var(--color-hairline);

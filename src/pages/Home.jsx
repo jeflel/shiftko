@@ -34,7 +34,7 @@ import {
 const weekdayFormatter = new Intl.DateTimeFormat(undefined, { weekday: 'short' })
 const monthFormatter = new Intl.DateTimeFormat(undefined, { month: 'short' })
 
-// "Sep 7 – Sep 13" — end is the exclusive day after the week, so the
+// "Sep 7 - Sep 13": end is the exclusive day after the week, so the
 // displayed range ends one day earlier.
 function formatWeekRange(start, end) {
   const lastDay = new Date(end)
@@ -71,7 +71,7 @@ function notificationTitle(type) {
 
 // Today hero card: the shift the nurse is on today, or "No shift today". Per
 // DESIGN.md's Today Hero + Shift Progress spec (Main.dc.html), reskinned per
-// MainHorizontalTiles.dc.html (home-linear-light) — pulled up over the
+// MainHorizontalTiles.dc.html (home-linear-light): pulled up over the
 // gradient hero, deep-teal time readout, colored period tag.
 function TodayHero({ todaysShift, credential }) {
   const period = todaysShift ? getShiftPeriod(todaysShift.starts_at) : null
@@ -160,7 +160,7 @@ function SectionHeader({ title, onViewAll, children }) {
 // Quick-action row: Add a Shift (opens the Personal Event panel) and Claim
 // Shifts (net-new per the Reskin Plan, links to the Pool tab), as two
 // icon-left horizontal tiles side by side. Per MainHorizontalTiles.dc.html
-// (home-linear-light, shiftko-design-v2-visual-pass-dup) — replaces the
+// (home-linear-light, shiftko-design-v2-visual-pass-dup): replaces the
 // earlier full-width stacked ActionList.
 function QuickActionTiles({ openCount, onGoToPool, onAddPersonalEvent }) {
   return (
@@ -383,8 +383,8 @@ function getInitials(fullName) {
 }
 
 // Colored Day/Evening/Night tag for the Home hero reskin. Deliberately
-// local to Home.jsx rather than a change to ui/pill.jsx's ShiftPeriodPill —
-// the rest of the app keeps the two-color rule (icon + gray text only);
+// local to Home.jsx rather than a change to ui/pill.jsx's ShiftPeriodPill,
+// since the rest of the app keeps the two-color rule (icon + gray text only);
 // this screen's full-color port was approved 2026-09-09.
 const PERIOD_TAG_CONFIG = {
   Day: { icon: Sun, bg: 'bg-period-day-bg', fg: 'text-period-day-fg' },
@@ -799,7 +799,7 @@ export default function Home({ user, role, onGoToManage, onGoToPool, onGoToSched
   )
 }
 
-// Coordinator Home body, per CoordinatorHome.dc.html (home-linear-light) —
+// Coordinator Home body, per CoordinatorHome.dc.html (home-linear-light):
 // the coordinator counterpart to the nurse TodayHero/QuickActionTiles/
 // WeeklyProgress stack above, sharing the same gradient header.
 function CoordinatorHomeContent({ shifts, today, pendingApprovalsCount, onGoToManage }) {
@@ -971,7 +971,7 @@ function CoordinatorStatRow({ shiftsToday, approvals, unstaffed }) {
   )
 }
 
-// Approvals / Post Shift / Manage — all route into the Manage tab for now
+// Approvals / Post Shift / Manage: all route into the Manage tab for now
 // (there's no dedicated Approvals screen or a way to deep-link Manage's post
 // form yet; see LINEAR_LIGHT_ROLLOUT.md's Coordinator Manage flow entry).
 function CoordinatorQuickActions({ pendingApprovalsCount, onGoToManage }) {
@@ -1032,8 +1032,8 @@ function CoordinatorQuickActions({ pendingApprovalsCount, onGoToManage }) {
 
 // Coverage-gap row: reuses the shift-list/date-col pattern from Upcoming
 // Shifts, but the live data only knows a day has zero shifts scheduled (not
-// which unit/period is short-staffed, per the mockup's fictional detail) —
-// see LINEAR_LIGHT_ROLLOUT.md for the Departments/staffing-pattern work that
+// which unit/period is short-staffed, per the mockup's fictional detail).
+// See LINEAR_LIGHT_ROLLOUT.md for the Departments/staffing-pattern work that
 // would make a per-unit gap callout possible.
 function CoverageGapRow({ date }) {
   return (
