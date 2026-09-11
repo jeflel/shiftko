@@ -142,7 +142,71 @@ kept in sync with this file's Status section.
     states (pending/approved/denied) render correctly for both the nurse
     who claimed and (via `alex.ramirez@shiftko.test`, which already had a
     long claim history) a second nurse.
-- [ ] Swaps (net-new: no live backend or UI exists at all yet)
+- [x] **Swaps** (`src/components/ui/stepper.jsx`, `status-banner.jsx`,
+  `swap-card.jsx`, `selection-row.jsx`; new `src/pages/SwapFlow.jsx`,
+  `SwapPickCoworker.jsx`, `SwapPickShift.jsx`, `SwapReview.jsx`,
+  `SwapStatusDetail.jsx`, `SwapStatusList.jsx`), 2026-09-11. Net-new
+  feature: no live backend or UI existed at all before this pass.
+  - **Resolved §0.2's outstanding piece**: kept coordinator-gated, matching
+    every `SwapStatus*.dc.html` mockup as drawn (5-state
+    `requested → accepted → declined/approved/denied`), not the lighter
+    self-scheduling alternative. User's explicit call, 2026-09-11.
+  - New migration `supabase/migrations/20260911214324_shift_swaps.sql`:
+    `shift_swaps` table + `swap_status` enum exactly per HANDOFF.md §6.3's
+    sketch, RLS mirroring `shift_claims`'s model from `CLAUDE.md`'s RLS
+    Security Model section (parties read their own rows, coordinators
+    `is_coordinator()` ALL, no workspace scoping, matching precedent).
+    Applied to the linked production project.
+  - Extracted `ClaimStatusDetail.jsx`'s local `ClaimStepper` into a shared
+    `Stepper` component (`ui/stepper.jsx`) now that Swaps needed the same
+    3-step shape a second time, per the established "duplicate once,
+    extract on second use" pattern. Same for its local `StatusBanner`
+    (`ui/status-banner.jsx`), extended to support an avatar-initials variant
+    for `SwapIncomingRequest`'s "X wants to swap with you" banner.
+  - New `ui/swap-card.jsx` (`SwapStack`/`SwapCard`/`SwapConnector`) built
+    shared from the start (not duplicate-then-extract) since every Swap
+    screen needing it was built in the same commit.
+  - `SwapFlow.jsx` owns the pick-coworker → pick-shift → review step state,
+    same pattern as `onboarding/OnboardingFlow.jsx`. Entry point: a new
+    "Request a swap" button on `ShiftDetail.jsx` (mine, scheduled, not
+    past, no pending claim, not already offered), added without a full
+    Linear Light reskin of that page, which is still its own future
+    checklist item.
+  - `SwapStatusDetail.jsx` is one component branching by `(status, viewer
+    role)` rather than a separate page per mockup, covers Requested,
+    IncomingRequest, Accepted, Approved, and two invented negative states
+    (Declined, Denied) that have no mockup at all, extending the Accepted/
+    Approved shape the same way Claims' invented Denied did (the stepper's
+    relevant step turns red, everything before it stays done).
+  - `SwapStatusList.jsx` is net-new (no mockup, same reasoning as
+    `ClaimStatusList`): "Awaiting Your Response" (incoming, needs action)
+    then every other swap, either side. Entry point: a new icon button in
+    `Schedule.jsx`'s sticky header (`ArrowLeftRight`, only shown on the My
+    Shifts sub-tab).
+  - Coordinator approval: a new "Pending swaps" section in `ManageTab`
+    (`Schedule.jsx`), directly mirroring the existing Pending Claims
+    section's structure and (still-unported) old-style classes rather than
+    Linear Light tokens, since `ManageTab` itself isn't reskinned yet,
+    matching the ShiftDetail precedent of a minimal, style-consistent touch
+    rather than bundling an unrelated page's reskin into this commit.
+  - **Real bug caught during live verification and fixed before commit**:
+    `SwapCard`'s avatar initials were computed from the full display label
+    ("Ana Florendo's shift") instead of the bare name, producing "AS"
+    instead of "AF". Fixed by splitting `SwapCard` into separate
+    `personName` (initials source) and `personLabel` (display text) props.
+  - Verified signed in as both nurse (`alex.ramirez@shiftko.test`) and
+    coordinator (`jefleangelo@gmail.com`): coordinator posted a real test
+    shift for a second nurse (no other nurse had any upcoming shift in
+    this data), nurse sent a real swap request against it (confirmed the
+    INSERT, the RLS select policies, and the FK-embed query shapes all
+    work against production), viewed it in Swap Status, then cancelled it
+    (confirmed the DELETE + RLS policy). Test shift deleted afterward.
+    **Not yet verified live**: an actual Accept/Decline (needs a second
+    nurse's login) or the coordinator's Approve/Deny buttons (needs an
+    `accepted` swap to test against). Both are code-reviewed and mirror
+    the proven Claims flow closely, but click-through verification is
+    still open for whenever real swap traffic exists or more test
+    credentials are available.
 - [ ] Offer Shift (`PostShiftLinearLight`, `OfferShiftConfirm/Status/Claimed/PickedUpLinearLight`)
 - [ ] Coordinator Manage / Approvals / Staff Roster / Departments / Duplicate Week
 - [ ] Profile / Notifications
@@ -212,9 +276,10 @@ kept in sync with this file's Status section.
 
 - Section 0.3, Offer-shift: mockup's 4-screen stepper vs. the live 1-tap
   toggle, unresolved. Blocks a faithful Offer Shift flow port until decided.
-- Swaps has no live backend at all (no `shift_claims`-equivalent table for
-  swaps). Needs schema work (`HANDOFF.md` section 6.3) before any UI can be
-  built.
+- ~~Swaps has no live backend at all~~ resolved 2026-09-11: kept
+  coordinator-gated per the mockups, `shift_swaps` table + RLS built and
+  live. See the Status section's Swaps entry above for the full decisions
+  log.
 - Departments/multi-tenancy detail is needed for the Staff
   Roster/Departments flow and for richer (per-unit) coverage-gap detail.
 

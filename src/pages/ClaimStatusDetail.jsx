@@ -4,62 +4,25 @@ import { supabase } from '../lib/supabase'
 import { NavRow } from '@/components/ui/nav-row'
 import { PeriodTag } from '@/components/ui/period-tag'
 import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
+import { Stepper } from '@/components/ui/stepper'
 import { formatShiftDate, formatShiftTimeRange, getShiftPeriod } from '../lib/shiftFormat'
 
 // 3-step Claimed / Pending Approval / Approved stepper, per
 // ClaimStatusPendingLinearLight.dc.html and ClaimStatusApprovedLinearLight.dc.html.
 // No mockup covers a denied claim, so this extends the same shape: the final
-// step and progress bar turn red instead of reaching "Approved", flagged in
+// step turns red instead of reaching "Approved", flagged in
 // LINEAR_LIGHT_ROLLOUT.md as an invented variant.
 function ClaimStepper({ status }) {
   const isPending = status === 'pending'
   const isDenied = status === 'denied'
-  const progressPercent = isPending ? 50 : 100
 
   const steps = [
     { label: 'Claimed', done: true },
     { label: 'Pending Approval', done: !isPending, current: isPending },
-    { label: isDenied ? 'Denied' : 'Approved', done: !isPending, current: false, denied: isDenied },
+    { label: isDenied ? 'Denied' : 'Approved', done: !isPending && !isDenied, failed: isDenied },
   ]
 
-  return (
-    <div className="relative pt-1">
-      <div className="absolute top-[18px] right-[33px] left-[33px] h-0.5 bg-track-neutral" />
-      <div
-        className={cn('absolute top-[18px] left-[33px] h-0.5', isDenied ? 'bg-status-denied-fg' : 'bg-teal')}
-        style={{ width: `calc((100% - 66px) * ${progressPercent / 100})` }}
-      />
-      <div className="relative z-10 flex flex-row justify-between">
-        {steps.map((step, index) => (
-          <div key={step.label} className="flex w-[70px] flex-col items-center gap-1.5">
-            <span
-              className={cn(
-                'flex size-[26px] items-center justify-center rounded-full border-2 text-[11px] font-semibold',
-                step.denied
-                  ? 'border-status-denied-fg bg-status-denied-fg text-white'
-                  : step.done
-                    ? 'border-teal-foreground bg-teal-foreground text-white'
-                    : step.current
-                      ? 'border-teal-foreground bg-card-surface text-teal-foreground'
-                      : 'border-hairline bg-card-surface text-ink-secondary',
-              )}
-            >
-              {step.denied || step.done ? <Check size={12} strokeWidth={2.5} /> : index + 1}
-            </span>
-            <span
-              className={cn(
-                'text-center text-[11px] leading-tight font-medium tracking-[-0.01em]',
-                step.done || step.current || step.denied ? 'font-semibold text-ink' : 'text-ink-secondary',
-              )}
-            >
-              {step.label}
-            </span>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
+  return <Stepper steps={steps} />
 }
 
 function StatusBanner({ icon: Icon, children }) {

@@ -8,6 +8,12 @@ const dateFormatter = new Intl.DateTimeFormat(undefined, {
   year: 'numeric',
 })
 
+const shortDayFormatter = new Intl.DateTimeFormat(undefined, {
+  weekday: 'short',
+  month: 'short',
+  day: 'numeric',
+})
+
 const timeFormatOptions = {
   hour: 'numeric',
   minute: '2-digit',
@@ -20,6 +26,13 @@ export function formatLocalDateKey(date) {
 
 export function formatShiftDate(startsAt) {
   return dateFormatter.format(new Date(startsAt))
+}
+
+// "Mon, Sep 15" - used by the Swap cards, which pack date + time onto one
+// line (swap-card-time in the Linear Light source) rather than the two-line
+// full-date layout formatShiftDate serves elsewhere.
+export function formatShiftDayShort(startsAt) {
+  return shortDayFormatter.format(new Date(startsAt))
 }
 
 export function formatShiftTimeRange(startsAt, endsAt) {

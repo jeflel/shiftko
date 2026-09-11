@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
-import { AlertTriangle, Calendar, Check, ChevronLeft, ChevronRight, List, Pencil, Sun, Sunset, Moon, X, Trash2, Users } from 'lucide-react'
+import { AlertTriangle, ArrowLeftRight, Calendar, Check, ChevronLeft, ChevronRight, List, Pencil, Sun, Sunset, Moon, X, Trash2, Users } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import ShiftDetail from './ShiftDetail'
+import SwapStatusList from './SwapStatusList'
 import PersonalEventPanel from '@/components/PersonalEventPanel'
 import { ShiftPeriodPill, StatusPill } from '@/components/ui/pill'
 import { PeriodTag, ShiftStatusTag } from '@/components/ui/period-tag'
@@ -172,6 +173,17 @@ function ScheduleViewToggle({ value, onChange }) {
 function ScheduleTab({ user }) {
   const [view, setView] = useState('mine')
   const [contentView, setContentView] = useState('list')
+  const [showSwapStatus, setShowSwapStatus] = useState(false)
+
+  if (showSwapStatus) {
+    return (
+      <SwapStatusList
+        user={user}
+        onBack={() => setShowSwapStatus(false)}
+        onGoToSchedule={() => setShowSwapStatus(false)}
+      />
+    )
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -184,33 +196,46 @@ function ScheduleTab({ user }) {
       <div className="sticky top-0 z-10 -mx-5 -mt-[26px] flex flex-col gap-4 border-b border-hairline bg-page-ground px-5 pt-[38px] pb-4">
         <div className="flex items-center justify-between">
           <h1 className="text-[22px] font-bold tracking-[-0.01em] text-ink">Schedule</h1>
-          <div className="flex gap-1 rounded-[11px] bg-track-neutral p-[3px]">
-            <button
-              type="button"
-              onClick={() => setContentView('list')}
-              aria-label="List view"
-              data-testid="schedule-content-view-list"
-              aria-pressed={contentView === 'list'}
-              className={cn(
-                'flex h-[26px] w-[30px] items-center justify-center rounded-[7px]',
-                contentView === 'list' ? 'bg-card-surface text-ink' : 'text-ink-secondary',
-              )}
-            >
-              <List size={15} strokeWidth={1.75} />
-            </button>
-            <button
-              type="button"
-              onClick={() => setContentView('calendar')}
-              aria-label="Calendar view"
-              data-testid="schedule-content-view-calendar"
-              aria-pressed={contentView === 'calendar'}
-              className={cn(
-                'flex h-[26px] w-[30px] items-center justify-center rounded-[7px]',
-                contentView === 'calendar' ? 'bg-card-surface text-ink' : 'text-ink-secondary',
-              )}
-            >
-              <Calendar size={15} strokeWidth={1.75} />
-            </button>
+          <div className="flex items-center gap-2">
+            {view === 'mine' && (
+              <button
+                type="button"
+                onClick={() => setShowSwapStatus(true)}
+                aria-label="Swap status"
+                data-testid="schedule-swap-status-button"
+                className="flex size-9 shrink-0 items-center justify-center rounded-control border border-hairline bg-card-surface text-ink-secondary"
+              >
+                <ArrowLeftRight size={16} strokeWidth={1.75} />
+              </button>
+            )}
+            <div className="flex gap-1 rounded-[11px] bg-track-neutral p-[3px]">
+              <button
+                type="button"
+                onClick={() => setContentView('list')}
+                aria-label="List view"
+                data-testid="schedule-content-view-list"
+                aria-pressed={contentView === 'list'}
+                className={cn(
+                  'flex h-[26px] w-[30px] items-center justify-center rounded-[7px]',
+                  contentView === 'list' ? 'bg-card-surface text-ink' : 'text-ink-secondary',
+                )}
+              >
+                <List size={15} strokeWidth={1.75} />
+              </button>
+              <button
+                type="button"
+                onClick={() => setContentView('calendar')}
+                aria-label="Calendar view"
+                data-testid="schedule-content-view-calendar"
+                aria-pressed={contentView === 'calendar'}
+                className={cn(
+                  'flex h-[26px] w-[30px] items-center justify-center rounded-[7px]',
+                  contentView === 'calendar' ? 'bg-card-surface text-ink' : 'text-ink-secondary',
+                )}
+              >
+                <Calendar size={15} strokeWidth={1.75} />
+              </button>
+            </div>
           </div>
         </div>
 
@@ -1758,6 +1783,138 @@ function ManageTab() {
     fetchPendingClaims()
   }, [])
 
+  const [pendingSwaps, setPendingSwaps] = useState([])
+  const [swapsLoading, setSwapsLoading] = useState(true)
+  const [swapsError, setSwapsError] = useState(null)
+  const [swapActionError, setSwapActionError] = useState(null)
+  const [actioningSwapId, setActioningSwapId] = useState(null)
+
+  async function fetchPendingSwaps() {
+    setSwapsLoading(true)
+    setSwapsError(null)
+
+    const { data, error: fetchError } = await supabase
+      .from('shift_swaps')
+      .select(`
+        id, status, created_at,
+        requester_id, recipient_id, requester_shift_id, recipient_shift_id,
+        requester:profiles!requester_id ( full_name, credential ),
+        recipient:profiles!recipient_id ( full_name, credential ),
+        requester_shift:shifts!requester_shift_id ( id, unit, starts_at, ends_at ),
+        recipient_shift:shifts!recipient_shift_id ( id, unit, starts_at, ends_at )
+      `)
+      .eq('status', 'accepted')
+      .order('created_at', { ascending: false })
+
+    if (fetchError) {
+      setSwapsError(fetchError.message)
+      setPendingSwaps([])
+      setSwapsLoading(false)
+      return
+    }
+
+    setPendingSwaps((data ?? []).filter((swap) => swap.requester_shift && swap.recipient_shift))
+    setSwapsLoading(false)
+  }
+
+  useEffect(() => {
+    fetchPendingSwaps()
+  }, [])
+
+  async function handleApproveSwap(swap) {
+    setSwapActionError(null)
+    setActioningSwapId(swap.id)
+
+    const { error: giveError } = await supabase
+      .from('shifts')
+      .update({ nurse_id: swap.recipient_id })
+      .eq('id', swap.requester_shift_id)
+
+    if (giveError) {
+      setActioningSwapId(null)
+      setSwapActionError(giveError.message)
+      return
+    }
+
+    const { error: getError } = await supabase
+      .from('shifts')
+      .update({ nurse_id: swap.requester_id })
+      .eq('id', swap.recipient_shift_id)
+
+    if (getError) {
+      setActioningSwapId(null)
+      setSwapActionError(getError.message)
+      return
+    }
+
+    const { error: approveError } = await supabase
+      .from('shift_swaps')
+      .update({ status: 'approved', decided_at: new Date().toISOString() })
+      .eq('id', swap.id)
+
+    if (approveError) {
+      setActioningSwapId(null)
+      setSwapActionError(approveError.message)
+      return
+    }
+
+    const { error: notifyError } = await supabase.from('notifications').insert([
+      {
+        user_id: swap.requester_id,
+        type: 'swap_approved',
+        message: `Your swap with ${swap.recipient?.full_name ?? 'your coworker'} was approved.`,
+        shift_id: swap.recipient_shift_id,
+      },
+      {
+        user_id: swap.recipient_id,
+        type: 'swap_approved',
+        message: `Your swap with ${swap.requester?.full_name ?? 'your coworker'} was approved.`,
+        shift_id: swap.requester_shift_id,
+      },
+    ])
+
+    setActioningSwapId(null)
+    if (notifyError) setSwapActionError(notifyError.message)
+
+    fetchPendingSwaps()
+  }
+
+  async function handleDenySwap(swap) {
+    setSwapActionError(null)
+    setActioningSwapId(swap.id)
+
+    const { error: denyError } = await supabase
+      .from('shift_swaps')
+      .update({ status: 'denied', decided_at: new Date().toISOString() })
+      .eq('id', swap.id)
+
+    if (denyError) {
+      setActioningSwapId(null)
+      setSwapActionError(denyError.message)
+      return
+    }
+
+    const { error: notifyError } = await supabase.from('notifications').insert([
+      {
+        user_id: swap.requester_id,
+        type: 'swap_denied',
+        message: 'Your coordinator did not approve this swap.',
+        shift_id: swap.requester_shift_id,
+      },
+      {
+        user_id: swap.recipient_id,
+        type: 'swap_denied',
+        message: 'Your coordinator did not approve this swap.',
+        shift_id: swap.recipient_shift_id,
+      },
+    ])
+
+    setActioningSwapId(null)
+    if (notifyError) setSwapActionError(notifyError.message)
+
+    fetchPendingSwaps()
+  }
+
   async function fetchRecentShifts() {
     setRecentLoading(true)
     setRecentError(null)
@@ -2652,6 +2809,88 @@ function ManageTab() {
                       </li>
                     ))}
                   </ul>
+                </li>
+              )
+            })}
+          </ul>
+        )}
+      </section>
+
+      <section>
+        <h2 className="mb-4 text-[20px] font-semibold text-[#1D1D1F]">Pending swaps</h2>
+
+        {swapsLoading && <p className="text-sm text-[#6B7280]">Loading pending swaps…</p>}
+        {swapsError && <p className="text-sm text-red-700">Could not load pending swaps: {swapsError}</p>}
+        {swapActionError && <p className="mb-3 text-sm text-red-700">{swapActionError}</p>}
+
+        {!swapsLoading && !swapsError && pendingSwaps.length === 0 && (
+          <p className="text-sm text-[#6B7280]">No pending swaps.</p>
+        )}
+
+        {!swapsLoading && pendingSwaps.length > 0 && (
+          <ul className="flex flex-col gap-3">
+            {pendingSwaps.map((swap) => {
+              const isActioning = actioningSwapId === swap.id
+
+              return (
+                <li key={swap.id} className="rounded-xl bg-white p-4 shadow-sm border border-[#E5E5EA]">
+                  <div className="flex items-center gap-3">
+                    <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#F9F9FB] text-xs font-semibold text-[#6B7280]">
+                      {getInitials(swap.requester?.full_name)}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-[#1D1D1F]">
+                        {swap.requester?.full_name ?? 'Unknown'} &harr; {swap.recipient?.full_name ?? 'Unknown'}
+                      </p>
+                      <p className="mt-0.5 text-xs text-[#9CA3AF]">Both nurses have accepted this swap</p>
+                    </div>
+                  </div>
+
+                  <div className="mt-3 border-b border-[#E5E5EA]" />
+
+                  <ul className="flex flex-col">
+                    <li className="flex items-center justify-between gap-3 border-b border-[#E5E5EA] py-3">
+                      <div className="min-w-0">
+                        <p className="text-xs text-[#9CA3AF]">{swap.requester?.full_name}&rsquo;s shift</p>
+                        <p className="truncate text-sm font-medium text-[#1D1D1F]">
+                          {formatShiftDate(swap.requester_shift.starts_at)} ·{' '}
+                          {formatShiftTimeRange(swap.requester_shift.starts_at, swap.requester_shift.ends_at)}
+                        </p>
+                      </div>
+                      <ShiftPeriodPill period={getShiftPeriod(swap.requester_shift.starts_at)} />
+                    </li>
+                    <li className="flex items-center justify-between gap-3 py-3">
+                      <div className="min-w-0">
+                        <p className="text-xs text-[#9CA3AF]">{swap.recipient?.full_name}&rsquo;s shift</p>
+                        <p className="truncate text-sm font-medium text-[#1D1D1F]">
+                          {formatShiftDate(swap.recipient_shift.starts_at)} ·{' '}
+                          {formatShiftTimeRange(swap.recipient_shift.starts_at, swap.recipient_shift.ends_at)}
+                        </p>
+                      </div>
+                      <ShiftPeriodPill period={getShiftPeriod(swap.recipient_shift.starts_at)} />
+                    </li>
+                  </ul>
+
+                  <div className="mt-3 flex shrink-0 items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleApproveSwap(swap)}
+                      disabled={isActioning}
+                      data-testid="schedule-manage-approve-swap"
+                      className="rounded-full bg-[#1D1D1F] px-3 py-1 text-xs font-medium text-white disabled:opacity-60"
+                    >
+                      Approve
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDenySwap(swap)}
+                      disabled={isActioning}
+                      data-testid="schedule-manage-deny-swap"
+                      className="rounded-full border border-[#E5E5EA] px-3 py-1 text-xs font-medium text-[#1D1D1F] disabled:opacity-60"
+                    >
+                      Deny
+                    </button>
+                  </div>
                 </li>
               )
             })}

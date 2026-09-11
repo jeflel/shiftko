@@ -3,6 +3,7 @@ import { ChevronLeft, Users } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { ShiftPeriodPill } from '@/components/ui/pill'
 import { Button } from '@/components/ui/button'
+import SwapFlow from './SwapFlow'
 import {
   formatShiftDate,
   formatShiftTimeRange,
@@ -25,6 +26,7 @@ export default function ShiftDetail({ shift, user, onBack }) {
   const [hasPendingClaim, setHasPendingClaim] = useState(false)
   const [offerSaving, setOfferSaving] = useState(false)
   const [offerError, setOfferError] = useState(null)
+  const [showSwapFlow, setShowSwapFlow] = useState(false)
 
   const period = getShiftPeriod(shift.starts_at)
 
@@ -99,6 +101,18 @@ export default function ShiftDetail({ shift, user, onBack }) {
     shiftState?.status === 'scheduled' &&
     !hasPendingClaim
 
+  // Swap eligibility mirrors the offer toggle's (mine, scheduled, not past,
+  // no pending claim) plus one more: not already offered to the whole unit
+  // via the 1-tap offer toggle - offering to anyone and requesting a specific
+  // person's shift are two different self-scheduling paths that shouldn't
+  // run at once on the same shift.
+  const canRequestSwap =
+    !isPastShift &&
+    shiftState?.nurse_id === user.id &&
+    shiftState?.status === 'scheduled' &&
+    !hasPendingClaim &&
+    !shiftState?.is_offered
+
   useEffect(() => {
     let cancelled = false
 
@@ -162,6 +176,20 @@ export default function ShiftDetail({ shift, user, onBack }) {
     }
   }, [shift, user.id])
 
+  if (showSwapFlow) {
+    return (
+      <SwapFlow
+        user={user}
+        shift={shift}
+        onBack={() => setShowSwapFlow(false)}
+        onSent={() => {
+          setShowSwapFlow(false)
+          onBack()
+        }}
+      />
+    )
+  }
+
   return (
     <div className="fixed inset-0 z-[100] overflow-y-auto bg-white">
       <main className="mx-auto w-full max-w-md px-5 pt-8 pb-12">
@@ -222,6 +250,20 @@ export default function ShiftDetail({ shift, user, onBack }) {
             )}
 
             {offerError && <p className="mt-2 text-sm text-red-700">{offerError}</p>}
+          </div>
+        )}
+
+        {canRequestSwap && (
+          <div className="mt-3">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setShowSwapFlow(true)}
+              data-testid="shift-detail-swap-request"
+              className="h-auto w-full py-4 text-base"
+            >
+              Request a swap
+            </Button>
           </div>
         )}
 
