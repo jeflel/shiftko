@@ -38,6 +38,14 @@ const todayLabelFormatter = new Intl.DateTimeFormat(undefined, {
   day: 'numeric',
 })
 
+// "Sep 7 – Sep 13" — end is the exclusive day after the week, so the
+// displayed range ends one day earlier.
+function formatWeekRange(start, end) {
+  const lastDay = new Date(end)
+  lastDay.setDate(lastDay.getDate() - 1)
+  return `${monthFormatter.format(start)} ${start.getDate()} – ${monthFormatter.format(lastDay)} ${lastDay.getDate()}`
+}
+
 function formatHM(totalMinutes) {
   const clamped = Math.max(0, Math.round(totalMinutes))
   const hours = Math.floor(clamped / 60)
@@ -301,46 +309,51 @@ function WeeklyProgress({ shifts, weekOffset, onChangeWeekOffset }) {
         </div>
       </SectionHeader>
 
-      <div className="flex items-stretch rounded-card border border-hairline bg-white p-4 shadow-card-lift">
-        <div className="flex flex-1 flex-col gap-2">
-          <span className="flex items-center gap-1.5 text-[12px] font-medium tracking-[-0.01em] text-ink-secondary">
-            <span className="flex size-[22px] shrink-0 items-center justify-center rounded-control-sm bg-teal-tint text-teal-foreground">
-              <Calendar size={13} strokeWidth={1.75} />
+      <div className="flex flex-col gap-3.5 rounded-card border border-hairline bg-white p-4 shadow-card-lift">
+        <div className="flex items-stretch">
+          <div className="flex flex-1 flex-col gap-2">
+            <span className="flex items-center gap-1.5 text-[12px] font-medium tracking-[-0.01em] text-ink-secondary">
+              <span className="flex size-[22px] shrink-0 items-center justify-center rounded-control-sm bg-teal-tint text-teal-foreground">
+                <Calendar size={13} strokeWidth={1.75} />
+              </span>
+              Shifts worked
             </span>
-            Shifts worked
-          </span>
-          <p className="text-[22px] leading-none font-bold tracking-[-0.01em] text-ink">
-            {shiftCount}
-            <span className="ml-0.5 text-sm font-medium text-ink-secondary">/{shiftsTarget}</span>
-          </p>
-          <div className="h-1.5 overflow-hidden rounded-full bg-track-neutral">
-            <div
-              className="h-full rounded-full bg-teal"
-              style={{ width: `${Math.min(100, (shiftCount / shiftsTarget) * 100)}%` }}
-            />
+            <p className="text-[22px] leading-none font-bold tracking-[-0.01em] text-ink">
+              {shiftCount}
+              <span className="ml-1.5 text-sm font-medium text-ink-secondary">/{shiftsTarget}</span>
+            </p>
+            <div className="h-1.5 overflow-hidden rounded-full bg-track-neutral">
+              <div
+                className="h-full rounded-full bg-teal"
+                style={{ width: `${Math.min(100, (shiftCount / shiftsTarget) * 100)}%` }}
+              />
+            </div>
+          </div>
+
+          <div className="mx-5 my-px w-px shrink-0 bg-hairline" />
+
+          <div className="flex flex-1 flex-col gap-2">
+            <span className="flex items-center gap-1.5 text-[12px] font-medium tracking-[-0.01em] text-ink-secondary">
+              <span className="flex size-[22px] shrink-0 items-center justify-center rounded-control-sm bg-stat-hours-tint text-stat-hours-fg">
+                <Clock size={13} strokeWidth={1.75} />
+              </span>
+              Hours worked
+            </span>
+            <p className="text-[22px] leading-none font-bold tracking-[-0.01em] text-ink">
+              {totalHours}
+              <span className="ml-1.5 text-sm font-medium text-ink-secondary">/{hoursTarget}</span>
+            </p>
+            <div className="h-1.5 overflow-hidden rounded-full bg-track-neutral">
+              <div
+                className="h-full rounded-full bg-stat-hours-fg"
+                style={{ width: `${Math.min(100, (totalHours / hoursTarget) * 100)}%` }}
+              />
+            </div>
           </div>
         </div>
 
-        <div className="mx-5 my-px w-px shrink-0 bg-hairline" />
-
-        <div className="flex flex-1 flex-col gap-2">
-          <span className="flex items-center gap-1.5 text-[12px] font-medium tracking-[-0.01em] text-ink-secondary">
-            <span className="flex size-[22px] shrink-0 items-center justify-center rounded-control-sm bg-stat-hours-tint text-stat-hours-fg">
-              <Clock size={13} strokeWidth={1.75} />
-            </span>
-            Hours worked
-          </span>
-          <p className="text-[22px] leading-none font-bold tracking-[-0.01em] text-ink">
-            {totalHours}
-            <span className="ml-0.5 text-sm font-medium text-ink-secondary">/{hoursTarget}</span>
-          </p>
-          <div className="h-1.5 overflow-hidden rounded-full bg-track-neutral">
-            <div
-              className="h-full rounded-full bg-stat-hours-fg"
-              style={{ width: `${Math.min(100, (totalHours / hoursTarget) * 100)}%` }}
-            />
-          </div>
-        </div>
+        <div className="h-px bg-hairline" />
+        <p className="text-xs text-ink-secondary">{formatWeekRange(start, end)}</p>
       </div>
     </section>
   )

@@ -23,6 +23,7 @@ export default function Screen2({ onBack, onContinue }) {
           type="button"
           onClick={onBack}
           aria-label="Go back"
+          data-testid="screen2-back"
           className="flex h-8 w-8 shrink-0 items-center justify-center"
         >
           <ArrowLeft size={20} strokeWidth={2} className="text-ink-secondary" />
@@ -51,6 +52,7 @@ export default function Screen2({ onBack, onContinue }) {
           placeholder="Enter first name"
           required
           autoComplete="given-name"
+          data-testid="screen2-first-name-input"
           className={`mb-4 ${fieldClassName}`}
         />
 
@@ -65,10 +67,11 @@ export default function Screen2({ onBack, onContinue }) {
           placeholder="Enter last name"
           required
           autoComplete="family-name"
+          data-testid="screen2-last-name-input"
           className={fieldClassName}
         />
 
-        <Button type="submit" className="mt-8 h-[54px] w-full">
+        <Button type="submit" data-testid="screen2-continue" className="mt-8 h-[54px] w-full">
           Continue
         </Button>
       </form>

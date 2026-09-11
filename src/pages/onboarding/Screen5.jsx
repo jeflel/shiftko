@@ -30,6 +30,7 @@ export default function Screen5({ onBack, onContinue }) {
           type="button"
           onClick={onBack}
           aria-label="Go back"
+          data-testid="screen5-back"
           className="flex h-8 w-8 shrink-0 items-center justify-center"
         >
           <ArrowLeft size={20} strokeWidth={2} className="text-ink-secondary" />
@@ -74,7 +75,7 @@ export default function Screen5({ onBack, onContinue }) {
           })}
         </div>
 
-        <Button type="submit" className="mt-auto h-[54px] w-full translate-y-[23px]">
+        <Button type="submit" data-testid="screen5-continue" className="mt-auto h-[54px] w-full translate-y-[23px]">
           Continue
         </Button>
       </form>

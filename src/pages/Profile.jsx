@@ -170,6 +170,7 @@ export default function Profile({ user, onWorkspaceLeft }) {
                 <button
                   type="button"
                   onClick={() => toggleAction('leave')}
+                  data-testid="profile-leave-workspace"
                   className="rounded-full border border-[#E8E6E3] px-4 py-1.5 text-sm font-medium text-red-600"
                 >
                   Leave workspace
@@ -177,6 +178,7 @@ export default function Profile({ user, onWorkspaceLeft }) {
                 <button
                   type="button"
                   onClick={() => toggleAction('join')}
+                  data-testid="profile-join-workspace"
                   className="rounded-full border border-[#E8E6E3] px-4 py-1.5 text-sm font-medium text-[#111111]"
                 >
                   Join another
@@ -186,6 +188,7 @@ export default function Profile({ user, onWorkspaceLeft }) {
               <button
                 type="button"
                 onClick={() => toggleAction('join')}
+                data-testid="profile-join-workspace"
                 className="rounded-full border border-[#E8E6E3] px-4 py-1.5 text-sm font-medium text-[#111111]"
               >
                 Join workspace
@@ -203,6 +206,7 @@ export default function Profile({ user, onWorkspaceLeft }) {
                   type="button"
                   onClick={handleConfirmLeave}
                   disabled={leaveSaving}
+                  data-testid="profile-leave-confirm"
                   className="rounded-full bg-red-500 px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
                 >
                   {leaveSaving ? 'Leaving…' : 'Leave'}
@@ -211,6 +215,7 @@ export default function Profile({ user, onWorkspaceLeft }) {
                   type="button"
                   onClick={() => toggleAction('leave')}
                   disabled={leaveSaving}
+                  data-testid="profile-leave-cancel"
                   className="rounded-full border border-[#E8E6E3] px-4 py-2 text-sm font-medium text-[#111111] disabled:opacity-60"
                 >
                   Cancel
@@ -232,6 +237,7 @@ export default function Profile({ user, onWorkspaceLeft }) {
         type="button"
         onClick={handleSignOut}
         disabled={signingOut}
+        data-testid="profile-sign-out"
         className="mt-8 h-auto w-full gap-2 rounded-full bg-ink px-4 py-3 text-white hover:bg-ink disabled:opacity-60"
       >
         <LogOut size={16} strokeWidth={2} />

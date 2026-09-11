@@ -23,6 +23,7 @@ export default function BottomNav({ activeTab, onTabChange }) {
             <button
               key={tab.id}
               type="button"
+              data-testid={`nav-${tab.id}`}
               aria-current={isActive ? 'page' : undefined}
               onClick={() => onTabChange(tab.id)}
               className={cn(

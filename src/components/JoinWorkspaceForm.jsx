@@ -51,12 +51,13 @@ export default function JoinWorkspaceForm({ user, onSuccess, submitLabel = 'Join
         placeholder="Enter code"
         required
         autoCapitalize="characters"
+        data-testid="join-workspace-code-input"
         className="h-auto border-[#E5E5EA] bg-white px-3.5 py-3 text-center text-lg font-medium tracking-widest uppercase focus-visible:border-[#1D1D1F] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#1D1D1F] focus-visible:ring-0"
       />
 
       {error && <p className="text-sm text-red-700">{error}</p>}
 
-      <Button type="submit" disabled={loading} className="w-full">
+      <Button type="submit" disabled={loading} data-testid="join-workspace-submit" className="w-full">
         {loading ? 'Joining…' : submitLabel}
       </Button>
     </form>

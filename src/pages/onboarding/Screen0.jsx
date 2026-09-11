@@ -38,10 +38,16 @@ export default function Screen0({ onGetStarted, onSignIn }) {
         </div>
 
         <div className="flex w-full flex-col gap-3">
-          <Button type="button" onClick={onGetStarted} className="h-[54px] w-full">
+          <Button type="button" onClick={onGetStarted} data-testid="screen0-get-started" className="h-[54px] w-full">
             Get Started
           </Button>
-          <Button type="button" variant="outline" onClick={onSignIn} className="h-[54px] w-full">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onSignIn}
+            data-testid="screen0-sign-in"
+            className="h-[54px] w-full"
+          >
             I already have an account
           </Button>
         </div>

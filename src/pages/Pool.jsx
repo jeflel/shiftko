@@ -250,6 +250,7 @@ export default function Pool({ user }) {
                               size="sm"
                               onClick={() => handleWithdraw(shift)}
                               disabled={isWithdrawing}
+                              data-testid="pool-withdraw-claim"
                             >
                               {isWithdrawing ? 'Withdrawing…' : 'Withdraw'}
                             </Button>
@@ -260,6 +261,7 @@ export default function Pool({ user }) {
                             size="sm"
                             onClick={() => handleClaim(shift)}
                             disabled={isClaiming}
+                            data-testid="pool-claim-shift"
                           >
                             {isClaiming ? 'Requesting…' : 'Claim'}
                           </Button>

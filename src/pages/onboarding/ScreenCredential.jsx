@@ -23,6 +23,7 @@ export default function ScreenCredential({ onBack, onContinue }) {
           type="button"
           onClick={onBack}
           aria-label="Go back"
+          data-testid="credential-back"
           className="flex h-8 w-8 shrink-0 items-center justify-center"
         >
           <ArrowLeft size={20} strokeWidth={2} className="text-ink-secondary" />
@@ -48,6 +49,7 @@ export default function ScreenCredential({ onBack, onContinue }) {
                 key={option.value}
                 type="button"
                 onClick={() => setCredential(option.value)}
+                data-testid={`credential-option-${option.value.toLowerCase()}`}
                 className={`flex h-[94px] w-full items-center justify-between rounded-card border bg-white px-6 text-left transition-colors ${
                   selected
                     ? 'border-teal-foreground shadow-[0px_7px_20px_2px_rgba(46,73,92,0.06)]'
@@ -79,7 +81,7 @@ export default function ScreenCredential({ onBack, onContinue }) {
           })}
         </div>
 
-        <Button type="submit" className="mt-auto h-[54px] w-full translate-y-[23px]">
+        <Button type="submit" data-testid="credential-continue" className="mt-auto h-[54px] w-full translate-y-[23px]">
           Continue
         </Button>
       </form>

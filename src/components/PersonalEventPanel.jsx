@@ -112,7 +112,7 @@ export default function PersonalEventPanel({ userId, event, onClose, onSaved, on
       >
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-semibold text-ink">{isEdit ? 'Edit Personal Event' : 'Add Personal Event'}</h3>
-          <button type="button" onClick={onClose} aria-label="Close" className="text-ink-secondary hover:text-ink">
+          <button type="button" data-testid="personal-event-close" onClick={onClose} aria-label="Close" className="text-ink-secondary hover:text-ink">
             <X size={16} strokeWidth={2.5} />
           </button>
         </div>
@@ -133,6 +133,7 @@ export default function PersonalEventPanel({ userId, event, onClose, onSaved, on
           <label className={labelClassName}>Department</label>
           <SegmentedControl
             ariaLabel="Department"
+            testidPrefix="personal-event-department"
             value={hasUnit ? 'set' : 'none'}
             onChange={(id) => setHasUnit(id === 'set')}
             options={[
@@ -142,7 +143,12 @@ export default function PersonalEventPanel({ userId, event, onClose, onSaved, on
           />
           {hasUnit ? (
             <>
-              <select value={unit} onChange={(e) => setUnit(e.target.value)} className={inputClassName}>
+              <select
+                value={unit}
+                onChange={(e) => setUnit(e.target.value)}
+                data-testid="personal-event-unit-select"
+                className={inputClassName}
+              >
                 <option value="Unit 1">Unit 1</option>
                 <option value="Unit 2">Unit 2</option>
               </select>
@@ -155,6 +161,7 @@ export default function PersonalEventPanel({ userId, event, onClose, onSaved, on
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. Weekend job at Peninsula Landscaping"
+                data-testid="personal-event-name-input"
                 className={inputClassName}
               />
               <span className="text-[11px] text-ink-secondary">Required since no department is set.</span>
@@ -169,6 +176,7 @@ export default function PersonalEventPanel({ userId, event, onClose, onSaved, on
               type="time"
               value={startTime}
               onChange={(e) => setStartTime(e.target.value)}
+              data-testid="personal-event-start-time"
               className={inputClassName}
             />
             <span className="text-sm text-ink-secondary">to</span>
@@ -176,6 +184,7 @@ export default function PersonalEventPanel({ userId, event, onClose, onSaved, on
               type="time"
               value={endTime}
               onChange={(e) => setEndTime(e.target.value)}
+              data-testid="personal-event-end-time"
               className={inputClassName}
             />
           </div>
@@ -183,12 +192,19 @@ export default function PersonalEventPanel({ userId, event, onClose, onSaved, on
 
         {error && <p className="text-sm text-red-700">{error}</p>}
 
-        <Button type="button" onClick={handleSubmit} disabled={saving} className="w-full">
+        <Button type="button" data-testid="personal-event-save" onClick={handleSubmit} disabled={saving} className="w-full">
           {saving ? 'Saving…' : isEdit ? 'Save Changes' : 'Add Event'}
         </Button>
 
         {isEdit && (
-          <Button type="button" variant="destructive" onClick={handleDelete} disabled={deleting} className="w-full">
+          <Button
+            type="button"
+            variant="destructive"
+            data-testid="personal-event-delete"
+            onClick={handleDelete}
+            disabled={deleting}
+            className="w-full"
+          >
             {deleting ? 'Deleting…' : 'Delete Event'}
           </Button>
         )}

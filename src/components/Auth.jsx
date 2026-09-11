@@ -104,6 +104,7 @@ export default function Auth({ initialView = 'signin' }) {
           type="button"
           onClick={handleGoogleSignIn}
           disabled={googleLoading}
+          data-testid="auth-google-signin"
           className="mt-7 flex h-[54px] w-full items-center justify-center gap-2 rounded-button border border-hairline bg-white text-[17px] font-semibold tracking-[-0.34px] text-ink disabled:opacity-60"
         >
           <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
@@ -145,6 +146,7 @@ export default function Auth({ initialView = 'signin' }) {
             placeholder="Enter email"
             required
             autoComplete="email"
+            data-testid="auth-email-input"
             className={`mb-4 ${signinFieldClassName}`}
           />
 
@@ -159,6 +161,7 @@ export default function Auth({ initialView = 'signin' }) {
             placeholder="Enter password"
             required
             autoComplete="new-password"
+            data-testid="auth-password-input"
             className={signinFieldClassName}
           />
 
@@ -167,6 +170,7 @@ export default function Auth({ initialView = 'signin' }) {
           <Button
             type="submit"
             disabled={loading}
+            data-testid="auth-submit"
             className="mt-8 h-[54px] w-full"
           >
             {loading ? 'Signing up…' : 'Sign up'}
@@ -175,7 +179,7 @@ export default function Auth({ initialView = 'signin' }) {
 
         <p className="mt-4 text-center text-[15px] tracking-[-0.3px] text-ink-secondary">
           Already have an account?{' '}
-          <button type="button" onClick={toggleView} className="font-semibold">
+          <button type="button" onClick={toggleView} data-testid="auth-toggle-view" className="font-semibold">
             Sign in
           </button>
         </p>
@@ -196,6 +200,7 @@ export default function Auth({ initialView = 'signin' }) {
         type="button"
         onClick={handleGoogleSignIn}
         disabled={googleLoading}
+        data-testid="auth-google-signin"
         className="mt-7 flex h-[54px] w-full items-center justify-center gap-2 rounded-button border border-hairline bg-white text-[17px] font-semibold tracking-[-0.34px] text-ink disabled:opacity-60"
       >
         <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
@@ -237,6 +242,7 @@ export default function Auth({ initialView = 'signin' }) {
           placeholder="Enter email"
           required
           autoComplete="email"
+          data-testid="auth-email-input"
           className={`mb-4 ${signinFieldClassName}`}
         />
 
@@ -252,6 +258,7 @@ export default function Auth({ initialView = 'signin' }) {
             placeholder="Enter password"
             required
             autoComplete="current-password"
+            data-testid="auth-password-input"
             className={`pr-11 ${signinFieldClassName}`}
           />
           <button
@@ -269,6 +276,7 @@ export default function Auth({ initialView = 'signin' }) {
         <Button
           type="submit"
           disabled={loading}
+          data-testid="auth-submit"
           className="mt-8 h-[54px] w-full rounded-button bg-teal-foreground text-[17px] font-semibold tracking-[-0.34px] text-white hover:bg-teal-foreground/90 disabled:opacity-60"
         >
           {loading ? 'Signing in…' : 'Sign in'}
@@ -277,7 +285,7 @@ export default function Auth({ initialView = 'signin' }) {
 
       <p className="mt-4 text-center text-[15px] tracking-[-0.3px] text-ink-secondary">
         Don't have an account?{' '}
-        <button type="button" onClick={toggleView} className="font-semibold">
+        <button type="button" onClick={toggleView} data-testid="auth-toggle-view" className="font-semibold">
           Sign up
         </button>
       </p>

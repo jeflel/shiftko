@@ -50,6 +50,7 @@ export default function Screen3({ firstName = '', onBack, onContinue }) {
           type="button"
           onClick={onBack}
           aria-label="Go back"
+          data-testid="screen3-back"
           className="flex h-8 w-8 shrink-0 items-center justify-center"
         >
           <ArrowLeft size={20} strokeWidth={2} className="text-ink-secondary" />
@@ -76,6 +77,7 @@ export default function Screen3({ firstName = '', onBack, onContinue }) {
                 key={option.value}
                 type="button"
                 onClick={() => setRole(option.value)}
+                data-testid={`screen3-role-${option.value}`}
                 className={`flex h-[94px] w-full items-center justify-between rounded-card border bg-white px-6 text-left transition-colors ${
                   selected
                     ? 'border-teal-foreground shadow-[0px_7px_20px_2px_rgba(46,73,92,0.06)]'
@@ -120,7 +122,7 @@ export default function Screen3({ firstName = '', onBack, onContinue }) {
           })}
         </div>
 
-        <Button type="submit" className="mt-auto h-[54px] w-full translate-y-[23px]">
+        <Button type="submit" data-testid="screen3-continue" className="mt-auto h-[54px] w-full translate-y-[23px]">
           Continue
         </Button>
       </form>

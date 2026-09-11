@@ -79,6 +79,7 @@ export function CalendarStrip({ selectedDateKey, onSelect, monthsAhead = 3 }) {
                   <button
                     key={cell.dateKey}
                     type="button"
+                    data-testid={`calendar-day-${cell.dateKey}`}
                     disabled={isPast}
                     onClick={() => onSelect(cell.dateKey)}
                     className={cn(

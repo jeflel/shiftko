@@ -168,6 +168,7 @@ export default function ShiftDetail({ shift, user, onBack }) {
         <button
           type="button"
           onClick={onBack}
+          data-testid="shift-detail-back"
           className="mb-6 inline-flex items-center gap-1 text-sm font-medium text-ink-secondary"
         >
           <ChevronLeft size={18} strokeWidth={2} />
@@ -203,6 +204,7 @@ export default function ShiftDetail({ shift, user, onBack }) {
                 variant="secondary"
                 onClick={() => handleToggleOffer(false)}
                 disabled={offerSaving}
+                data-testid="shift-detail-offer-toggle"
                 className="h-auto w-full py-4 text-base"
               >
                 {offerSaving ? 'Withdrawing…' : 'Withdraw offer'}
@@ -212,6 +214,7 @@ export default function ShiftDetail({ shift, user, onBack }) {
                 type="button"
                 onClick={() => handleToggleOffer(true)}
                 disabled={offerSaving}
+                data-testid="shift-detail-offer-toggle"
                 className="h-auto w-full py-4 text-base"
               >
                 {offerSaving ? 'Offering…' : 'Offer this shift'}

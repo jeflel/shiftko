@@ -72,6 +72,7 @@ export default function Screen6({ firstName = '', onFinish }) {
         <button
           type="button"
           onClick={handleShare}
+          data-testid="screen6-share"
           className="absolute top-[48px] right-8 text-teal-foreground"
           aria-label="Share invite code"
         >
@@ -79,7 +80,7 @@ export default function Screen6({ firstName = '', onFinish }) {
         </button>
       </div>
 
-      <Button type="button" onClick={onFinish} className="mt-auto h-[54px] w-full">
+      <Button type="button" onClick={onFinish} data-testid="screen6-finish" className="mt-auto h-[54px] w-full">
         Let's Go
       </Button>
     </main>
