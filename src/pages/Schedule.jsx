@@ -1282,6 +1282,15 @@ const inputClassName =
   'w-full rounded-control border border-hairline p-3 text-sm focus:border-ink focus:outline-none'
 const labelClassName = 'text-xs font-medium tracking-wide text-ink-secondary uppercase'
 
+// Linear Light's .field-input/.field-textarea, first used by the coordinator's
+// Post a Shift form (PostShiftLinearLight.dc.html) - 14px radius rather than
+// inputClassName's 9px, plus explicit ink text. Scoped to that form only, not
+// merged into inputClassName, since inputClassName is also used by the
+// nurse-facing "Add a shift" self-scheduling modal, which has no mockup and
+// isn't part of this pass.
+const fieldInputClassName =
+  'w-full rounded-field border border-hairline bg-card-surface p-3 text-sm font-medium text-ink focus:border-ink focus:outline-none'
+
 // Standard Burlingame shift blocks (30-min overlap for handoff/report). Two-Color
 // Rule: no per-period hue — unselected chips are neutral, selected uses the one
 // accent teal (Selection Row pattern), same as the onboarding credential/unit pickers.
@@ -1593,6 +1602,7 @@ function ManageTab() {
     customStart: { hours: 7, minutes: 0 },
     customEnd: { hours: 15, minutes: 0 },
     unassigned: false,
+    notes: '',
   })
 
   const [currentUserId, setCurrentUserId] = useState(null)
@@ -2072,8 +2082,8 @@ function ManageTab() {
     const { starts_at, ends_at } = buildShiftTimes(form.date, start, end)
 
     const payload = form.unassigned
-      ? { unit: form.unit, starts_at, ends_at, status: 'open', nurse_id: null }
-      : { nurse_id: form.nurse_id, unit: form.unit, starts_at, ends_at }
+      ? { unit: form.unit, starts_at, ends_at, status: 'open', nurse_id: null, notes: form.notes || null }
+      : { nurse_id: form.nurse_id, unit: form.unit, starts_at, ends_at, notes: form.notes || null }
 
     const { error: insertError } = await supabase.from('shifts').insert(payload)
 
@@ -2092,6 +2102,7 @@ function ManageTab() {
         customStart: { hours: 7, minutes: 0 },
         customEnd: { hours: 15, minutes: 0 },
         unassigned: false,
+        notes: '',
       })
       fetchRecentShifts()
     }
@@ -2101,9 +2112,21 @@ function ManageTab() {
     setActionError(null)
     setActioningShiftId(group.shift.id)
 
+    // Computed before the update below (from the group's pre-update local
+    // state), since approving overwrites shifts.nurse_id with the claimant's
+    // id - the original offering nurse's id wouldn't be recoverable from the
+    // shift row afterward otherwise.
+    const wasOffered =
+      group.shift.is_offered && group.shift.nurse_id && group.shift.nurse_id !== claim.nurse_id
+
     const { error: shiftError } = await supabase
       .from('shifts')
-      .update({ status: 'scheduled', nurse_id: claim.nurse_id, is_offered: false })
+      .update({
+        status: 'scheduled',
+        nurse_id: claim.nurse_id,
+        is_offered: false,
+        ...(wasOffered ? { previous_nurse_id: group.shift.nurse_id } : {}),
+      })
       .eq('id', group.shift.id)
 
     if (shiftError) {
@@ -2140,9 +2163,6 @@ function ManageTab() {
     }
 
     const shiftDetails = `${group.shift.unit} · ${formatShiftDate(group.shift.starts_at)} · ${formatShiftTimeRange(group.shift.starts_at, group.shift.ends_at)}`
-
-    const wasOffered =
-      group.shift.is_offered && group.shift.nurse_id && group.shift.nurse_id !== claim.nurse_id
 
     const notificationRows = [
       {
@@ -2347,45 +2367,49 @@ function ManageTab() {
   return (
     <div className="flex flex-col gap-10">
       <section>
-        <h2 className="mb-4 text-[20px] font-semibold text-[#1D1D1F]">Post a shift</h2>
+        <h2 className="mb-4 text-[20px] font-semibold text-ink">Post a shift</h2>
 
         <div className="flex flex-col gap-4">
-          <label className="flex items-center gap-2 text-sm font-medium text-[#1D1D1F]">
-            <input
-              type="checkbox"
-              checked={form.unassigned}
-              onChange={(e) =>
-                setForm({ ...form, unassigned: e.target.checked, nurse_id: '' })
-              }
-              data-testid="schedule-manage-unassigned-checkbox"
-              className="h-4 w-4 rounded border-[#E5E5EA] accent-[#1D1D1F]"
-            />
-            Leave unassigned (open shift)
-          </label>
-
           <div className="flex flex-col gap-1.5">
-            <label className={labelClassName}>Nurse</label>
-            <select
-              value={form.nurse_id}
-              onChange={(e) => setForm({ ...form, nurse_id: e.target.value })}
-              disabled={form.unassigned}
-              className={cn(inputClassName, 'disabled:opacity-50')}
-            >
-              <option value="">Select a nurse</option>
-              {nurses.map((n) => (
-                <option key={n.id} value={n.id}>
-                  {n.full_name} {n.credential ? `(${n.credential})` : ''}
-                </option>
-              ))}
-            </select>
+            <label className={labelClassName}>Assign</label>
+            <SegmentedControl
+              ariaLabel="Assign shift"
+              testidPrefix="schedule-manage-assign"
+              value={form.unassigned ? 'leaveOpen' : 'assignNurse'}
+              onChange={(id) =>
+                setForm({ ...form, unassigned: id === 'leaveOpen', nurse_id: '' })
+              }
+              options={[
+                { id: 'leaveOpen', label: 'Leave Open' },
+                { id: 'assignNurse', label: 'Assign Nurse' },
+              ]}
+            />
           </div>
+
+          {!form.unassigned && (
+            <div className="flex flex-col gap-1.5">
+              <label className={labelClassName}>Nurse</label>
+              <select
+                value={form.nurse_id}
+                onChange={(e) => setForm({ ...form, nurse_id: e.target.value })}
+                className={fieldInputClassName}
+              >
+                <option value="">Select a nurse</option>
+                {nurses.map((n) => (
+                  <option key={n.id} value={n.id}>
+                    {n.full_name} {n.credential ? `(${n.credential})` : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           <div className="flex flex-col gap-1.5">
             <label className={labelClassName}>Unit</label>
             <select
               value={form.unit}
               onChange={(e) => setForm({ ...form, unit: e.target.value })}
-              className={inputClassName}
+              className={fieldInputClassName}
             >
               <option value="Unit 1">Unit 1</option>
               <option value="Unit 2">Unit 2</option>
@@ -2510,6 +2534,17 @@ function ManageTab() {
             {presetActionError && <p className="text-xs text-red-700">{presetActionError}</p>}
           </div>
 
+          <div className="flex flex-col gap-1.5">
+            <label className={labelClassName}>Notes</label>
+            <textarea
+              value={form.notes}
+              onChange={(e) => setForm({ ...form, notes: e.target.value })}
+              placeholder="Add a note (optional)"
+              rows={2}
+              className={cn(fieldInputClassName, 'resize-none placeholder:text-ink-secondary')}
+            />
+          </div>
+
           {error && <p className="text-sm text-red-700">{error}</p>}
           {success && <p className="text-sm text-[#16A34A]">Shift posted successfully.</p>}
 
@@ -2518,7 +2553,7 @@ function ManageTab() {
             onClick={handleSubmit}
             disabled={saving}
             data-testid="schedule-manage-post-shift"
-            className="h-auto w-full rounded-full bg-[#1D1D1F] py-4 text-base font-semibold text-white hover:bg-[#1D1D1F]/90 disabled:opacity-60"
+            className="w-full"
           >
             {saving ? 'Posting…' : 'Post shift'}
           </Button>

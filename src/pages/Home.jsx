@@ -17,12 +17,14 @@ import {
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import ShiftDetail from './ShiftDetail'
+import OfferShiftUpdate from './OfferShiftUpdate'
 import PersonalEventPanel from '@/components/PersonalEventPanel'
 import { Wordmark } from '@/components/ui/wordmark'
 import { PeriodTag } from '@/components/ui/period-tag'
 import { cn } from '@/lib/utils'
 import {
   formatLocalDateKey,
+  formatRelativeTime,
   formatShiftTimeRange,
   getShiftPeriod,
   isSameLocalDay,
@@ -380,22 +382,6 @@ function getInitials(fullName) {
   return (first + last).toUpperCase() || null
 }
 
-function formatRelativeTime(isoString) {
-  const diffMinutes = Math.floor((Date.now() - new Date(isoString).getTime()) / 60000)
-
-  if (diffMinutes < 1) return 'Just now'
-  if (diffMinutes < 60) return `${diffMinutes} minute${diffMinutes === 1 ? '' : 's'} ago`
-
-  const diffHours = Math.floor(diffMinutes / 60)
-  if (diffHours < 24) return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`
-
-  const diffDays = Math.floor(diffHours / 24)
-  if (diffDays < 7) return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`
-
-  const diffWeeks = Math.floor(diffDays / 7)
-  return `${diffWeeks} week${diffWeeks === 1 ? '' : 's'} ago`
-}
-
 export default function Home({ user, role, onGoToManage, onGoToPool, onGoToSchedule }) {
   const [fullName, setFullName] = useState(null)
   const [credential, setCredential] = useState(null)
@@ -408,6 +394,7 @@ export default function Home({ user, role, onGoToManage, onGoToPool, onGoToSched
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [selectedShift, setSelectedShift] = useState(null)
+  const [offerUpdateShiftId, setOfferUpdateShiftId] = useState(null)
   const [bellOpen, setBellOpen] = useState(false)
   const [showAddPersonalEvent, setShowAddPersonalEvent] = useState(false)
 
@@ -556,6 +543,11 @@ export default function Home({ user, role, onGoToManage, onGoToPool, onGoToSched
   }
 
   async function handleOpenNotification(notification) {
+    if (notification.type === 'offer_claimed' && notification.shift_id) {
+      setBellOpen(false)
+      setOfferUpdateShiftId(notification.shift_id)
+    }
+
     if (notification.read) return
 
     setNotifications((current) =>
@@ -570,6 +562,19 @@ export default function Home({ user, role, onGoToManage, onGoToPool, onGoToSched
         shift={selectedShift}
         user={user}
         onBack={() => setSelectedShift(null)}
+      />
+    )
+  }
+
+  if (offerUpdateShiftId) {
+    return (
+      <OfferShiftUpdate
+        shiftId={offerUpdateShiftId}
+        onBack={() => setOfferUpdateShiftId(null)}
+        onGoToSchedule={() => {
+          setOfferUpdateShiftId(null)
+          onGoToSchedule()
+        }}
       />
     )
   }
@@ -613,29 +618,32 @@ export default function Home({ user, role, onGoToManage, onGoToPool, onGoToSched
                 notification.type === 'claim_approved' || notification.type === 'offer_claimed'
 
               return (
-                <li
-                  key={notification.id}
-                  className="flex items-start gap-2 border-b border-hairline p-4 last:border-b-0"
-                >
-                  {isApproved ? (
-                    <CheckCircle2
-                      className="mt-0.5 shrink-0 text-teal-foreground"
-                      size={16}
-                      strokeWidth={2}
-                    />
-                  ) : (
-                    <AlertTriangle
-                      className="mt-0.5 shrink-0 text-ink-secondary"
-                      size={16}
-                      strokeWidth={2}
-                    />
-                  )}
-                  <div className="min-w-0">
-                    <p className="text-sm text-ink">{notification.message}</p>
-                    <p className="mt-0.5 text-xs text-ink-secondary">
-                      {formatRelativeTime(notification.created_at)}
-                    </p>
-                  </div>
+                <li key={notification.id} className="border-b border-hairline last:border-b-0">
+                  <button
+                    type="button"
+                    onClick={() => handleOpenNotification(notification)}
+                    className="flex w-full items-start gap-2 p-4 text-left"
+                  >
+                    {isApproved ? (
+                      <CheckCircle2
+                        className="mt-0.5 shrink-0 text-teal-foreground"
+                        size={16}
+                        strokeWidth={2}
+                      />
+                    ) : (
+                      <AlertTriangle
+                        className="mt-0.5 shrink-0 text-ink-secondary"
+                        size={16}
+                        strokeWidth={2}
+                      />
+                    )}
+                    <div className="min-w-0">
+                      <p className="text-sm text-ink">{notification.message}</p>
+                      <p className="mt-0.5 text-xs text-ink-secondary">
+                        {formatRelativeTime(notification.created_at)}
+                      </p>
+                    </div>
+                  </button>
                 </li>
               )
             })}

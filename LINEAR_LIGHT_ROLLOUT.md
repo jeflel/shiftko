@@ -207,7 +207,73 @@ kept in sync with this file's Status section.
     the proven Claims flow closely, but click-through verification is
     still open for whenever real swap traffic exists or more test
     credentials are available.
-- [ ] Offer Shift (`PostShiftLinearLight`, `OfferShiftConfirm/Status/Claimed/PickedUpLinearLight`)
+- [x] **Post a Shift (coordinator)**, `PostShiftLinearLight` (`Schedule.jsx`'s
+  `ManageTab`), 2026-09-11. Restyle of the existing coordinator form, no
+  behavior change beyond two small additions:
+  - New `--radius-field` token (14px, first use of the mockup's
+    `.field-input`/`.field-textarea` vocabulary) and a locally-scoped
+    `fieldInputClassName`, kept separate from the shared `inputClassName`/
+    `labelClassName` pair since those are also used by the nurse-facing "Add
+    a shift" self-scheduling modal, which has no mockup and isn't part of
+    this pass.
+  - The "Leave unassigned" checkbox became the shared `SegmentedControl`
+    (Leave Open / Assign Nurse), and the Nurse `<select>` now hides
+    entirely under "Leave Open" instead of showing disabled, matching the
+    mockup. Kept "Unit" as the field label rather than the mockup's
+    "Department" since the Departments feature isn't built yet, same
+    reasoning as HANDOFF.md's PostShift/ShiftEdit note.
+  - Added the mockup's Notes field (`shifts.notes` already existed with no
+    UI writing to it).
+  - Kept the live SHIFT_PRESETS icon-tile picker (Day/Evening/Night/Custom
+    with saved presets) rather than the mockup's plainer 3-way segmented -
+    same "visual pass, not a behavior change" call as Pool's inline
+    Claim/Withdraw buttons.
+- [x] **Offer This Shift (nurse)**, `OfferShiftConfirmLinearLight`,
+  `OfferShiftStatusLinearLight` (Offered/Claimed sub-states),
+  `OfferShiftPickedUpLinearLight` (as `OfferShiftUpdate.jsx`'s "Shift
+  Update"), 2026-09-11. Resolves HANDOFF.md §0.3 in favor of the mockup's
+  4-screen stepper over the existing 1-tap toggle - user's explicit call,
+  2026-09-11. New `OfferShiftConfirm.jsx`, `OfferShiftStatus.jsx` (also
+  exports `CoworkerRow`, reused by `OfferShiftUpdate.jsx`),
+  `OfferShiftUpdate.jsx`; `ShiftDetail.jsx`'s old `handleToggleOffer`
+  1-tap button split into `canStartOffer` (pushes Confirm) and
+  `canViewOfferStatus` (pushes Status) - the two need different gates now,
+  since viewing status has to stay reachable even after a coworker's claim
+  makes `hasPendingClaim` true.
+  - New shared `ui/hero-card.jsx`, extracted from `ClaimStatusDetail.jsx`'s
+    local `HeroCard` once this flow needed the same shift-summary card
+    shape a second place (added an optional `credential` line Claims never
+    used). Extended `shiftFormat.js` with `formatRelativeTime`, extracted
+    from `Home.jsx`'s local copy for the same reason.
+  - **Schema gap identified in HANDOFF.md §0.3 ("NET-NEW+SCHEMA if kept")**:
+    approving a claim on an offered shift overwrites `shifts.nurse_id` with
+    the claimant's id (`Schedule.jsx`'s `handleApprove`), so the original
+    offering nurse had no durable way to find "their" shift again once it's
+    picked up. New migration
+    `supabase/migrations/20260911223000_offer_shift_previous_nurse.sql`
+    adds `shifts.previous_nurse_id` (set by `handleApprove` when the
+    approved claim was on an offered shift) plus an additive RLS policy
+    (`previous_nurse_id = auth.uid()`) alongside the existing "nurses see
+    own shifts" rule rather than editing it. Applied to the linked
+    production project.
+  - The Approved/Picked Up terminal state is unreachable from
+    `ShiftDetail`/`OfferShiftStatus` (the shift no longer shows up as
+    "mine" once `nurse_id` changes), so it only surfaces via a notification
+    tap: `Home.jsx`'s `offer_claimed` notification handling, previously
+    dead code that only marked notifications read, now also opens
+    `OfferShiftUpdate.jsx` (queried by `shiftId` via `previous_nurse_id`).
+    Made the notification dropdown's list rows clickable too (previously
+    only the single `RequestActivity` hero tile was); other notification
+    types still just mark read, unchanged.
+  - Verified live signed in as nurse `alex.ramirez@shiftko.test`: offered a
+    real shift, confirmed the Confirm -> Status(Offered) -> Withdraw loop
+    round-trips correctly (`is_offered` toggles, entry point button swaps
+    between "Offer this shift" and "View offer status", "Request a swap"
+    correctly hidden while offered). **Not yet click-verified**: the
+    Claimed sub-state, coordinator approval, and the Picked Up/notification
+    path all need a second nurse account to claim the shift - same
+    limitation noted for Swaps' Accept/Decline. Code-reviewed but unverified
+    live until a second test account claims a real offered shift.
 - [ ] Coordinator Manage / Approvals / Staff Roster / Departments / Duplicate Week
 - [ ] Profile / Notifications
 - [ ] Shift Detail (Mine / Open / Edit)
@@ -274,8 +340,10 @@ kept in sync with this file's Status section.
 
 ## Open product decisions (carried over from `HANDOFF.md`, still relevant)
 
-- Section 0.3, Offer-shift: mockup's 4-screen stepper vs. the live 1-tap
-  toggle, unresolved. Blocks a faithful Offer Shift flow port until decided.
+- ~~Section 0.3, Offer-shift: mockup's 4-screen stepper vs. the live 1-tap
+  toggle~~ resolved 2026-09-11: kept the 4-screen stepper, user's explicit
+  call. See the Status section's Offer This Shift entry above for the full
+  decisions log, including the schema gap this uncovered.
 - ~~Swaps has no live backend at all~~ resolved 2026-09-11: kept
   coordinator-gated per the mockups, `shift_swaps` table + RLS built and
   live. See the Status section's Swaps entry above for the full decisions

@@ -170,8 +170,8 @@
         },
         {
           "action": "click",
-          "testid": "schedule-manage-unassigned-checkbox",
-          "note": "Checks 'Leave unassigned (open shift)', which clears/disables the Nurse select — the resulting shift lands in the Pool for any nurse on the unit to claim. Skip this step to instead pick a nurse from the (untestid'd) Nurse <select>."
+          "testid": "schedule-manage-assign-leaveOpen",
+          "note": "Selects 'Leave Open' in the Assign segmented control, which hides the Nurse select — the resulting shift lands in the Pool for any nurse on the unit to claim. Skip this step to instead leave 'Assign Nurse' selected and pick a nurse from the (untestid'd) Nurse <select>."
         },
         {
           "action": "click",

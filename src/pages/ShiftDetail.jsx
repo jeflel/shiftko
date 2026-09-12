@@ -4,6 +4,8 @@ import { supabase } from '../lib/supabase'
 import { ShiftPeriodPill } from '@/components/ui/pill'
 import { Button } from '@/components/ui/button'
 import SwapFlow from './SwapFlow'
+import OfferShiftConfirm from './OfferShiftConfirm'
+import OfferShiftStatus from './OfferShiftStatus'
 import {
   formatShiftDate,
   formatShiftTimeRange,
@@ -24,9 +26,9 @@ export default function ShiftDetail({ shift, user, onBack }) {
   const [credential, setCredential] = useState(null)
   const [shiftState, setShiftState] = useState(null)
   const [hasPendingClaim, setHasPendingClaim] = useState(false)
-  const [offerSaving, setOfferSaving] = useState(false)
-  const [offerError, setOfferError] = useState(null)
   const [showSwapFlow, setShowSwapFlow] = useState(false)
+  const [showOfferConfirm, setShowOfferConfirm] = useState(false)
+  const [showOfferStatus, setShowOfferStatus] = useState(false)
 
   const period = getShiftPeriod(shift.starts_at)
 
@@ -74,44 +76,25 @@ export default function ShiftDetail({ shift, user, onBack }) {
     return () => { cancelled = true }
   }, [shift.id])
 
-  async function handleToggleOffer(offer) {
-    setOfferError(null)
-    setOfferSaving(true)
-
-    const { error: rpcError } = await supabase.rpc('toggle_shift_offer', {
-      p_shift_id: shift.id,
-      p_offer: offer,
-    })
-
-    setOfferSaving(false)
-
-    if (rpcError) {
-      setOfferError(rpcError.message)
-      return
-    }
-
-    setShiftState((current) => (current ? { ...current, is_offered: offer } : current))
-  }
-
   const isPastShift = new Date(shift.ends_at).getTime() < Date.now()
 
-  const canManageOffer =
-    !isPastShift &&
-    shiftState?.nurse_id === user.id &&
-    shiftState?.status === 'scheduled' &&
-    !hasPendingClaim
+  const isMine =
+    !isPastShift && shiftState?.nurse_id === user.id && shiftState?.status === 'scheduled'
+
+  // Two separate gates now that offering pushes a stepper (Confirm then
+  // Status) instead of a 1-tap toggle: starting a fresh offer still needs no
+  // pending claim already in flight, but viewing an in-progress offer's
+  // status has to stay reachable even after a coworker claims it - that's
+  // exactly the state OfferShiftStatus.jsx's Claimed screen shows.
+  const canStartOffer = isMine && !hasPendingClaim && !shiftState?.is_offered
+  const canViewOfferStatus = isMine && shiftState?.is_offered
 
   // Swap eligibility mirrors the offer toggle's (mine, scheduled, not past,
   // no pending claim) plus one more: not already offered to the whole unit
   // via the 1-tap offer toggle - offering to anyone and requesting a specific
   // person's shift are two different self-scheduling paths that shouldn't
   // run at once on the same shift.
-  const canRequestSwap =
-    !isPastShift &&
-    shiftState?.nurse_id === user.id &&
-    shiftState?.status === 'scheduled' &&
-    !hasPendingClaim &&
-    !shiftState?.is_offered
+  const canRequestSwap = isMine && !hasPendingClaim && !shiftState?.is_offered
 
   useEffect(() => {
     let cancelled = false
@@ -190,6 +173,35 @@ export default function ShiftDetail({ shift, user, onBack }) {
     )
   }
 
+  if (showOfferConfirm) {
+    return (
+      <OfferShiftConfirm
+        shift={shift}
+        credential={credential}
+        onBack={() => setShowOfferConfirm(false)}
+        onOffered={() => {
+          setShiftState((current) => (current ? { ...current, is_offered: true } : current))
+          setShowOfferConfirm(false)
+          setShowOfferStatus(true)
+        }}
+      />
+    )
+  }
+
+  if (showOfferStatus) {
+    return (
+      <OfferShiftStatus
+        shift={shift}
+        credential={credential}
+        onBack={() => setShowOfferStatus(false)}
+        onWithdrawn={() => {
+          setShiftState((current) => (current ? { ...current, is_offered: false } : current))
+          setShowOfferStatus(false)
+        }}
+      />
+    )
+  }
+
   return (
     <div className="fixed inset-0 z-[100] overflow-y-auto bg-white">
       <main className="mx-auto w-full max-w-md px-5 pt-8 pb-12">
@@ -224,32 +236,30 @@ export default function ShiftDetail({ shift, user, onBack }) {
           <p className="mt-3 text-sm text-ink-secondary">{formatShiftDate(shift.starts_at)}</p>
         </div>
 
-        {canManageOffer && (
+        {canStartOffer && (
           <div className="mt-6">
-            {shiftState.is_offered ? (
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => handleToggleOffer(false)}
-                disabled={offerSaving}
-                data-testid="shift-detail-offer-toggle"
-                className="h-auto w-full py-4 text-base"
-              >
-                {offerSaving ? 'Withdrawing…' : 'Withdraw offer'}
-              </Button>
-            ) : (
-              <Button
-                type="button"
-                onClick={() => handleToggleOffer(true)}
-                disabled={offerSaving}
-                data-testid="shift-detail-offer-toggle"
-                className="h-auto w-full py-4 text-base"
-              >
-                {offerSaving ? 'Offering…' : 'Offer this shift'}
-              </Button>
-            )}
+            <Button
+              type="button"
+              onClick={() => setShowOfferConfirm(true)}
+              data-testid="shift-detail-offer-toggle"
+              className="h-auto w-full py-4 text-base"
+            >
+              Offer this shift
+            </Button>
+          </div>
+        )}
 
-            {offerError && <p className="mt-2 text-sm text-red-700">{offerError}</p>}
+        {canViewOfferStatus && (
+          <div className="mt-6">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setShowOfferStatus(true)}
+              data-testid="shift-detail-offer-toggle"
+              className="h-auto w-full py-4 text-base"
+            >
+              View offer status
+            </Button>
           </div>
         )}
 

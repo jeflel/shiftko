@@ -64,6 +64,10 @@
   --radius-button: 12px;
   --radius-control: 9px;
   --radius-control-sm: 7px;
+  /* First used by PostShiftLinearLight.dc.html's .field-input/.field-textarea
+     vocabulary (Offer Shift flow, coordinator's Post a Shift form) - a touch
+     tighter than --radius-card so form fields read as inputs, not cards. */
+  --radius-field: 14px;
   --shadow-card-lift: 0 5px 15px rgba(53, 87, 97, 0.12);
 
   /* Aliases for pre-v2 token names still referenced page-by-page,
