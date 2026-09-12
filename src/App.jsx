@@ -7,6 +7,7 @@ import Schedule from './pages/Schedule'
 import Pool from './pages/Pool'
 import Profile from './pages/Profile'
 import PostShift from './pages/PostShift'
+import CoordinatorApprovals from './pages/CoordinatorApprovals'
 import Screen0 from './pages/onboarding/Screen0'
 
 function App() {
@@ -83,6 +84,10 @@ function App() {
     setActiveTab('postshift')
   }
 
+  function handleGoToApprovals() {
+    setActiveTab('approvals')
+  }
+
   function handleBackToHome() {
     setActiveTab('home')
   }
@@ -124,6 +129,7 @@ function App() {
             role={role}
             onGoToManage={handleGoToManage}
             onGoToPostShift={handleGoToPostShift}
+            onGoToApprovals={handleGoToApprovals}
             onGoToPool={handleGoToPool}
             onGoToSchedule={handleGoToSchedule}
           />
@@ -132,6 +138,7 @@ function App() {
           <Schedule user={session.user} role={role} initialTab={scheduleInitialTab} />
         )}
         {activeTab === 'postshift' && <PostShift onBack={handleBackToHome} />}
+        {activeTab === 'approvals' && <CoordinatorApprovals onBack={handleBackToHome} />}
         {activeTab === 'pool' && (
           <Pool user={session.user} onGoToSchedule={handleGoToSchedule} />
         )}
