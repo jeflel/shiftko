@@ -1,5 +1,5 @@
 {
-  "$comment": "Flow map for Chrome-driven automation of the Shiftko app (no URL routing exists — App.jsx holds all navigation as in-memory state, so every flow below starts from a specific base app state; see README.md for how to get there). Keep this file hand-in-sync with data-testid attributes in src/: whenever a flow's UI changes, update the testid in the component AND the matching step here in the same change.",
+  "$comment": "Flow map for Chrome-driven automation of the Shiftko app (no URL routing exists \u2014 App.jsx holds all navigation as in-memory state, so every flow below starts from a specific base app state; see README.md for how to get there). Keep this file hand-in-sync with data-testid attributes in src/: whenever a flow's UI changes, update the testid in the component AND the matching step here in the same change.",
   "flows": {
     "sign-in": {
       "description": "Sign in with an existing account.",
@@ -36,7 +36,7 @@
         {
           "action": "click",
           "testid": "screen0-get-started",
-          "note": "Screen0's 'Get Started' button. Sets App's authView to 'signup', which renders <Auth initialView=\"signup\">. NOTE: src/pages/onboarding/OnboardingFlow.jsx (Screen2-6, ScreenCredential) is NOT wired into App.jsx today — it is dead code — so sign-up goes straight from Screen0 to the Auth form, not through any onboarding screens."
+          "note": "Screen0's 'Get Started' button. Sets App's authView to 'signup', which renders <Auth initialView=\"signup\">. NOTE: src/pages/onboarding/OnboardingFlow.jsx (Screen2-6, ScreenCredential) is NOT wired into App.jsx today \u2014 it is dead code \u2014 so sign-up goes straight from Screen0 to the Auth form, not through any onboarding screens."
         },
         {
           "action": "fill",
@@ -69,7 +69,7 @@
         {
           "action": "click",
           "testid": "pool-claim-shift",
-          "note": "Pool.jsx's per-row Claim button. IMPORTANT: as of the current code, Pool's shift rows (ShiftCard) are NOT clickable/navigable to ShiftDetail — only this Claim/Withdraw button is interactive, so this flow does not pass through ShiftDetail. Multiple open shifts share this same testid; scope to a specific row (e.g. via read_page/get_page_text) if more than one is open. On success the row shows 'Requested' plus a pool-withdraw-claim button; on failure (race with another nurse) an inline 'This shift is no longer available.' message appears."
+          "note": "Pool.jsx's per-row Claim button. IMPORTANT: as of the current code, Pool's shift rows (ShiftCard) are NOT clickable/navigable to ShiftDetail \u2014 only this Claim/Withdraw button is interactive, so this flow does not pass through ShiftDetail. Multiple open shifts share this same testid; scope to a specific row (e.g. via read_page/get_page_text) if more than one is open. On success the row shows 'Requested' plus a pool-withdraw-claim button; on failure (race with another nurse) an inline 'This shift is no longer available.' message appears."
         }
       ]
     },
@@ -91,7 +91,7 @@
           "action": "fill",
           "testid": "personal-event-name-input",
           "value": "Weekend job at Peninsula Landscaping",
-          "note": "Only rendered/required when 'No Department' is selected above. If you skipped that step, fill personal-event-unit-select instead (a <select>, not a fill target for text automation — pick an option value)."
+          "note": "Only rendered/required when 'No Department' is selected above. If you skipped that step, fill personal-event-unit-select instead (a <select>, not a fill target for text automation \u2014 pick an option value)."
         },
         {
           "action": "fill",
@@ -119,22 +119,22 @@
         {
           "action": "click",
           "testid": "nav-schedule",
-          "note": "BottomNav tab. For a nurse (role !== 'coordinator'), Schedule renders ScheduleTab directly — there's only one top-level pseudo-tab so no schedule-tab-* bar is shown. For a coordinator, a top tab bar appears with testids schedule-tab-team, schedule-tab-manage, schedule-tab-staff (Team Schedule / Manage / Staff)."
+          "note": "BottomNav tab. For a nurse (role !== 'coordinator'), Schedule renders ScheduleTab directly \u2014 there's only one top-level pseudo-tab so no schedule-tab-* bar is shown. For a coordinator, a top tab bar appears with testids schedule-tab-team, schedule-tab-manage, schedule-tab-staff (Team Schedule / Manage / Staff)."
         },
         {
           "action": "click",
           "testid": "schedule-view-team",
-          "note": "Nurse-only. ScheduleTab renders one persistent header (title, list/calendar toggle, and this My Shifts / Team Schedule segmented control — testids schedule-view-mine, schedule-view-team; defaults to schedule-view-mine) above whichever sub-tab body is active, so switching never remounts or hides the header — only the body below swaps and shows its own loading state. Not present for a coordinator, who instead uses schedule-tab-team from the previous step (that screen has its own separate top tab bar and header, not this one)."
+          "note": "Nurse-only. ScheduleTab renders one persistent header (title, list/calendar toggle, and this My Shifts / Team Schedule segmented control \u2014 testids schedule-view-mine, schedule-view-team; defaults to schedule-view-mine) above whichever sub-tab body is active, so switching never remounts or hides the header \u2014 only the body below swaps and shows its own loading state. Not present for a coordinator, who instead uses schedule-tab-team from the previous step (that screen has its own separate top tab bar and header, not this one)."
         },
         {
           "action": "click",
           "testid": "schedule-content-view-calendar",
-          "note": "Toggles between list (schedule-content-view-list, default) and month-calendar (schedule-content-view-calendar) rendering of the same shift/personal-event data. This is ONE shared state across both My Shifts and Team Schedule (owned by ScheduleTab's persistent header) — switching sub-tabs keeps whichever of list/calendar was already selected, it doesn't reset. Team Schedule's calendar day-detail rows show whose shift each row is (name + credential, or 'Open · tap to claim'), since it spans every nurse."
+          "note": "Toggles between list (schedule-content-view-list, default) and month-calendar (schedule-content-view-calendar) rendering of the same shift/personal-event data. This is ONE shared state across both My Shifts and Team Schedule (owned by ScheduleTab's persistent header) \u2014 switching sub-tabs keeps whichever of list/calendar was already selected, it doesn't reset. Team Schedule's calendar day-detail rows show whose shift each row is (name + credential, or 'Open \u00b7 tap to claim'), since it spans every nurse."
         },
         {
           "action": "click",
           "testid": "calendar-day-<YYYY-MM-DD>",
-          "note": "Optional — only once the calendar toggle above is active. Selects a day cell in the month grid (MonthCalendarGrid, shared by both My Shifts and Team Schedule's calendar view) and updates the day-detail panel below it. Compute the target date as YYYY-MM-DD and substitute it, e.g. calendar-day-2026-09-12. Same testid convention as the CalendarStrip date picker elsewhere in the app (see README.md) — never mounted at the same time, so no ambiguity."
+          "note": "Optional \u2014 only once the calendar toggle above is active. Selects a day cell in the month grid (MonthCalendarGrid, shared by both My Shifts and Team Schedule's calendar view) and updates the day-detail panel below it. Compute the target date as YYYY-MM-DD and substitute it, e.g. calendar-day-2026-09-12. Same testid convention as the CalendarStrip date picker elsewhere in the app (see README.md) \u2014 never mounted at the same time, so no ambiguity."
         }
       ]
     },
@@ -155,23 +155,18 @@
       ]
     },
     "coordinator-post-shift": {
-      "description": "Post an open (unassigned) shift as a coordinator. Fully wired in Schedule.jsx's ManageTab.",
-      "assumesBaseState": "Signed in as a coordinator (role === 'coordinator'), on the Home or any tab.",
+      "description": "Post an open (unassigned) shift as a coordinator. Fully wired in PostShift.jsx, its own pushed screen reached from Home.",
+      "assumesBaseState": "Signed in as a coordinator (role === 'coordinator'), on Home.",
       "steps": [
         {
           "action": "click",
-          "testid": "nav-schedule",
-          "note": "BottomNav tab. Coordinators land on the 'team' sub-tab by default."
-        },
-        {
-          "action": "click",
-          "testid": "schedule-tab-manage",
-          "note": "Switches to the Manage sub-tab, which shows the 'Post a shift' form at the top."
+          "testid": "home-post-shift-tile",
+          "note": "Home quick-action tile. Pushes PostShift as a full-screen overlay with the 'Post a Shift' form."
         },
         {
           "action": "click",
           "testid": "schedule-manage-assign-leaveOpen",
-          "note": "Selects 'Leave Open' in the Assign segmented control, which hides the Nurse select — the resulting shift lands in the Pool for any nurse on the unit to claim. Skip this step to instead leave 'Assign Nurse' selected and pick a nurse from the (untestid'd) Nurse <select>."
+          "note": "Selects 'Leave Open' in the Assign segmented control, which hides the Nurse select \u2014 the resulting shift lands in the Pool for any nurse on the unit to claim. Skip this step to instead leave 'Assign Nurse' selected and pick a nurse from the (untestid'd) Nurse <select>."
         },
         {
           "action": "click",
@@ -181,12 +176,12 @@
         {
           "action": "click",
           "testid": "calendar-day-<today's date, YYYY-MM-DD>",
-          "note": "REQUIRED — the form's date starts empty, so a date must be picked from the CalendarStrip before submitting will succeed. Compute today's local date as YYYY-MM-DD and substitute it into this testid, e.g. calendar-day-2026-09-08. Any future date's cell works the same way: calendar-day-<that date>."
+          "note": "REQUIRED \u2014 the form's date starts empty, so a date must be picked from the CalendarStrip before submitting will succeed. Compute today's local date as YYYY-MM-DD and substitute it into this testid, e.g. calendar-day-2026-09-08. Any future date's cell works the same way: calendar-day-<that date>."
         },
         {
           "action": "click",
           "testid": "schedule-manage-post-shift",
-          "note": "Submits the shift. On success shows a 'Shift posted successfully.' message and the new shift appears under the 'Recent shifts' list below."
+          "note": "Submits the shift. On success shows a 'Shift posted successfully.' message and the form resets, staying on this screen."
         }
       ]
     }

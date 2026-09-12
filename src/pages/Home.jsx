@@ -382,7 +382,7 @@ function getInitials(fullName) {
   return (first + last).toUpperCase() || null
 }
 
-export default function Home({ user, role, onGoToManage, onGoToPool, onGoToSchedule }) {
+export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoToPool, onGoToSchedule }) {
   const [fullName, setFullName] = useState(null)
   const [credential, setCredential] = useState(null)
   const [homeUnit, setHomeUnit] = useState(null)
@@ -711,6 +711,7 @@ export default function Home({ user, role, onGoToManage, onGoToPool, onGoToSched
                 today={today}
                 pendingApprovalsCount={pendingApprovalsCount}
                 onGoToManage={onGoToManage}
+                onGoToPostShift={onGoToPostShift}
               />
             )}
 
@@ -779,7 +780,7 @@ export default function Home({ user, role, onGoToManage, onGoToPool, onGoToSched
 // Coordinator Home body, per CoordinatorHome.dc.html (home-linear-light):
 // the coordinator counterpart to the nurse TodayHero/QuickActionTiles/
 // WeeklyProgress stack above, sharing the same gradient header.
-function CoordinatorHomeContent({ shifts, today, pendingApprovalsCount, onGoToManage }) {
+function CoordinatorHomeContent({ shifts, today, pendingApprovalsCount, onGoToManage, onGoToPostShift }) {
   const todayShifts = shifts.filter((shift) => isSameLocalDay(new Date(shift.starts_at), today))
   const staffedTodayShifts = todayShifts.filter(
     (shift) => shift.status !== 'open' && shift.status !== 'pending',
@@ -817,7 +818,11 @@ function CoordinatorHomeContent({ shifts, today, pendingApprovalsCount, onGoToMa
         unstaffed={unstaffedDates.length}
       />
 
-      <CoordinatorQuickActions pendingApprovalsCount={pendingApprovalsCount} onGoToManage={onGoToManage} />
+      <CoordinatorQuickActions
+        pendingApprovalsCount={pendingApprovalsCount}
+        onGoToManage={onGoToManage}
+        onGoToPostShift={onGoToPostShift}
+      />
 
       {unstaffedDates.length > 0 && (
         <section className="flex flex-col gap-2.5">
@@ -948,10 +953,10 @@ function CoordinatorStatRow({ shiftsToday, approvals, unstaffed }) {
   )
 }
 
-// Approvals / Post Shift / Manage: all route into the Manage tab for now
-// (there's no dedicated Approvals screen or a way to deep-link Manage's post
-// form yet; see LINEAR_LIGHT_ROLLOUT.md's Coordinator Manage flow entry).
-function CoordinatorQuickActions({ pendingApprovalsCount, onGoToManage }) {
+// Approvals and Manage still route into the Manage tab for now (there's no
+// dedicated Approvals screen yet; see LINEAR_LIGHT_ROLLOUT.md's Coordinator
+// Manage flow entry). Post Shift has its own screen as of this commit.
+function CoordinatorQuickActions({ pendingApprovalsCount, onGoToManage, onGoToPostShift }) {
   return (
     <div className="flex gap-2">
       <button
@@ -976,7 +981,7 @@ function CoordinatorQuickActions({ pendingApprovalsCount, onGoToManage }) {
 
       <button
         type="button"
-        onClick={onGoToManage}
+        onClick={onGoToPostShift}
         data-testid="home-post-shift-tile"
         className="flex flex-1 flex-col items-center gap-1.5 rounded-card border border-hairline bg-white px-2 py-2.5 text-center shadow-card-lift transition-colors active:bg-press-state"
       >

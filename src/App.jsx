@@ -6,6 +6,7 @@ import Home from './pages/Home'
 import Schedule from './pages/Schedule'
 import Pool from './pages/Pool'
 import Profile from './pages/Profile'
+import PostShift from './pages/PostShift'
 import Screen0 from './pages/onboarding/Screen0'
 
 function App() {
@@ -78,6 +79,14 @@ function App() {
     setActiveTab('schedule')
   }
 
+  function handleGoToPostShift() {
+    setActiveTab('postshift')
+  }
+
+  function handleBackToHome() {
+    setActiveTab('home')
+  }
+
   function handleGoToPool() {
     setActiveTab('pool')
   }
@@ -114,6 +123,7 @@ function App() {
             user={session.user}
             role={role}
             onGoToManage={handleGoToManage}
+            onGoToPostShift={handleGoToPostShift}
             onGoToPool={handleGoToPool}
             onGoToSchedule={handleGoToSchedule}
           />
@@ -121,6 +131,7 @@ function App() {
         {activeTab === 'schedule' && (
           <Schedule user={session.user} role={role} initialTab={scheduleInitialTab} />
         )}
+        {activeTab === 'postshift' && <PostShift onBack={handleBackToHome} />}
         {activeTab === 'pool' && (
           <Pool user={session.user} onGoToSchedule={handleGoToSchedule} />
         )}
