@@ -1,14 +1,9 @@
 import { useEffect, useState } from 'react'
-import {
-  Mail,
-  BadgeCheck,
-  MapPin,
-  Building2,
-  LogOut,
-} from 'lucide-react'
+import { Building2, LogOut } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Wordmark } from '@/components/ui/wordmark'
+import { SHIFT_LIST_CLASSNAME, ShiftListDivider } from '@/components/ui/shift-list'
 import JoinWorkspaceForm from '../components/JoinWorkspaceForm'
 
 function initials(name) {
@@ -21,19 +16,15 @@ function initials(name) {
     .join('')
 }
 
-function InfoRow({ icon: Icon, label, value, last }) {
+function SettingsRow({ label, value, last }) {
   return (
-    <div
-      className={`flex items-center gap-3 py-3 ${last ? '' : 'border-b border-[#E8E6E3]'}`}
-    >
-      <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#F8F7F5] text-[#6B7280]">
-        <Icon size={16} strokeWidth={2} />
+    <>
+      <div className="flex items-center justify-between gap-3 px-4 py-3.5">
+        <span className="text-sm font-medium text-ink">{label}</span>
+        <span className="truncate text-sm text-ink-secondary">{value || 'Not set'}</span>
       </div>
-      <div className="min-w-0 flex-1">
-        <p className="text-[11px] font-medium tracking-wide text-[#9CA3AF] uppercase">{label}</p>
-        <p className="truncate text-sm font-medium text-[#111111]">{value || '—'}</p>
-      </div>
-    </div>
+      {!last && <ShiftListDivider inset={false} />}
+    </>
   )
 }
 
@@ -125,12 +116,12 @@ export default function Profile({ user, onWorkspaceLeft }) {
       {/* Identity header */}
       {profile && (
         <div className="mt-8 flex items-center gap-4">
-          <div className="flex size-16 shrink-0 items-center justify-center rounded-full bg-[#F8F7F5] text-xl font-semibold text-[#111111]">
+          <div className="flex size-14 shrink-0 items-center justify-center rounded-full bg-press-state text-[17px] font-semibold text-ink">
             {initials(profile.full_name)}
           </div>
           <div className="min-w-0">
-            <p className="truncate text-lg font-semibold text-[#111111]">{profile.full_name}</p>
-            <p className="truncate text-sm text-[#6B7280]">
+            <p className="truncate text-[17px] font-semibold tracking-[-0.01em] text-ink">{profile.full_name}</p>
+            <p className="truncate text-[13px] text-ink-secondary">
               {[profile.credential, profile.home_unit].filter(Boolean).join(' · ') || 'No details yet'}
             </p>
           </div>
@@ -139,19 +130,19 @@ export default function Profile({ user, onWorkspaceLeft }) {
 
       {/* Account */}
       {profile && (
-        <div className="mt-6 rounded-xl border border-[#E8E6E3] bg-white p-4 shadow-sm">
-          <p className="px-1 text-xs font-medium tracking-wide text-[#6B7280] uppercase">Account</p>
-          <div className="mt-1">
-            <InfoRow icon={Mail} label="Email" value={profile.email} />
-            <InfoRow icon={BadgeCheck} label="Credential" value={profile.credential} />
-            <InfoRow icon={MapPin} label="Home unit" value={profile.home_unit} last />
+        <div className="mt-6">
+          <p className="mb-2 px-1 text-xs font-medium tracking-wide text-ink-secondary uppercase">Account</p>
+          <div className={SHIFT_LIST_CLASSNAME}>
+            <SettingsRow label="Email" value={profile.email} />
+            <SettingsRow label="Credential" value={profile.credential} />
+            <SettingsRow label="Home unit" value={profile.home_unit} last />
           </div>
         </div>
       )}
 
       {/* Workspace */}
       {profile && (
-        <div className="mt-4 rounded-xl border border-[#E8E6E3] bg-white p-4 shadow-sm">
+        <div className={`mt-4 p-4 ${SHIFT_LIST_CLASSNAME}`}>
           <div className="flex items-center gap-3">
             <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#F8F7F5] text-[#6B7280]">
               <Building2 size={16} strokeWidth={2} />
@@ -235,10 +226,11 @@ export default function Profile({ user, onWorkspaceLeft }) {
       {/* Sign out */}
       <Button
         type="button"
+        variant="secondary"
         onClick={handleSignOut}
         disabled={signingOut}
         data-testid="profile-sign-out"
-        className="mt-8 h-auto w-full gap-2 rounded-full bg-ink px-4 py-3 text-white hover:bg-ink disabled:opacity-60"
+        className="mt-8 h-[50px] w-full rounded-card"
       >
         <LogOut size={16} strokeWidth={2} />
         {signingOut ? 'Signing out…' : 'Sign out'}
