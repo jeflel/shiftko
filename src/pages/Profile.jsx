@@ -17,16 +17,22 @@ function initials(name) {
     .join('')
 }
 
-function SettingsRow({ label, value, last }) {
+function SettingsRow({ label, value, icon, last }) {
   return (
     <>
-      <div className="flex items-center justify-between gap-3 px-4 py-3.5">
+      <div className="flex items-center gap-3 px-4 py-3.5">
+        {icon}
         <span className="text-sm font-medium text-ink">{label}</span>
-        <span className="truncate text-sm text-ink-secondary">{value || 'Not set'}</span>
+        <span className="ml-auto truncate text-sm text-ink-secondary">{value || 'Not set'}</span>
       </div>
       {!last && <ShiftListDivider inset={false} />}
     </>
   )
+}
+
+function capitalize(value) {
+  if (!value) return value
+  return value.charAt(0).toUpperCase() + value.slice(1)
 }
 
 export default function Profile({ user, onWorkspaceLeft }) {
@@ -52,7 +58,7 @@ export default function Profile({ user, onWorkspaceLeft }) {
     async function fetchAccount() {
       const { data } = await supabase
         .from('profiles')
-        .select('full_name, email, credential, home_unit, workspace_id')
+        .select('full_name, email, role, credential, home_unit, workspace_id')
         .eq('id', user.id)
         .single()
 
@@ -220,14 +226,29 @@ export default function Profile({ user, onWorkspaceLeft }) {
         </div>
       )}
 
+      {/* Facility */}
+      {profile && (
+        <div className="mt-6">
+          <div className={SHIFT_LIST_CLASSNAME}>
+            <SettingsRow
+              icon={<Building2 size={16} strokeWidth={1.75} className="text-ink-secondary" />}
+              label="Facility"
+              value={workspace?.name}
+              last
+            />
+          </div>
+        </div>
+      )}
+
       {/* Account */}
       {profile && (
         <div className="mt-6">
           <p className="mb-2 px-1 text-xs font-medium tracking-wide text-ink-secondary uppercase">Account</p>
           <div className={SHIFT_LIST_CLASSNAME}>
-            <SettingsRow label="Email" value={profile.email} />
+            <SettingsRow label="Name" value={profile.full_name} />
+            <SettingsRow label="Role" value={capitalize(profile.role)} />
             <SettingsRow label="Credential" value={profile.credential} />
-            <SettingsRow label="Home unit" value={profile.home_unit} last />
+            <SettingsRow label="Home Department" value={profile.home_unit} last />
           </div>
         </div>
       )}
@@ -383,6 +404,19 @@ export default function Profile({ user, onWorkspaceLeft }) {
         {passwordSuccess && <p className="mt-2 px-1 text-sm text-teal-foreground">Password updated.</p>}
       </div>
 
+      {/* Sign out */}
+      <Button
+        type="button"
+        variant="secondary"
+        onClick={handleSignOut}
+        disabled={signingOut}
+        data-testid="profile-sign-out"
+        className="mt-8 h-[50px] w-full rounded-card"
+      >
+        <LogOut size={16} strokeWidth={2} />
+        {signingOut ? 'Signing out…' : 'Sign out'}
+      </Button>
+
       {/* Delete account */}
       <div className="mt-4">
         <div className={SHIFT_LIST_CLASSNAME}>
@@ -442,19 +476,6 @@ export default function Profile({ user, onWorkspaceLeft }) {
           )}
         </div>
       </div>
-
-      {/* Sign out */}
-      <Button
-        type="button"
-        variant="secondary"
-        onClick={handleSignOut}
-        disabled={signingOut}
-        data-testid="profile-sign-out"
-        className="mt-8 h-[50px] w-full rounded-card"
-      >
-        <LogOut size={16} strokeWidth={2} />
-        {signingOut ? 'Signing out…' : 'Sign out'}
-      </Button>
 
       <p className="mt-6 text-center text-xs text-[#9CA3AF]">Shiftko · Beta</p>
     </main>
