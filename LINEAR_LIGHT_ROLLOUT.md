@@ -419,13 +419,34 @@ kept in sync with this file's Status section.
     scope for a Profile-screen feature add. Scoped as its own future
     follow-up, not skipped silently.
   - Verified live signed in as `derek.okafor@relay-test.com`: Change
-    Password form expands/collapses, Connected Accounts correctly shows
-    "None" for this password-only account, Delete Account's confirm
-    button is disabled by default and only enables after typing DELETE
-    exactly, cancelled without actually invoking the delete function
-    (didn't want to destroy a seeded test account without an explicit
-    go-ahead). The Edge Function itself was verified independently at
-    the database level (cascade check) rather than via a real delete.
+    Password expands/collapses, Connected Accounts correctly shows "None"
+    for this password-only account, Delete Account's confirm button is
+    disabled by default and only enables after typing DELETE exactly,
+    cancelled without actually invoking the delete function (didn't want
+    to destroy a seeded test account without an explicit go-ahead). The
+    Edge Function itself was verified independently at the database
+    level (cascade check) rather than via a real delete.
+    - **Follow-up fix (commit `383c3bc`), 2026-09-12**: a direct side by
+      side comparison against the actual mockup file (not a prose
+      description of it) found the first pass was not 1:1 despite
+      looking visually correct. Three real gaps: (1) the mockup's
+      standalone "Facility" settings-list row (icon + real workspace
+      name) was missing entirely, added above the Account block, pulling
+      from the same `workspace` state the Workspace block already uses,
+      not hardcoded; (2) the Account block showed Email/Credential/Home
+      unit instead of the mockup's exact Name/Role/Credential/Home
+      Department (4 rows, `role` added to the existing profile query,
+      Email dropped from display since it has no mockup row - flagged,
+      not silently removed; Name renders without the mockup's chevron
+      since no edit-name flow exists yet - also flagged as a deliberate
+      simplification); (3) Sign Out and Delete Account were in the wrong
+      order, swapped to match Sign Out then Delete Account. Root cause:
+      the fix pass that built this was driven by a prose description of
+      the mockup rather than the agent reading the actual `.dc.html`
+      file's real markup/CSS directly - the corrected pass quoted the
+      mockup's exact HTML in the prompt instead, which is now the
+      required method going forward (see the rollout doc's "Core
+      method" section, point 2).
 - [ ] Notifications (dedicated page): scoped separately from Profile.
   No live Notifications page exists at all currently, only a
   notification dropdown/banner system inside `Home.jsx`. Needs its own
