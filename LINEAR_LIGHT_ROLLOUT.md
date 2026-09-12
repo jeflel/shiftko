@@ -370,11 +370,20 @@ kept in sync with this file's Status section.
     edit/delete, Staff's inline edit-expand, and Duplicate Week's full
     review -> conflict-warning -> cancel flow all work against production
     data (didn't confirm the actual copy, to avoid writing duplicate test
-    shifts). **Still needs a real coordinator-session click-through** of
-    the Home tile entry points themselves (`home-approvals-tile`,
-    `home-post-shift-tile`, `home-manage-tile`) and the Approvals screen
-    against real pending claims/swaps, once coordinator credentials are
-    available.
+    shifts).
+  - **Coordinator-session click-through completed 2026-09-12**, signed in
+    as `jefleangelo@gmail.com`: all three real Home tile entry points
+    (Approvals/Post Shift/Manage) route correctly from the coordinator's
+    actual Home (not the debug param). Staff (51 real staff, search +
+    unit filter) and Duplicate Week's form both load real data. Approvals
+    end-to-end verified against a real pending claim: signed in separately
+    as nurse `maria.santos@relay-test.com`, claimed an open Sat 8/15 Night
+    shift from Pool, then back in the coordinator session the Home tile's
+    badge updated live (0 to 1 waiting), the Approvals screen showed
+    "Maria Santos wants this shift", Approve resolved it, and the tile
+    badge returned to 0. Coordinator Approve/Deny on swaps still untested
+    (needs a real `accepted`-status swap, not just a claim) - same
+    limitation noted in the Swaps entry above.
 - [ ] Profile / Notifications
 - [ ] Shift Detail (Mine / Open / Edit)
 - [ ] Personal Events (Add / Edit): mostly ported already via
