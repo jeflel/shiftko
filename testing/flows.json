@@ -119,7 +119,7 @@
         {
           "action": "click",
           "testid": "nav-schedule",
-          "note": "BottomNav tab. For a nurse (role !== 'coordinator'), Schedule renders ScheduleTab directly \u2014 there's only one top-level pseudo-tab so no schedule-tab-* bar is shown. For a coordinator, a top tab bar appears with testids schedule-tab-team, schedule-tab-manage, schedule-tab-staff (Team Schedule / Manage / Staff)."
+          "note": "BottomNav tab. For a nurse (role !== 'coordinator'), Schedule renders ScheduleTab directly \u2014 there's only one top-level pseudo-tab so no schedule-tab-* bar is shown. For a coordinator, a top tab bar appears with testids schedule-tab-team, schedule-tab-manage (Team Schedule / Manage). Staff has its own pushed screen now, reached from the Manage tab, not a Schedule tab."
         },
         {
           "action": "click",
