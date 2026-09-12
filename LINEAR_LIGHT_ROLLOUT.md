@@ -384,7 +384,54 @@ kept in sync with this file's Status section.
     badge returned to 0. Coordinator Approve/Deny on swaps still untested
     (needs a real `accepted`-status swap, not just a claim) - same
     limitation noted in the Swaps entry above.
-- [ ] Profile / Notifications
+- [x] **Profile** (`src/pages/Profile.jsx`), 2026-09-12. Restyle plus
+  real net-new settings features, not a pure reskin (user's explicit
+  call: "anything missing we build it", not skip).
+  - Restyle commit (`f0e4842`): identity header down to the mockup's
+    56px avatar, Account block converted to the grouped
+    `SHIFT_LIST_CLASSNAME`/`ShiftListDivider` container (reused from
+    `shift-list.jsx`, not reinvented), Workspace block's existing
+    join/leave logic wrapped in the same grouped-list treatment
+    untouched, Sign Out restyled to the `.btn.btn-secondary` spec.
+    Tabbar left exactly as-is per the standing exception (see
+    "Standing rules" below) - mockups are the decided design source
+    for every element except the tabbar/navbar, which always stays the
+    live implementation.
+  - Feature commit (`61112cc`): three settings the mockup shows but
+    live never built - Change Password (real
+    `supabase.auth.updateUser({ password })` call, inline expand form
+    reusing the file's existing `openAction` toggle pattern), Connected
+    Accounts (read-only, derived from the real signed-in user's
+    `identities` array via `supabase.auth.getUser()`, shows "None" for
+    password-only accounts, not invented state), Delete Account (new
+    Supabase Edge Function `supabase/functions/delete-account/index.ts`,
+    commit `0fdd151`, verifies caller identity from their own JWT before
+    using the service role key to delete only that verified caller,
+    confirmed `profiles.id -> auth.users(id)` is `ON DELETE CASCADE`
+    directly against the production DB via `supabase db query --linked`
+    before trusting the cascade). Delete requires typing DELETE to
+    enable the confirm button, mirroring a type-to-confirm pattern for
+    irreversible actions.
+  - Explicitly NOT built this pass: Push Notifications toggle, New Open
+    Shifts Alert toggle. Both need push infrastructure (service worker,
+    VAPID keypair, a subscriptions table, and trigger wiring across
+    shift/claim/approval flows) that doesn't exist yet and is out of
+    scope for a Profile-screen feature add. Scoped as its own future
+    follow-up, not skipped silently.
+  - Verified live signed in as `derek.okafor@relay-test.com`: Change
+    Password form expands/collapses, Connected Accounts correctly shows
+    "None" for this password-only account, Delete Account's confirm
+    button is disabled by default and only enables after typing DELETE
+    exactly, cancelled without actually invoking the delete function
+    (didn't want to destroy a seeded test account without an explicit
+    go-ahead). The Edge Function itself was verified independently at
+    the database level (cascade check) rather than via a real delete.
+- [ ] Notifications (dedicated page): scoped separately from Profile.
+  No live Notifications page exists at all currently, only a
+  notification dropdown/banner system inside `Home.jsx`. Needs its own
+  investigation into what that existing code already does before
+  deciding what a dedicated page adds, rather than assuming the mockup's
+  shape applies directly.
 - [ ] Shift Detail (Mine / Open / Edit)
 - [ ] Personal Events (Add / Edit): mostly ported already via
   `PersonalEventPanel.jsx`, needs a token-fidelity pass like Home got
@@ -446,6 +493,18 @@ kept in sync with this file's Status section.
   viewer's own same-day shift (same unit + exact start/end = match, only
   against non-open/non-pending shifts). No-ops harmlessly for coordinators,
   who don't have shifts of their own to match against.
+- **The tabbar/navbar is the one standing exception to "match the
+  mockup"**: every other visual element in every flow should match the
+  Linear Light artifact, but the bottom tabbar always stays the live
+  app's existing implementation, never the mockup's tabbar markup. User's
+  explicit standing rule, applies to every flow, not just Profile.
+- **Profile's settings features (Change Password, Connected Accounts,
+  Delete Account) were built as real Supabase-backed features, not
+  skipped or stubbed**, even though no backend existed for any of them
+  before this pass. User's explicit call: "anything missing we build
+  it." This is the precedent for future flows that hit the same kind of
+  gap - default to building the missing piece for real, not skipping it
+  silently, unless the user says otherwise for that specific case.
 
 ## Open product decisions (carried over from `HANDOFF.md`, still relevant)
 
