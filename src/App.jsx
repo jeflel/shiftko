@@ -8,6 +8,9 @@ import Pool from './pages/Pool'
 import Profile from './pages/Profile'
 import PostShift from './pages/PostShift'
 import CoordinatorApprovals from './pages/CoordinatorApprovals'
+import CoordinatorManage from './pages/CoordinatorManage'
+import StaffRoster from './pages/StaffRoster'
+import DuplicateWeek from './pages/DuplicateWeek'
 import Screen0 from './pages/onboarding/Screen0'
 
 function App() {
@@ -21,6 +24,9 @@ function App() {
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('home')
   const [scheduleInitialTab, setScheduleInitialTab] = useState('schedule')
+  // Post a Shift has two entry points (Home's tile, and the Manage hub's own
+  // CTA) that need different back targets - tracks which one was used.
+  const [postShiftReturnTo, setPostShiftReturnTo] = useState('home')
 
   useEffect(() => {
     let active = true
@@ -76,20 +82,41 @@ function App() {
   }
 
   function handleGoToManage() {
-    setScheduleInitialTab('manage')
-    setActiveTab('schedule')
+    setActiveTab('manage')
   }
 
   function handleGoToPostShift() {
+    setPostShiftReturnTo('home')
     setActiveTab('postshift')
+  }
+
+  function handleGoToPostShiftFromManage() {
+    setPostShiftReturnTo('manage')
+    setActiveTab('postshift')
+  }
+
+  function handlePostShiftBack() {
+    setActiveTab(postShiftReturnTo)
   }
 
   function handleGoToApprovals() {
     setActiveTab('approvals')
   }
 
+  function handleGoToStaffRoster() {
+    setActiveTab('staffroster')
+  }
+
+  function handleGoToDuplicateWeek() {
+    setActiveTab('duplicateweek')
+  }
+
   function handleBackToHome() {
     setActiveTab('home')
+  }
+
+  function handleBackToManage() {
+    setActiveTab('manage')
   }
 
   function handleGoToPool() {
@@ -137,8 +164,18 @@ function App() {
         {activeTab === 'schedule' && (
           <Schedule user={session.user} role={role} initialTab={scheduleInitialTab} />
         )}
-        {activeTab === 'postshift' && <PostShift onBack={handleBackToHome} />}
+        {activeTab === 'postshift' && <PostShift onBack={handlePostShiftBack} />}
         {activeTab === 'approvals' && <CoordinatorApprovals onBack={handleBackToHome} />}
+        {activeTab === 'manage' && (
+          <CoordinatorManage
+            onBack={handleBackToHome}
+            onGoToPostShift={handleGoToPostShiftFromManage}
+            onGoToStaff={handleGoToStaffRoster}
+            onGoToDuplicateWeek={handleGoToDuplicateWeek}
+          />
+        )}
+        {activeTab === 'staffroster' && <StaffRoster onBack={handleBackToManage} />}
+        {activeTab === 'duplicateweek' && <DuplicateWeek onBack={handleBackToManage} />}
         {activeTab === 'pool' && (
           <Pool user={session.user} onGoToSchedule={handleGoToSchedule} />
         )}

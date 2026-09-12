@@ -284,7 +284,97 @@ kept in sync with this file's Status section.
     path all need a second nurse account to claim the shift - same
     limitation noted for Swaps' Accept/Decline. Code-reviewed but unverified
     live until a second test account claims a real offered shift.
-- [ ] Coordinator Manage / Approvals / Staff Roster / Departments / Duplicate Week
+- [x] **Coordinator Manage / Approvals / Staff Roster / Duplicate Week**,
+  `PostShift.jsx`, `CoordinatorApprovals.jsx`, `StaffRoster.jsx`,
+  `DuplicateWeek.jsx`, `CoordinatorManage.jsx`, 2026-09-12. Restructured
+  Schedule.jsx's old single "Manage" tab (Post a Shift form inline, then
+  Recent Shifts/Pending Claims/Pending Swaps/Duplicate a Week stacked below
+  it, plus a separate "Staff" tab) into five pushed screens matching the
+  mockups' actual navigation shape, per the user's explicit call to match
+  the mockups over keeping today's structure:
+  - **Correction mid-session**: this bullet was assumed to be mostly
+    net-new feature work (Staff Roster, Duplicate Week, Approvals "don't
+    exist live"). Wrong for two of them - a bad initial grep missed
+    `StaffTab` (a full working Staff tab with weekly stats and inline
+    edit) and the "Duplicate a week" section (full working source/dest
+    week copy logic), both already live inside `ManageTab`/Schedule's
+    tabbar. Only **Departments** turned out to be genuinely unbuilt. Once
+    caught, all five screens were done in one session since four of them
+    were relocations of working code, not new builds.
+  - `PostShift.jsx`: Post a Shift form, moved out as-is (already Linear
+    Light styled from the earlier Offer Shift flow commit). Reachable both
+    directly from Home's Post Shift tile and from `CoordinatorManage`'s own
+    CTA - these are two different entry points needing different back
+    targets, handled with a small `postShiftReturnTo` state in `App.jsx`
+    rather than always returning to Home (caught by live click-through
+    testing, not by review - the first wiring silently sent Manage's Post
+    a Shift back button to Home instead of back to Manage).
+  - `CoordinatorApprovals.jsx`: Pending claims + Pending swaps, moved out
+    with approve/deny logic unchanged. Flattened claim groups to one
+    approval-card per claim (mockup's shape) instead of one card per shift
+    with nested claimant rows, dropping the old "RECENT" badge that only
+    made sense in the nested view. Swap cards keep full date/time/period
+    per side rather than the mockup's terser "Mon 15 Day" text, since that
+    detail matters for an approve/deny decision.
+  - `StaffRoster.jsx`: built from `StaffTab` (the fuller of the two staff
+    implementations - see below), not the plain per-row-shadow version.
+    Added the mockup's search input and unit-filter tabs as pure
+    client-side filtering (no new query), defaulting to an "All" tab
+    rather than the mockup's first-unit default. The mockup's "Add Staff"
+    button has no live backend (no invite/create-staff flow exists) and
+    wasn't built.
+  - **Dead code found and deleted, not ported**: `ManageTab` had its own
+    second, older, redundant "Staff" section at the very end (a
+    simpler home-unit-only editor, superseded by the real `StaffTab` but
+    never removed). Confirmed unused before deleting.
+  - `DuplicateWeek.jsx`: source/dest week pickers + conflict-count confirm
+    card, moved out with the same copy logic. The mockup supports multiple
+    destination weeks at once ("Copy To" list, "Add another week" link);
+    live only ever supported one source and one destination week, kept
+    as-is since that's a real feature gap, not a visual detail, and out of
+    scope for a reskin pass. Kept the native date inputs rather than
+    mimicking the mockup's tappable "week-picker" card, which implies a
+    picker sheet that doesn't exist live.
+  - `CoordinatorManage.jsx`: the hub - Post a Shift CTA, Upcoming Shifts,
+    Tools list (Duplicate a Week, Staff, Departments). "Recent shifts"
+    (`order('created_at', desc)` - whatever was posted most recently) was
+    renamed and requeried as "Upcoming Shifts" (`order('starts_at', asc)`,
+    filtered to today-or-later) to match the mockup's actual content - a
+    query semantics change, not just visual. Kept both edit and delete
+    icons per shift row (mockup only draws edit) since delete is real,
+    tested functionality already live. **Departments stays a disabled
+    "Soon" row** - no table, no UI, matches the already-carried-over open
+    decision below.
+  - Schedule.jsx's coordinator tab bar simplified from three tabs (Team
+    Schedule / Manage / Staff) down to one (Team Schedule), so the tab
+    strip no longer renders for coordinators either (`tabs.length > 1` is
+    now false for both roles) - Manage and Staff are reachable only from
+    Home/the hub now.
+  - New `src/lib/shiftPresets.js` (`SHIFT_PRESETS`/`buildShiftTimes`),
+    `src/lib/manageFormat.js` (`getInitials`/`formatTimeAgo`/
+    `formatWeekRangeLabel`), `src/components/ui/field.jsx`
+    (`inputClassName`/`labelClassName`/`fieldInputClassName`) - shared
+    across the five new pages and Schedule.jsx's remaining
+    `AddMyShiftPanel` (nurse self-scheduling), which still needs
+    `SHIFT_PRESETS`/`buildShiftTimes`/`inputClassName`/`labelClassName`.
+    Schedule.jsx's own copies of these (plus the now fully-dead
+    `getInitials`/`formatTimeAgo`/`formatWeekRangeLabel`/`ShiftCard`/
+    `ShiftTimeLabel`/`ShiftDateColumn`, orphaned once `ManageTab`/
+    `StaffTab` were removed) were deleted in favor of importing from the
+    shared modules.
+  - Verified live signed in as nurse `alex.ramirez@shiftko.test` (no
+    coordinator credentials were available this session): all five screens
+    render correctly against real data by force-mounting them via a
+    temporary `?debugTab=` query param in `App.jsx` (added, verified,
+    then fully reverted - never committed). Confirmed Upcoming Shifts'
+    edit/delete, Staff's inline edit-expand, and Duplicate Week's full
+    review -> conflict-warning -> cancel flow all work against production
+    data (didn't confirm the actual copy, to avoid writing duplicate test
+    shifts). **Still needs a real coordinator-session click-through** of
+    the Home tile entry points themselves (`home-approvals-tile`,
+    `home-post-shift-tile`, `home-manage-tile`) and the Approvals screen
+    against real pending claims/swaps, once coordinator credentials are
+    available.
 - [ ] Profile / Notifications
 - [ ] Shift Detail (Mine / Open / Edit)
 - [ ] Personal Events (Add / Edit): mostly ported already via

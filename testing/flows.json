@@ -119,12 +119,12 @@
         {
           "action": "click",
           "testid": "nav-schedule",
-          "note": "BottomNav tab. For a nurse (role !== 'coordinator'), Schedule renders ScheduleTab directly \u2014 there's only one top-level pseudo-tab so no schedule-tab-* bar is shown. For a coordinator, a top tab bar appears with testids schedule-tab-team, schedule-tab-manage (Team Schedule / Manage). Staff has its own pushed screen now, reached from the Manage tab, not a Schedule tab."
+          "note": "BottomNav tab. Coordinators and nurses both land directly on their single Schedule sub-tab now (no schedule-tab-* bar for either) \u2014 nurse gets ScheduleTab (My Shifts/Team Schedule toggle), coordinator gets TeamScheduleTab directly. Manage, Post Shift, Approvals, Staff, and Duplicate Week all moved off Schedule entirely into their own pushed screens reached from Home's coordinator tiles (home-manage-tile, home-post-shift-tile, home-approvals-tile) and Manage's own Tools list."
         },
         {
           "action": "click",
           "testid": "schedule-view-team",
-          "note": "Nurse-only. ScheduleTab renders one persistent header (title, list/calendar toggle, and this My Shifts / Team Schedule segmented control \u2014 testids schedule-view-mine, schedule-view-team; defaults to schedule-view-mine) above whichever sub-tab body is active, so switching never remounts or hides the header \u2014 only the body below swaps and shows its own loading state. Not present for a coordinator, who instead uses schedule-tab-team from the previous step (that screen has its own separate top tab bar and header, not this one)."
+          "note": "Nurse-only. ScheduleTab renders one persistent header (title, list/calendar toggle, and this My Shifts / Team Schedule segmented control \u2014 testids schedule-view-mine, schedule-view-team; defaults to schedule-view-mine) above whichever sub-tab body is active, so switching never remounts or hides the header \u2014 only the body below swaps and shows its own loading state. A coordinator instead lands on TeamScheduleTab directly from the previous step (that screen has its own separate header, not this one, and no sub-tab toggle to switch)."
         },
         {
           "action": "click",
