@@ -59,6 +59,16 @@ kept in sync with this file's Status section.
   gradient) with `CoverageHero`, `CoordinatorStatRow`,
   `CoordinatorQuickActions`, `CoverageGapRow`, per `CoordinatorHome.dc.html`.
   Now shares the same gradient header as nurse Home.
+  - Fidelity follow-up, 2026-09-12: the mockup's gradient header (both
+    nurse variants and `CoordinatorHome.dc.html`) had its top safe-area
+    tightened (`safe-top` 42px to 16px, `.topbar` margin-top 12px to 6px)
+    after the design canvas was flagged for an oversized empty band above
+    the avatar/wordmark/bell row. Ported the equivalent to live's shared
+    gradient header div: `pt-10` to `pt-4` (same ~40% ratio). The
+    mockup's separate `225px` to `203px` fixed-background-height tweak has
+    no live equivalent (live's gradient is sized by the header div's own
+    content, not a longer background layer a card floats over) and wasn't
+    ported.
 - [x] **Schedule, My Shifts + Team Schedule** (`src/pages/Schedule.jsx`),
   2026-09-11. Both list and calendar views, both sub-tabs:
   - New shared `src/components/ui/period-tag.jsx`: colored `PeriodTag`
