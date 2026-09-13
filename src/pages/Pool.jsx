@@ -226,7 +226,7 @@ export default function Pool({ user, onGoToSchedule }) {
   return (
     <main className="mx-auto w-full max-w-md px-5 pt-[26px] pb-12">
       <div className="mb-1 flex items-center justify-between">
-        <h1 className="text-[26px] font-semibold text-ink">Pool</h1>
+        <h1 className="text-[26px] font-semibold tracking-[-0.02em] text-ink">Pool</h1>
         <button
           type="button"
           onClick={() => setShowClaimStatus(true)}

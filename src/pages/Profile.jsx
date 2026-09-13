@@ -204,7 +204,7 @@ export default function Profile({ user, onWorkspaceLeft }) {
   return (
     <main className="mx-auto w-full max-w-md px-5 pt-[26px] pb-12">
       <div className="flex items-center justify-between">
-        <h1 className="text-[26px] font-semibold text-[#111111]">Profile</h1>
+        <h1 className="text-[26px] font-semibold tracking-[-0.02em] text-ink">Profile</h1>
         <div className="flex flex-col items-end gap-1">
           <Wordmark />
           <span className="rounded-full bg-[#E0F7FA] px-2 py-0.5 text-xs font-medium text-teal-mid">Beta</span>

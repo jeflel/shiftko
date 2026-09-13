@@ -98,7 +98,7 @@ function ScheduleTab({ user }) {
           of scroll position. */}
       <div className="sticky top-0 z-10 -mx-5 -mt-[26px] flex flex-col gap-4 border-b border-hairline bg-page-ground px-5 pt-[38px] pb-4">
         <div className="flex items-center justify-between">
-          <h1 className="text-[22px] font-bold tracking-[-0.01em] text-ink">Schedule</h1>
+          <h1 className="text-[26px] font-semibold tracking-[-0.02em] text-ink">Schedule</h1>
           <div className="flex items-center gap-2">
             {view === 'mine' && (
               <button
@@ -1210,7 +1210,7 @@ function TeamScheduleTab({ user, onChangeView, contentView: contentViewProp }) {
     <div className="flex flex-col gap-4">
       <div className="sticky top-0 z-10 -mx-5 flex flex-col gap-4 border-b border-hairline bg-page-ground px-5 pt-3 pb-4">
         <div className="flex items-center justify-between">
-          <h1 className="text-[22px] font-bold tracking-[-0.01em] text-ink">Schedule</h1>
+          <h1 className="text-[26px] font-semibold tracking-[-0.02em] text-ink">Schedule</h1>
           <div className="flex gap-1 rounded-[11px] bg-track-neutral p-[3px]">
             <button
               type="button"
