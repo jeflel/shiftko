@@ -59,15 +59,17 @@ export async function updatePersonalEvent(id, { unit, name, startsAt, endsAt }) 
   return data
 }
 
-// Coworkers scheduled on the same unit during a personal event's time window,
-// used by the Edit-mode "Also on" match card. RLS's "nurses see unit shifts"
+// Coworkers scheduled on the same unit during a personal event's time window.
+// Used by the Edit-mode "Also on" match card (names only) and by the personal
+// event detail screen's "Also on <unit>" list (which also shows each
+// coworker's credential and shift time). RLS's "nurses see unit shifts"
 // policy already lets a nurse read scheduled shifts on her home unit, and the
 // profiles!nurse_id join matches Team Schedule's. The viewer's own shifts are
-// filtered out so the card lists only others.
+// filtered out so the list shows only others.
 export async function getCoworkersOnShift({ unit, startsAt, endsAt, excludeNurseId }) {
   let query = supabase
     .from('shifts')
-    .select('starts_at, profiles!nurse_id ( full_name )')
+    .select('starts_at, ends_at, profiles!nurse_id ( full_name, credential )')
     .eq('unit', unit)
     .eq('status', 'scheduled')
     .lt('starts_at', endsAt)
@@ -80,7 +82,12 @@ export async function getCoworkersOnShift({ unit, startsAt, endsAt, excludeNurse
   if (error) throw error
 
   return (data ?? [])
-    .map((row) => ({ full_name: row.profiles?.full_name }))
+    .map((row) => ({
+      full_name: row.profiles?.full_name,
+      credential: row.profiles?.credential ?? null,
+      starts_at: row.starts_at,
+      ends_at: row.ends_at,
+    }))
     .filter((row) => row.full_name)
 }
 

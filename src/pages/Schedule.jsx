@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { ArrowLeftRight, Calendar, Check, ChevronLeft, ChevronRight, List, X } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import ShiftDetail from './ShiftDetail'
+import PersonalEventDetail from './PersonalEventDetail'
 import SwapStatusList from './SwapStatusList'
 import PersonalEventPanel from '@/components/PersonalEventPanel'
 import { PeriodTag, ShiftStatusTag } from '@/components/ui/period-tag'
@@ -721,6 +722,7 @@ function MyShiftsTab({ user, contentView }) {
   const [selectedShift, setSelectedShift] = useState(null)
   const [personalEvents, setPersonalEvents] = useState([])
   const [selectedPersonalEvent, setSelectedPersonalEvent] = useState(null)
+  const [editingPersonalEvent, setEditingPersonalEvent] = useState(null)
   const [refreshKey, setRefreshKey] = useState(0)
   const [showAddPanel, setShowAddPanel] = useState(false)
   const [calendarMonth, setCalendarMonth] = useState(() => {
@@ -972,15 +974,31 @@ function MyShiftsTab({ user, contentView }) {
       )}
 
       {selectedPersonalEvent && (
+        <PersonalEventDetail
+          event={selectedPersonalEvent}
+          user={user}
+          onBack={() => setSelectedPersonalEvent(null)}
+          onEdit={() => setEditingPersonalEvent(selectedPersonalEvent)}
+          onDeleted={() => {
+            setSelectedPersonalEvent(null)
+            setEditingPersonalEvent(null)
+            setRefreshKey((k) => k + 1)
+          }}
+        />
+      )}
+
+      {editingPersonalEvent && (
         <PersonalEventPanel
           userId={user.id}
-          event={selectedPersonalEvent}
-          onClose={() => setSelectedPersonalEvent(null)}
+          event={editingPersonalEvent}
+          onClose={() => setEditingPersonalEvent(null)}
           onSaved={() => {
+            setEditingPersonalEvent(null)
             setSelectedPersonalEvent(null)
             setRefreshKey((k) => k + 1)
           }}
           onDeleted={() => {
+            setEditingPersonalEvent(null)
             setSelectedPersonalEvent(null)
             setRefreshKey((k) => k + 1)
           }}
