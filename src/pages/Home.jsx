@@ -729,7 +729,7 @@ export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoTo
   return (
     <div className="flex min-h-screen w-full flex-col bg-page-ground">
       <main className="mx-auto flex w-full max-w-md flex-1 flex-col pb-12">
-        <div className="flex flex-1 flex-col bg-gradient-to-b from-hero-gradient-start to-hero-gradient-end bg-[length:100%_223px] bg-top bg-no-repeat">
+        <div className="flex flex-1 flex-col bg-gradient-to-b from-hero-gradient-start via-hero-gradient-mid via-70% to-hero-gradient-end bg-[length:100%_223px] bg-top bg-no-repeat">
           <div className="flex flex-col gap-4 px-5 pt-4 pb-11">
             <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2">
               <span

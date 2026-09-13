@@ -27,6 +27,7 @@
      (Home, Schedule) via components/ui/period-tag.jsx. Screens not yet
      ported (ShiftDetail, Pool) keep the old two-color rule via ui/pill.jsx. */
   --color-hero-gradient-start: #0aa2cf;
+  --color-hero-gradient-mid: #5dc7e6;
   --color-hero-gradient-end: #f9f9fb;
   --color-status-deep: #004458;
   --color-period-day-bg: #fdf3d8;
