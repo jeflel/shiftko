@@ -761,7 +761,7 @@ export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoTo
                 />
 
                 {latestNotification && (
-                  <section className="flex flex-col gap-2.5 rounded-[20px] bg-press-state p-3">
+                  <section className="flex flex-col gap-2.5 rounded-[20px] bg-track-neutral p-3">
                     <SectionHeader title="Request Activity" onViewAll={() => setShowNotifications(true)} />
                     <RequestActivity notification={latestNotification} onOpen={handleOpenNotification} />
                   </section>
