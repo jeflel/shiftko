@@ -755,6 +755,25 @@ The analysis is kept because the findings outlive the frame:
   darkest teal for the first ~120px where the text sits and fade after it,
   instead of fading from 0.
 
+## Request Activity card restructure (2026-09-12, same day)
+
+The Home "Request Activity" card rendered the raw notification sentence in one
+truncated line. Every claim message has the shape
+`Your claim for <unit> · <date> · <time> was [not] approved. <tail>`, so
+truncation cut at "Your claim for Unit 1 · Friday, July 24, 2..." - the nurse
+saw which shift it was about but never what happened to it.
+
+Now the title carries the outcome from `type` (`Claim not approved`, replacing
+the vague `Claim update`, plus a `swap_approved` case that previously fell
+through to "Notification"), and the second line carries the context, extracted
+from the sentence and compacted to
+`Unit 1 · Fri, Jul 24 · 7:00 AM – 7:00 PM`. A `chevron-muted` chevron marks it
+as tappable. It falls back to the raw message if the sentence shape ever
+changes, so a wording change degrades instead of breaking.
+
+Verified live: both lines report `scrollWidth === clientWidth` (no clipping),
+the card is 408x64, and the chevron renders at `#C7C7CC`. Commit `f4658e0`.
+
 ## Decisions made / deviations worth knowing about
 
 - **Nurse Home built on `MainHorizontalTiles.dc.html`** (icon-left quick
