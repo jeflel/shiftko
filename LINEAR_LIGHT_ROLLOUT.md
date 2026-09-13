@@ -834,6 +834,24 @@ the inset behaviour itself cannot be confirmed off-device.
 Caveat worth knowing: iOS honours the tint only when the user has Safari's
 "Show Color in Tab Bar" setting on, so it is not fully in our control.
 
+## Two-line row info blocks got the mockup's 2px gap (2026-09-12, same day)
+
+The shift info in the row lists was two `<p>`s with nothing between them, so
+the time and the unit/meta read as one pancaked block. The mockup defines
+`.shift-info { display: flex; flex-direction: column; gap: 2px; flex: 1 1 auto;
+min-width: 0; }`, so those blocks are now `flex min-w-0 flex-1 flex-col
+gap-0.5` (`845c8eb`).
+
+Eleven blocks: Home's two Upcoming rows, the Request Activity card's own
+outcome/context pair (same two-line shape, same screen), and Schedule's eight
+list rows. A single-line block (`No nurse assigned`, coordinator coverage-gap
+row) was deliberately left alone, since a gap there would do nothing.
+
+Measured after deploy: the gap between the two lines is exactly 2px in the
+Upcoming rows, up from 0. Row height stays 66px because the date column drives
+it and the info block is vertically centred, so the extra 2px is absorbed
+inside the block rather than growing the row.
+
 ## Row dividers were collapsing to zero height (2026-09-12, same day)
 
 The vertical divider between the date column and the shift info was invisible
