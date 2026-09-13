@@ -834,6 +834,26 @@ the inset behaviour itself cannot be confirmed off-device.
 Caveat worth knowing: iOS honours the tint only when the user has Safari's
 "Show Color in Tab Bar" setting on, so it is not fully in our control.
 
+## Hero gradient mid stop moved to 70% (2026-09-12, same day)
+
+The Home hero gradient was only two stops (`--color-hero-gradient-start`
+`#0AA2CF` to `--color-hero-gradient-end` `#F9F9FB`), so the teal fell away
+across the first half of the 223px band. The design's gradient family carries
+a light-blue middle (`#5DC7E6`), so a `--color-hero-gradient-mid: #5dc7e6`
+token was added and the middle stop placed at 70% (`4905bd4`):
+
+```css
+linear-gradient(in oklab, #0AA2CF 0%, #5DC7E6 70%, #F9F9FB 100%)
+```
+
+painted at `100% 223px`, unchanged.
+
+Verified on the deployed build: the computed gradient reports three stops with
+the middle at 70%, so the teal holds for 156px of the 223px band instead of
+111px. Tailwind emits both `via-hero-gradient-mid` and `via-70%`
+(`--tw-gradient-via-position:70%`), confirming the position is real and not
+silently falling back to the 50% default.
+
 ## Page titles aligned to the mockup spec (2026-09-12, same day)
 
 Schedule, Pool and Profile had drifted apart: Schedule was `22px/700/-0.01em`,
