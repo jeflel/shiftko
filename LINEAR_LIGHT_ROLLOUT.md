@@ -834,6 +834,39 @@ the inset behaviour itself cannot be confirmed off-device.
 Caveat worth knowing: iOS honours the tint only when the user has Safari's
 "Show Color in Tab Bar" setting on, so it is not fully in our control.
 
+## Row dividers were collapsing to zero height (2026-09-12, same day)
+
+The vertical divider between the date column and the shift info was invisible
+on Home's Upcoming list, Pool, Claim Status and Swap Status. The element was
+present in the DOM and carried the right colour, but measured `w=1px h=0px`:
+
+```jsx
+<div className="h-full self-stretch border-l border-hairline" />
+```
+
+`h-full` is `height: 100%`, which computes to `auto` against the row's
+indefinite height, and a non-`auto` cross-size stops `align-self: stretch` from
+applying, so the box collapsed and its left border drew nothing. Schedule and
+Coordinator Manage already used the working construction, which is why they
+looked right:
+
+```jsx
+<div className="h-full min-h-9 w-px shrink-0 self-stretch bg-hairline" aria-hidden="true" />
+```
+
+That is a real 1px box with a background and a 36px floor. All seven copies of
+the broken pattern were replaced (`b0bec4e`) across `Home.jsx` (three, one of
+them the coordinator coverage-gap row), `Pool.jsx`, `ClaimStatusList.jsx`,
+`SwapStatusList.jsx` and `ui/selection-row.jsx`.
+
+Measured after deploy: the Home's dividers are `w=1px h=36px #E5E5EA` inside
+66px rows, matching the Schedule's `w=1px h=36px` inside 70px rows.
+
+Rule for future row work: never build a hairline divider from a border on a
+zero-width box combined with `h-full`. It collapses on any row whose height is
+not definite, and it fails silently, since the colour and the DOM node are both
+still correct.
+
 ## Hero gradient mid stop moved to 70% (2026-09-12, same day)
 
 The Home hero gradient was only two stops (`--color-hero-gradient-start`
