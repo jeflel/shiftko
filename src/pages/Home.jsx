@@ -16,9 +16,11 @@ import {
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import ShiftDetail from './ShiftDetail'
+import PersonalEventDetail from './PersonalEventDetail'
 import OfferShiftUpdate from './OfferShiftUpdate'
 import Notifications from './Notifications'
 import PersonalEventPanel from '@/components/PersonalEventPanel'
+import { fetchMyPersonalEvents } from '@/lib/personalEvents'
 import { Wordmark } from '@/components/ui/wordmark'
 import { PeriodTag } from '@/components/ui/period-tag'
 import { cn } from '@/lib/utils'
@@ -269,6 +271,43 @@ function UpcomingShiftRow({ shift, isFirst, isLast, onSelectShift }) {
   )
 }
 
+function UpcomingPersonalEventRow({ event, isFirst, isLast, onSelectEvent }) {
+  const eventDate = new Date(event.starts_at)
+
+  return (
+    <button
+      type="button"
+      onClick={() => onSelectEvent(event)}
+      data-testid="home-upcoming-personal-event-row"
+      className={cn(
+        'flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors active:bg-press-state',
+        isFirst && 'rounded-t-card',
+        isLast && 'rounded-b-card',
+      )}
+    >
+      <div className="flex w-8 shrink-0 flex-col items-center text-center">
+        <span className="text-[11px] font-semibold tracking-[0.03em] text-ink-secondary uppercase">
+          {weekdayFormatter.format(eventDate)}
+        </span>
+        <span className="text-[19px] leading-[1.15] font-semibold text-ink">
+          {eventDate.getDate()}
+        </span>
+      </div>
+
+      <div className="h-full self-stretch border-l border-hairline" />
+
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-[13px] font-semibold text-ink">
+          {formatShiftTimeRange(event.starts_at, event.ends_at)}
+        </p>
+        <p className="truncate text-xs text-ink-secondary">{event.unit || event.name}</p>
+      </div>
+
+      <PeriodTag period="Personal" />
+    </button>
+  )
+}
+
 function WeeklyProgress({ shifts, weekOffset, onChangeWeekOffset }) {
   const { start, end } = getWeekBounds(weekOffset)
   const weekShifts = shifts.filter((shift) => {
@@ -393,6 +432,10 @@ export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoTo
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [selectedShift, setSelectedShift] = useState(null)
+  const [personalEvents, setPersonalEvents] = useState([])
+  const [selectedPersonalEvent, setSelectedPersonalEvent] = useState(null)
+  const [editingPersonalEvent, setEditingPersonalEvent] = useState(null)
+  const [refreshKey, setRefreshKey] = useState(0)
   const [offerUpdateShiftId, setOfferUpdateShiftId] = useState(null)
   const [showNotifications, setShowNotifications] = useState(false)
   const [showAddPersonalEvent, setShowAddPersonalEvent] = useState(false)
@@ -430,15 +473,26 @@ export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoTo
             .eq('user_id', user.id)
             .order('created_at', { ascending: false })
 
-      const [profileResult, shiftsResult, notificationsResult] = await Promise.all([
-        supabase
-          .from('profiles')
-          .select('full_name, credential, home_unit')
-          .eq('id', user.id)
-          .maybeSingle(),
-        shiftsQuery,
-        notificationsQuery,
-      ])
+      const personalEventsQuery = isCoordinator
+        ? Promise.resolve({ data: [], error: null })
+        : fetchMyPersonalEvents(user.id, {
+            start: new Date(),
+            end: new Date(Date.now() + 56 * 24 * 60 * 60 * 1000),
+          })
+            .then((data) => ({ data, error: null }))
+            .catch((err) => ({ data: [], error: err }))
+
+      const [profileResult, shiftsResult, notificationsResult, personalEventsResult] =
+        await Promise.all([
+          supabase
+            .from('profiles')
+            .select('full_name, credential, home_unit')
+            .eq('id', user.id)
+            .maybeSingle(),
+          shiftsQuery,
+          notificationsQuery,
+          personalEventsQuery,
+        ])
 
       if (cancelled) return
 
@@ -449,6 +503,7 @@ export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoTo
         setHomeUnit(null)
         setShifts([])
         setNotifications([])
+        setPersonalEvents([])
         setLoading(false)
         return
       }
@@ -460,6 +515,7 @@ export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoTo
         setHomeUnit(profileResult.data?.home_unit ?? null)
         setShifts([])
         setNotifications([])
+        setPersonalEvents([])
         setLoading(false)
         return
       }
@@ -469,6 +525,7 @@ export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoTo
       setHomeUnit(profileResult.data?.home_unit ?? null)
       setShifts(shiftsResult.data ?? [])
       setNotifications(notificationsResult.error ? [] : (notificationsResult.data ?? []))
+      setPersonalEvents(personalEventsResult.data ?? [])
       setLoading(false)
     }
 
@@ -477,7 +534,7 @@ export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoTo
     return () => {
       cancelled = true
     }
-  }, [user.id, isCoordinator])
+  }, [user.id, isCoordinator, refreshKey])
 
   useEffect(() => {
     if (isCoordinator) {
@@ -558,6 +615,24 @@ export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoTo
     )
   }
 
+  if (selectedPersonalEvent) {
+    return (
+      <PersonalEventDetail
+        event={selectedPersonalEvent}
+        user={user}
+        onBack={() => setSelectedPersonalEvent(null)}
+        onEdit={() => {
+          setEditingPersonalEvent(selectedPersonalEvent)
+          setSelectedPersonalEvent(null)
+        }}
+        onDeleted={() => {
+          setSelectedPersonalEvent(null)
+          setRefreshKey((k) => k + 1)
+        }}
+      />
+    )
+  }
+
   if (offerUpdateShiftId) {
     return (
       <OfferShiftUpdate
@@ -589,6 +664,13 @@ export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoTo
   const upcomingShifts = shifts.filter(
     (shift) => isWithinNextSevenDays(shift.starts_at) && shift.id !== todaysShift?.id,
   )
+  const upcomingPersonalEvents = personalEvents.filter((event) =>
+    isWithinNextSevenDays(event.starts_at),
+  )
+  const upcomingItems = [
+    ...upcomingShifts.map((shift) => ({ kind: 'shift', item: shift })),
+    ...upcomingPersonalEvents.map((event) => ({ kind: 'personal', item: event })),
+  ].sort((a, b) => new Date(a.item.starts_at) - new Date(b.item.starts_at))
   const latestNotification = notifications.find((n) => !n.read) ?? notifications[0] ?? null
 
   return (
@@ -667,19 +749,28 @@ export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoTo
                   </section>
                 )}
 
-                {upcomingShifts.length > 0 && (
+                {upcomingItems.length > 0 && (
                   <section className="flex flex-col gap-2.5">
-                    <SectionHeader title="Upcoming Shifts" onViewAll={onGoToSchedule} />
+                    <SectionHeader title="Upcoming" onViewAll={onGoToSchedule} />
                     <div className="rounded-card border border-hairline bg-white shadow-card-lift">
-                      {upcomingShifts.map((shift, index) => (
-                        <div key={shift.id}>
+                      {upcomingItems.map((entry, index) => (
+                        <div key={entry.item.id}>
                           {index > 0 && <div className="ml-[73px] h-px bg-hairline" />}
-                          <UpcomingShiftRow
-                            shift={shift}
-                            isFirst={index === 0}
-                            isLast={index === upcomingShifts.length - 1}
-                            onSelectShift={setSelectedShift}
-                          />
+                          {entry.kind === 'shift' ? (
+                            <UpcomingShiftRow
+                              shift={entry.item}
+                              isFirst={index === 0}
+                              isLast={index === upcomingItems.length - 1}
+                              onSelectShift={setSelectedShift}
+                            />
+                          ) : (
+                            <UpcomingPersonalEventRow
+                              event={entry.item}
+                              isFirst={index === 0}
+                              isLast={index === upcomingItems.length - 1}
+                              onSelectEvent={setSelectedPersonalEvent}
+                            />
+                          )}
                         </div>
                       ))}
                     </div>
@@ -705,7 +796,26 @@ export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoTo
         <PersonalEventPanel
           userId={user.id}
           onClose={() => setShowAddPersonalEvent(false)}
-          onSaved={() => setShowAddPersonalEvent(false)}
+          onSaved={() => {
+            setShowAddPersonalEvent(false)
+            setRefreshKey((k) => k + 1)
+          }}
+        />
+      )}
+
+      {editingPersonalEvent && (
+        <PersonalEventPanel
+          userId={user.id}
+          event={editingPersonalEvent}
+          onClose={() => setEditingPersonalEvent(null)}
+          onSaved={() => {
+            setEditingPersonalEvent(null)
+            setRefreshKey((k) => k + 1)
+          }}
+          onDeleted={() => {
+            setEditingPersonalEvent(null)
+            setRefreshKey((k) => k + 1)
+          }}
         />
       )}
     </div>
