@@ -310,7 +310,7 @@ function UpcomingShiftRow({ shift, isFirst, isLast, onSelectShift }) {
         </span>
       </div>
 
-      <div className="h-full self-stretch border-l border-hairline" />
+      <div className="h-full min-h-9 w-px shrink-0 self-stretch bg-hairline" aria-hidden="true" />
 
       <div className="min-w-0 flex-1">
         <p className="truncate text-[13px] font-semibold text-ink">
@@ -347,7 +347,7 @@ function UpcomingPersonalEventRow({ event, isFirst, isLast, onSelectEvent }) {
         </span>
       </div>
 
-      <div className="h-full self-stretch border-l border-hairline" />
+      <div className="h-full min-h-9 w-px shrink-0 self-stretch bg-hairline" aria-hidden="true" />
 
       <div className="min-w-0 flex-1">
         <p className="truncate text-[13px] font-semibold text-ink">
@@ -1127,7 +1127,7 @@ function CoverageGapRow({ date }) {
         <span className="text-[19px] leading-[1.15] font-semibold text-ink">{date.getDate()}</span>
       </div>
 
-      <div className="h-full self-stretch border-l border-hairline" />
+      <div className="h-full min-h-9 w-px shrink-0 self-stretch bg-hairline" aria-hidden="true" />
 
       <div className="min-w-0 flex-1">
         <p className="truncate text-[12px] text-period-warn-fg">No nurse assigned</p>

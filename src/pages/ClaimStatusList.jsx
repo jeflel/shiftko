@@ -27,7 +27,7 @@ function ClaimRow({ claim, onClick }) {
         <span className="text-[19px] leading-[1.15] font-medium text-ink">{date.getDate()}</span>
       </div>
 
-      <div className="h-full self-stretch border-l border-hairline" />
+      <div className="h-full min-h-9 w-px shrink-0 self-stretch bg-hairline" aria-hidden="true" />
 
       <div className="min-w-0 flex-1">
         <p className="truncate text-[13px] font-medium text-ink">
