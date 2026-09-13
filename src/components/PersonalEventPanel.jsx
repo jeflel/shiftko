@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { CalendarStrip } from '@/components/ui/calendar-strip'
 import { SegmentedControl } from '@/components/ui/segmented-control'
 import { cn } from '@/lib/utils'
+import { SHIFT_PRESETS } from '@/lib/shiftPresets'
 import { formatShiftTimeRange } from '@/lib/shiftFormat'
 import {
   createPersonalEvent,
@@ -51,6 +52,20 @@ function buildEventTimes(dateKey, start, end) {
 function parseTimeValue(value) {
   const [hours, minutes] = value.split(':').map(Number)
   return { hours, minutes }
+}
+
+function formatPresetTime({ hours, minutes }) {
+  return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`
+}
+
+// Which standard shift the current start/end times match, if any - drives
+// the Shift Period picker's selected state. '' means custom times, so no
+// segment is highlighted.
+function matchedPeriodKey(startTime, endTime) {
+  const preset = SHIFT_PRESETS.find(
+    (p) => formatPresetTime(p.start) === startTime && formatPresetTime(p.end) === endTime,
+  )
+  return preset?.key ?? ''
 }
 
 // Add/Edit Personal Event — per AddPersonalEvent.dc.html / PersonalEventEdit.dc.html
@@ -230,6 +245,26 @@ export default function PersonalEventPanel({ userId, event, onClose, onSaved, on
               <span className="text-[11px] text-ink-secondary">Required since no department is set.</span>
             </>
           )}
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <label className={labelClassName}>Shift Period</label>
+          <SegmentedControl
+            ariaLabel="Shift period"
+            testidPrefix="personal-event-period"
+            value={matchedPeriodKey(startTime, endTime)}
+            onChange={(id) => {
+              const preset = SHIFT_PRESETS.find((p) => p.key === id)
+              if (!preset) return
+              setStartTime(formatPresetTime(preset.start))
+              setEndTime(formatPresetTime(preset.end))
+            }}
+            options={[
+              { id: 'day', label: 'Day' },
+              { id: 'evening', label: 'Evening' },
+              { id: 'night', label: 'Night' },
+            ]}
+          />
         </div>
 
         <div className="flex flex-col gap-1.5">
