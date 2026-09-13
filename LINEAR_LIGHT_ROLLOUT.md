@@ -798,6 +798,38 @@ Verified live on the deployed build: the meta reads `#0aa2cf` on Home,
 `#f9f9fb` on Schedule and Pool, returns to `#0aa2cf` on Home, and flips to
 `#f9f9fb` with Notifications open over the hero.
 
+### The colour has to be painted twice (correction, `433fe25`)
+
+The first attempt only set the `theme-color` meta against a near-white
+`#F9F9FB`, which could never have been visible: `#F9F9FB` sits 6/255 from pure
+white, contrast 1.052. The meta also *overrode* the tint Safari derives from
+the page by itself, so it suppressed a visible result on the landing page's
+teal header.
+
+The working recipe, confirmed by reading the markup of a site that does this
+well (`hermes-agent.nousresearch.com`):
+
+```html
+<meta name="theme-color" content="#0000f2" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+```
+```css
+html { background: #0000f2; }
+body { background: #0000f2; }
+```
+
+The meta tints the toolbar; **`html`/`body` paint the strip revealed above the
+page when you scroll or pull down**. Setting only the meta leaves that strip
+white, which is the piece that made this look broken on a phone. `setThemeColor`
+now writes all three, so both surfaces track the screen together. Measured on
+the deployed build: Home is `rgb(10,162,207)` on the meta, `html` and `body`;
+Schedule and Pool are `rgb(249,249,251)`.
+
+Known deviation: the signed-out landing page has a `#81A7AF` header while the
+chrome and strip are `#F9F9FB`, so it seams there. The app's other screens all
+put the page ground at the top edge, so they match. Fixing the landing page
+means letting the Auth screen set its own colour.
+
 **Not verified, and only testable on a real iPhone:** whether content clears
 the notch. `env(safe-area-inset-top)` resolves to 0 in a desktop browser, so
 the inset behaviour itself cannot be confirmed off-device.
