@@ -731,26 +731,29 @@ the gradient, greeting, bell/ring and section-header changes apply to both. The
 coordinator's own tiles (Approvals / Post Shift / Manage) were NOT restyled -
 they are not part of that artifact.
 
-**Follow-up (same day):** the Request Activity section now sits in its own
-light-gray frame: `rounded-[20px] bg-track-neutral p-3` (`#EDEDF2` from the
-existing `track-neutral` token, on the `#F9F9FB` page ground), a deliberately
-larger radius than the 16px cards. Commits `7e208d0`, `b4a69a5`.
+**Reverted (same day):** a gray frame around the Request Activity section
+(`rounded-[20px] bg-track-neutral p-3`) was added in `7e208d0` and `b4a69a5`,
+then removed at Jefle's request. The section is back to a plain
+`flex flex-col gap-2.5`, and `Home.jsx` is byte-identical to its pre-frame
+state (`git diff` against `72d1c80` is empty).
 
-The fill was chosen with the `impeccable` skill (`colorize` playbook: Home is
-an **Operate** surface, so color encodes status and hierarchy, and rarity gives
-accent force). The first attempt used `press-state #F2F2F7`, which separates
-from the page ground by only 1.061:1 - barely more than the 1.052:1 a white
-card gets there - so it read as a smudge rather than a group. That was a
-separation problem, not a hue problem. `track-neutral #EDEDF2` separates
-1.110:1, roughly twice a white card, while keeping the "View All" teal link at
-4.59:1 (AA).
+The analysis is kept because the findings outlive the frame:
 
-A brand-tinted frame was considered and rejected: the activity tile *inside*
-this frame already uses `bg-teal-tint` in its approved state, so a teal-tinted
-frame would swallow it, and spending the accent on a decorative region is
-exactly what the Operate guidance warns against. The `impeccable detect`
-pass was run but only reaches the unauthenticated landing page, so it says
-nothing about this frame.
+- **The fill had to be a neutral.** `press-state #F2F2F7` separates from the
+  page ground by only 1.061:1, versus the 1.052:1 a white card gets there, so
+  it read as a smudge rather than a group. `track-neutral #EDEDF2` separates
+  1.110:1, about twice a white card. A brand-tinted frame was rejected because
+  the activity tile *inside* it already uses `bg-teal-tint` in its approved
+  state, so a teal frame would swallow it; spending the accent on decoration is
+  also what the `Operate` guidance warns against.
+- **Open defect: the Home hero header text fails WCAG AA everywhere.** White
+  text on the gradient measures 2.97:1 at the teal end and 1.29:1 near the page
+  ground; the 20px greeting sits at roughly 2.1:1 and needs 4.5:1. This is
+  pre-existing (the old gradient started at 1.95:1), not something the design
+  pass introduced, and `impeccable detect` flagged the same pattern
+  independently on the unauthenticated landing page. Candidate fix: hold the
+  darkest teal for the first ~120px where the text sits and fade after it,
+  instead of fading from 0.
 
 ## Decisions made / deviations worth knowing about
 
