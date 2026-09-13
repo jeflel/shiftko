@@ -776,38 +776,22 @@ the card is 408x64, and the chevron renders at `#C7C7CC`. Commit `f4658e0`.
 
 ## Edge-to-edge status bar and tinted browser chrome (2026-09-12, same day)
 
-The app now paints under the status bar and tints the iOS Safari toolbar per
-screen, the way claude.ai does. Two mechanisms, both previously missing:
+The app now paints under the status bar, so iOS Safari's toolbar and the strip
+revealed above the page on scroll both take the app's own surface colour. One
+colour for every screen: the page ground `#F9F9FB`.
+
+Three things make that work, and the first attempt only had two of them:
 
 - `index.html` had no `theme-color` meta at all, and its viewport meta lacked
   `viewport-fit=cover`, so the page never extended under the status bar.
 - `html`/`body` had no background in `tailwind.css`; the page background came
   from the legacy `index.css` (`#f9f9f9`), not the brand `#F9F9FB`.
 
-Changes (`f90e77c`): `viewport-fit=cover` plus a `theme-color` meta;
-`html`/`body` given `--color-page-ground`; `.app-content` reserves
-`env(safe-area-inset-top)` so tab content clears the status bar; two Home-only
-helpers (`.home-hero-bleed`, `.home-hero-bleed-top`) pull the hero gradient up
-to the very top edge while padding its content back down. A new
-`src/lib/themeColor.js`, plus effects in `App.jsx` and `Home.jsx`, keep the
-meta in sync with whatever is actually at the top of the screen: the hero teal
-on Home, the page ground everywhere else, including while a pushed screen or
-overlay covers the hero.
-
-Verified live on the deployed build: the meta reads `#0aa2cf` on Home,
-`#f9f9fb` on Schedule and Pool, returns to `#0aa2cf` on Home, and flips to
-`#f9f9fb` with Notifications open over the hero.
-
-### The colour has to be painted twice (correction, `433fe25`)
-
-The first attempt only set the `theme-color` meta against a near-white
-`#F9F9FB`, which could never have been visible: `#F9F9FB` sits 6/255 from pure
-white, contrast 1.052. The meta also *overrode* the tint Safari derives from
-the page by itself, so it suppressed a visible result on the landing page's
-teal header.
-
-The working recipe, confirmed by reading the markup of a site that does this
-well (`hermes-agent.nousresearch.com`):
+The meta tints the toolbar. **`html`/`body` paint the strip revealed above the
+page when you scroll or pull down** - setting only the meta leaves that strip
+white, which is the piece that makes this look broken on a phone. The recipe
+was confirmed against a site that does it well
+(`hermes-agent.nousresearch.com`), which sets all three:
 
 ```html
 <meta name="theme-color" content="#0000f2" />
@@ -818,17 +802,30 @@ html { background: #0000f2; }
 body { background: #0000f2; }
 ```
 
-The meta tints the toolbar; **`html`/`body` paint the strip revealed above the
-page when you scroll or pull down**. Setting only the meta leaves that strip
-white, which is the piece that made this look broken on a phone. `setThemeColor`
-now writes all three, so both surfaces track the screen together. Measured on
-the deployed build: Home is `rgb(10,162,207)` on the meta, `html` and `body`;
-Schedule and Pool are `rgb(249,249,251)`.
+Two things worth knowing:
 
-Known deviation: the signed-out landing page has a `#81A7AF` header while the
-chrome and strip are `#F9F9FB`, so it seams there. The app's other screens all
-put the page ground at the top edge, so they match. Fixing the landing page
-means letting the Auth screen set its own colour.
+- **The colour has to be visibly a colour.** The first attempt tinted with
+  `#F9F9FB`, which sits 6/255 from pure white (contrast 1.052): technically
+  applied, visually identical to white. An explicit `theme-color` also
+  *overrides* the tint Safari derives from the page by itself, so pinning a
+  near-white suppressed a correct result on the landing page's teal header.
+- **The hero gradient no longer runs under the status bar.** It was briefly
+  pulled up to the very top edge so the hero colour reached it, but that put a
+  grey chrome bar directly above a teal header. The gradient now starts below
+  the inset, so every screen's top edge is the page ground and matches the
+  chrome. `.app-content` reserves `env(safe-area-inset-top)` for every tab.
+
+The mechanism is entirely static: `index.html` carries the meta and
+`tailwind.css` points `html`/`body` at `--color-page-ground`. The per-screen
+machinery (`src/lib/themeColor.js` plus its effects in `App.jsx` and
+`Home.jsx`) existed briefly and was removed in `755d0a5` when the Home was
+brought in line with the other screens.
+
+Verified live on the deployed build: the meta reads `#F9F9FB` and `html`/`body`
+compute to `rgb(249,249,251)` on Home, Schedule and Pool with no inline
+override, and Home's gradient still renders as a 223px teal-to-page-ground
+band that is not clipped. Live asset `index-B32Iq9Yc.js` matches a fresh local
+build.
 
 **Not verified, and only testable on a real iPhone:** whether content clears
 the notch. `env(safe-area-inset-top)` resolves to 0 in a desktop browser, so
