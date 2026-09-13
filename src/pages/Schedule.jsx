@@ -201,7 +201,7 @@ function MyShiftRow({ shift, credential, isPast, onClick }) {
 
       <div className="h-full min-h-9 w-px shrink-0 self-stretch bg-hairline" aria-hidden="true" />
 
-      <div className="min-w-0 flex-1">
+      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <p className="truncate text-[14px] font-semibold text-ink">
           {formatShiftTimeRange(shift.starts_at, shift.ends_at)}
         </p>
@@ -252,7 +252,7 @@ function MyPersonalEventRow({ event, isPast, onClick }) {
 
       <div className="h-full min-h-9 w-px shrink-0 self-stretch bg-hairline" aria-hidden="true" />
 
-      <div className="min-w-0 flex-1">
+      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <p className="truncate text-[14px] font-semibold text-ink">
           {formatShiftTimeRange(event.starts_at, event.ends_at)}
         </p>
@@ -287,7 +287,7 @@ function CalendarDayShiftRow({ shift, credential, onClick }) {
       onClick={onClick}
       className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors duration-150 ease-out active:bg-press-state"
     >
-      <div className="min-w-0 flex-1">
+      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <p className="truncate text-[14px] font-semibold text-ink">
           {formatShiftTimeRange(shift.starts_at, shift.ends_at)}
         </p>
@@ -318,7 +318,7 @@ function CalendarDayPersonalEventRow({ event, onClick }) {
       onClick={onClick}
       className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors duration-150 ease-out active:bg-press-state"
     >
-      <div className="min-w-0 flex-1">
+      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <p className="truncate text-[14px] font-semibold text-ink">
           {formatShiftTimeRange(event.starts_at, event.ends_at)}
         </p>
@@ -348,7 +348,7 @@ function TeamCalendarDayShiftRow({ shift, onOpenShift }) {
 
   const content = (
     <>
-      <div className="min-w-0 flex-1">
+      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <p className="truncate text-[14px] font-semibold text-ink">
           {formatShiftTimeRange(shift.starts_at, shift.ends_at)}
         </p>
@@ -385,7 +385,7 @@ function TeamCalendarDayPersonalEventRow({ event }) {
 
   return (
     <div className="flex w-full items-center gap-3 px-4 py-3.5">
-      <div className="min-w-0 flex-1">
+      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <p className="truncate text-[14px] font-semibold text-ink">
           {formatShiftTimeRange(event.starts_at, event.ends_at)}
         </p>
@@ -415,7 +415,7 @@ function TeamShiftRow({ shift, isMatch, onOpenShift }) {
 
   const content = (
     <>
-      <div className="min-w-0 flex-1">
+      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <p className="truncate text-[14px] font-semibold text-ink">
           {formatShiftTimeRange(shift.starts_at, shift.ends_at)}
         </p>
@@ -455,7 +455,7 @@ function TeamPersonalEventRow({ event }) {
 
   return (
     <div className="flex w-full items-center gap-3 px-4 py-3.5">
-      <div className="min-w-0 flex-1">
+      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <p className="truncate text-[14px] font-semibold text-ink">
           {formatShiftTimeRange(event.starts_at, event.ends_at)}
         </p>
