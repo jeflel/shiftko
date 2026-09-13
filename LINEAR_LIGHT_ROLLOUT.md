@@ -774,6 +774,37 @@ changes, so a wording change degrades instead of breaking.
 Verified live: both lines report `scrollWidth === clientWidth` (no clipping),
 the card is 408x64, and the chevron renders at `#C7C7CC`. Commit `f4658e0`.
 
+## Edge-to-edge status bar and tinted browser chrome (2026-09-12, same day)
+
+The app now paints under the status bar and tints the iOS Safari toolbar per
+screen, the way claude.ai does. Two mechanisms, both previously missing:
+
+- `index.html` had no `theme-color` meta at all, and its viewport meta lacked
+  `viewport-fit=cover`, so the page never extended under the status bar.
+- `html`/`body` had no background in `tailwind.css`; the page background came
+  from the legacy `index.css` (`#f9f9f9`), not the brand `#F9F9FB`.
+
+Changes (`f90e77c`): `viewport-fit=cover` plus a `theme-color` meta;
+`html`/`body` given `--color-page-ground`; `.app-content` reserves
+`env(safe-area-inset-top)` so tab content clears the status bar; two Home-only
+helpers (`.home-hero-bleed`, `.home-hero-bleed-top`) pull the hero gradient up
+to the very top edge while padding its content back down. A new
+`src/lib/themeColor.js`, plus effects in `App.jsx` and `Home.jsx`, keep the
+meta in sync with whatever is actually at the top of the screen: the hero teal
+on Home, the page ground everywhere else, including while a pushed screen or
+overlay covers the hero.
+
+Verified live on the deployed build: the meta reads `#0aa2cf` on Home,
+`#f9f9fb` on Schedule and Pool, returns to `#0aa2cf` on Home, and flips to
+`#f9f9fb` with Notifications open over the hero.
+
+**Not verified, and only testable on a real iPhone:** whether content clears
+the notch. `env(safe-area-inset-top)` resolves to 0 in a desktop browser, so
+the inset behaviour itself cannot be confirmed off-device.
+
+Caveat worth knowing: iOS honours the tint only when the user has Safari's
+"Show Color in Tab Bar" setting on, so it is not fully in our control.
+
 ## Decisions made / deviations worth knowing about
 
 - **Nurse Home built on `MainHorizontalTiles.dc.html`** (icon-left quick
