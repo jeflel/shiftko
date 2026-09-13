@@ -834,6 +834,23 @@ the inset behaviour itself cannot be confirmed off-device.
 Caveat worth knowing: iOS honours the tint only when the user has Safari's
 "Show Color in Tab Bar" setting on, so it is not fully in our control.
 
+## Upcoming card got breathing room top and bottom (2026-09-12, same day)
+
+The Upcoming list card had no padding of its own, so its content sat flush
+against the card's top and bottom edges, with only the rows' own `py-3.5`
+(14px) inside. `py-1.5` (6px) was added to the card container alone
+(`b797207`); the rows and the spacing between them are unchanged.
+
+Measured after deploy: padding-top and padding-bottom are both 6px, the card is
+280px tall with its 4 rows intact, and the gaps above the first row and below
+the last are 6px each. That puts 20px between the card edge and the text
+(6 + the row's 14).
+
+This is a deliberate deviation from the mockup, which has no padding on
+`.shift-list`, and the shared `SHIFT_LIST_CLASSNAME` still has none, so the
+other list cards (Schedule, Pool, Claim Status) continue to sit flush. Only
+Home's Upcoming card was changed.
+
 ## Two-line row info blocks got the mockup's 2px gap (2026-09-12, same day)
 
 The shift info in the row lists was two `<p>`s with nothing between them, so
