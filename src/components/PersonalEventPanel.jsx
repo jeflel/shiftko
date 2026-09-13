@@ -1,13 +1,30 @@
-import { useState } from 'react'
-import { X } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { Calendar, Users, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { CalendarStrip } from '@/components/ui/calendar-strip'
 import { SegmentedControl } from '@/components/ui/segmented-control'
-import { createPersonalEvent, updatePersonalEvent, deletePersonalEvent } from '@/lib/personalEvents'
+import { cn } from '@/lib/utils'
+import { formatShiftTimeRange } from '@/lib/shiftFormat'
+import {
+  createPersonalEvent,
+  updatePersonalEvent,
+  deletePersonalEvent,
+  getCoworkersOnShift,
+} from '@/lib/personalEvents'
 
 const inputClassName =
-  'w-full rounded-control border border-hairline p-3 text-sm focus:border-ink focus:outline-none'
-const labelClassName = 'text-xs font-medium tracking-wide text-ink-secondary uppercase'
+  'w-full rounded-field border border-hairline px-[14px] py-3 text-sm font-medium focus:border-ink focus:outline-none'
+const labelClassName = 'text-xs font-semibold tracking-[0.05em] text-ink-secondary uppercase'
+
+// "Fri, Sep 26, 2026" - the compact selected-date label for the Date field.
+function formatDateLabel(dateKey) {
+  return new Date(`${dateKey}T00:00:00`).toLocaleDateString('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  })
+}
 
 function toDateKey(date) {
   const d = new Date(date)
@@ -51,6 +68,32 @@ export default function PersonalEventPanel({ userId, event, onClose, onSaved, on
   const [saving, setSaving] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState(null)
+  const [datePickerOpen, setDatePickerOpen] = useState(false)
+  const [coworkers, setCoworkers] = useState([])
+
+  // Live "Also on" match card: whenever the unit or time changes in Edit mode,
+  // re-query the coworkers on that unit whose shifts overlap the event window.
+  useEffect(() => {
+    if (!isEdit || !hasUnit) {
+      setCoworkers([])
+      return
+    }
+
+    let cancelled = false
+    const { starts_at, ends_at } = buildEventTimes(dateKey, parseTimeValue(startTime), parseTimeValue(endTime))
+
+    getCoworkersOnShift({ unit, startsAt: starts_at, endsAt: ends_at, excludeNurseId: userId })
+      .then((rows) => {
+        if (!cancelled) setCoworkers(rows)
+      })
+      .catch(() => {
+        if (!cancelled) setCoworkers([])
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [isEdit, hasUnit, unit, dateKey, startTime, endTime, userId])
 
   async function handleSubmit() {
     setError(null)
@@ -104,6 +147,9 @@ export default function PersonalEventPanel({ userId, event, onClose, onSaved, on
     }
   }
 
+  const eventTimes = buildEventTimes(dateKey, parseTimeValue(startTime), parseTimeValue(endTime))
+  const coworkerNames = coworkers.map((c) => c.full_name).join(', ')
+
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/30 sm:items-center" onClick={onClose}>
       <div
@@ -111,14 +157,14 @@ export default function PersonalEventPanel({ userId, event, onClose, onSaved, on
         className="flex max-h-[85vh] w-full max-w-md flex-col gap-4 overflow-y-auto rounded-t-2xl border border-hairline bg-card-surface p-4 shadow-card-lift sm:rounded-card"
       >
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-ink">{isEdit ? 'Edit Personal Event' : 'Add Personal Event'}</h3>
+          <h3 className="text-[17px] font-semibold tracking-[-0.01em] text-ink">{isEdit ? 'Edit Personal Event' : 'Add Personal Event'}</h3>
           <button type="button" data-testid="personal-event-close" onClick={onClose} aria-label="Close" className="text-ink-secondary hover:text-ink">
             <X size={16} strokeWidth={2.5} />
           </button>
         </div>
 
         {!isEdit && (
-          <p className="text-[13px] leading-snug text-ink-secondary">
+          <p className="text-[13px] leading-[1.4] text-ink-secondary">
             Log a shift you're working. Shows on your calendar and Team Schedule, no coordinator
             approval needed.
           </p>
@@ -126,7 +172,24 @@ export default function PersonalEventPanel({ userId, event, onClose, onSaved, on
 
         <div className="flex flex-col gap-1.5">
           <label className={labelClassName}>Date</label>
-          <CalendarStrip selectedDateKey={dateKey} onSelect={setDateKey} />
+          <button
+            type="button"
+            data-testid="personal-event-date-field"
+            onClick={() => setDatePickerOpen((open) => !open)}
+            className={cn(inputClassName, 'flex items-center justify-between text-left')}
+          >
+            <span>{formatDateLabel(dateKey)}</span>
+            <Calendar size={16} strokeWidth={2} className="shrink-0 text-ink-secondary" />
+          </button>
+          {datePickerOpen && (
+            <CalendarStrip
+              selectedDateKey={dateKey}
+              onSelect={(key) => {
+                setDateKey(key)
+                setDatePickerOpen(false)
+              }}
+            />
+          )}
         </div>
 
         <div className="flex flex-col gap-1.5">
@@ -190,9 +253,19 @@ export default function PersonalEventPanel({ userId, event, onClose, onSaved, on
           </div>
         </div>
 
+        {isEdit && hasUnit && coworkers.length > 0 && (
+          <div className="flex items-start gap-2.5 rounded-card border border-hairline bg-teal-tint px-[14px] py-3">
+            <Users size={16} strokeWidth={2} className="mt-0.5 shrink-0 text-teal-foreground" />
+            <p className="text-[13px] leading-[1.4] text-ink">
+              Also on {unit}, {formatShiftTimeRange(eventTimes.starts_at, eventTimes.ends_at)}:{' '}
+              <span className="font-semibold">{coworkerNames}</span>
+            </p>
+          </div>
+        )}
+
         {error && <p className="text-sm text-red-700">{error}</p>}
 
-        <Button type="button" data-testid="personal-event-save" onClick={handleSubmit} disabled={saving} className="w-full">
+        <Button type="button" data-testid="personal-event-save" onClick={handleSubmit} disabled={saving} className="h-[50px] w-full rounded-[16px]">
           {saving ? 'Saving…' : isEdit ? 'Save Changes' : 'Add Event'}
         </Button>
 

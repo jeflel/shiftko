@@ -454,8 +454,44 @@ kept in sync with this file's Status section.
   deciding what a dedicated page adds, rather than assuming the mockup's
   shape applies directly.
 - [ ] Shift Detail (Mine / Open / Edit)
-- [ ] Personal Events (Add / Edit): mostly ported already via
-  `PersonalEventPanel.jsx`, needs a token-fidelity pass like Home got
+- [x] **Personal Events (Add / Edit)** (`PersonalEventPanel.jsx`,
+  `personalEvents.js`, `ui/segmented-control.jsx`), 2026-09-12. Token-fidelity
+  pass plus two real feature additions, not a pure reskin. Built with
+  DeepSeek v4.1-flash via `opencode run` (first production flow built on
+  OpenCode instead of Claude Code), then verified at the code level.
+  - Token fixes to the mockups' exact values (verified against the
+    `.dc.html` files directly): title `text-sm` (14px) to 17px/600/-0.01em;
+    field label weight 500 to 600 and letter-spacing 0.025em to 0.05em;
+    text/select inputs from `rounded-control` (9px) to the existing
+    `rounded-field` token (14px), padding to 12px 14px, weight 500; primary
+    button 48px/12px to 50px/16px (overridden on this screen's buttons only,
+    the shared `Button` default untouched); Add-mode helper line-height
+    1.375 to 1.4.
+  - Date field rebuilt to the mockup's shape (user's explicit call, full
+    1:1): the inline `CalendarStrip` grid is now a single compact
+    `.field-input`-styled row ("Fri, Sep 26, 2026" plus a calendar icon)
+    that toggles the existing `CalendarStrip` open as the picker.
+  - Match-card built for real (user's explicit call): new
+    `getCoworkersOnShift()` in `personalEvents.js` (scheduled shifts on the
+    event's unit overlapping its window, `profiles!nurse_id` join, viewer
+    excluded), rendered in Edit mode when a unit is set, styled to the
+    mockup's teal tint. No RLS change was needed: the existing "nurses see
+    unit shifts" policy (migration `20260830070000`) already lets a nurse
+    read coworker shifts on her own home unit, and Team Schedule already
+    uses the identical profiles join. `CLAUDE.md`'s RLS summary omits that
+    policy and first suggested a new one was required, which was wrong.
+  - `SegmentedControl` (shared) brought onto the mockup's tokens (track
+    `#ededf2` to `#f2f2f7`, track radius 11px to 12px, segment radius 8px to
+    9px, added the active-segment `0 1px 2px rgba(20,20,19,.08)` shadow).
+    Converges other screens using it (Post Shift) onto the same standard.
+  - Verified at the code level: `npm run build` compiles clean, every token
+    value checked against the mockup files and `tailwind.css` at source, and
+    the full diff reviewed. A placement bug in the build spec (match-card
+    was specified below Department, the mockup has it after the time row)
+    was caught in review and fixed. Live signed-in click-through was NOT
+    done this pass: the browser tool refuses passwords and the vault save
+    was declined, so the render check is still open (user chose to commit on
+    the code-level verification).
 
 ## Decisions made / deviations worth knowing about
 
@@ -526,6 +562,29 @@ kept in sync with this file's Status section.
   it." This is the precedent for future flows that hit the same kind of
   gap - default to building the missing piece for real, not skipping it
   silently, unless the user says otherwise for that specific case.
+- **Personal Events Date field was a full 1:1 rebuild**, not a token
+  reskin (user's explicit call, 2026-09-12): the live inline
+  `CalendarStrip` grid was replaced by the mockup's single compact
+  `.field-input`-styled Date row that opens the strip as a picker.
+- **Personal Events match-card built for real, and it needed NO RLS
+  change.** The existing "nurses see unit shifts" policy
+  (`20260830070000_nurse_self_scheduling.sql`) already grants a nurse
+  read access to any shift on her own home unit, and the
+  `profiles!nurse_id` join already works (Team Schedule uses the same
+  join). `CLAUDE.md`'s RLS summary predates that policy and omits it, so
+  treat the summary as incomplete and check `supabase/migrations/`
+  before concluding a new policy is required. RLS was NOT modified.
+- **`SegmentedControl` tokens now match the Linear Light mockup
+  app-wide** (track `#ededf2` to `#f2f2f7`, track radius 11px to 12px,
+  segment radius 8px to 9px, active-segment `0 1px 2px rgba(20,20,19,.08)`
+  shadow). It is a shared component, so this also updates Post Shift's
+  segmented control: intended convergence, not a regression.
+- **First Shiftko flow built with OpenCode (DeepSeek v4.1-flash) instead
+  of Claude Code** (user's call, 2026-09-12). A head-to-head on this
+  same Personal Events fidelity audit showed v4.1-flash matched Claude on
+  every extracted token value and caught two deviations Claude missed, so
+  token-fidelity and other mechanical flow work routes to OpenCode now.
+  See the `shiftko-linear-light-rollout` skill's routing section.
 
 ## Open product decisions (carried over from `HANDOFF.md`, still relevant)
 
