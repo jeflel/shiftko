@@ -22,6 +22,7 @@ export default function ShiftDetail({ shift, user, onBack }) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [credential, setCredential] = useState(null)
+  const [role, setRole] = useState(null)
   const [shiftState, setShiftState] = useState(null)
   const [hasPendingClaim, setHasPendingClaim] = useState(false)
   const [myClaim, setMyClaim] = useState(null)
@@ -38,11 +39,14 @@ export default function ShiftDetail({ shift, user, onBack }) {
     async function fetchCredential() {
       const { data } = await supabase
         .from('profiles')
-        .select('credential')
+        .select('credential, role')
         .eq('id', user.id)
         .maybeSingle()
 
-      if (!cancelled) setCredential(data?.credential ?? null)
+      if (!cancelled) {
+        setCredential(data?.credential ?? null)
+        setRole(data?.role ?? null)
+      }
     }
 
     fetchCredential()
@@ -108,7 +112,7 @@ export default function ShiftDetail({ shift, user, onBack }) {
   const canRequestSwap = isMine && !hasPendingClaim && !shiftState?.is_offered
 
   const isOpen = shiftState?.status === 'open'
-  const canClaim = isOpen && !isPastShift && !myClaim && !claimed
+  const canClaim = isOpen && !isPastShift && !myClaim && !claimed && role === 'nurse'
 
   useEffect(() => {
     let cancelled = false

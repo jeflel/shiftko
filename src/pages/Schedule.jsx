@@ -330,11 +330,12 @@ function CalendarDayPersonalEventRow({ event, onClick }) {
   )
 }
 
-// Team-scope day-detail row for TeamMonthCalendarView — like CalendarDayShiftRow
-// but names whose shift it is (the day-detail label above carries the date, not
-// who's on it, since Team Schedule spans every nurse). Non-clickable, matching
-// the plain list view above.
-function TeamCalendarDayShiftRow({ shift }) {
+// Team-scope day-detail row for TeamMonthCalendarView, like CalendarDayShiftRow
+// but naming whose shift it is (the day-detail label above carries the date, not
+// who's on it, since Team Schedule spans every nurse). Open-shift rows are
+// tappable and open the Shift Detail screen, where a nurse can claim; other rows
+// stay plain.
+function TeamCalendarDayShiftRow({ shift, onOpenShift }) {
   const period = getShiftPeriod(shift.starts_at)
   const isOpen = shift.status === 'open'
   const isPending = shift.status === 'pending'
@@ -344,8 +345,8 @@ function TeamCalendarDayShiftRow({ shift }) {
     ? ['Open · tap to claim', shift.unit].filter(Boolean)
     : [displayName, displayCredential, shift.unit].filter(Boolean)
 
-  return (
-    <div className="flex w-full items-center gap-3 px-4 py-3.5">
+  const content = (
+    <>
       <div className="min-w-0 flex-1">
         <p className="truncate text-[14px] font-semibold text-ink">
           {formatShiftTimeRange(shift.starts_at, shift.ends_at)}
@@ -356,8 +357,22 @@ function TeamCalendarDayShiftRow({ shift }) {
         <PeriodTag period={period} />
       </div>
       {isOpen && <ChevronRight size={15} strokeWidth={2} className="shrink-0 text-chevron-muted" aria-hidden="true" />}
-    </div>
+    </>
   )
+
+  if (isOpen && onOpenShift) {
+    return (
+      <button
+        type="button"
+        onClick={() => onOpenShift(shift)}
+        className="flex w-full items-center gap-3 px-4 py-3.5 text-left"
+      >
+        {content}
+      </button>
+    )
+  }
+
+  return <div className="flex w-full items-center gap-3 px-4 py-3.5">{content}</div>
 }
 
 // Team-scope counterpart to TeamCalendarDayShiftRow for personal events —
@@ -387,7 +402,7 @@ function TeamCalendarDayPersonalEventRow({ event }) {
 // nested avatar rows, so every list in the app shares the same .shift-card
 // shape). `isMatch` tints the row when this shift shares the viewer's own
 // unit + start/end time that day (see TeamScheduleTab's isMatch check).
-function TeamShiftRow({ shift, isMatch }) {
+function TeamShiftRow({ shift, isMatch, onOpenShift }) {
   const period = getShiftPeriod(shift.starts_at)
   const isOpen = shift.status === 'open'
   const isPending = shift.status === 'pending'
@@ -397,8 +412,8 @@ function TeamShiftRow({ shift, isMatch }) {
     ? ['Open', shift.unit, 'tap to claim'].filter(Boolean)
     : [displayName, displayCredential, shift.unit].filter(Boolean)
 
-  return (
-    <div className={cn('flex w-full items-center gap-3 px-4 py-3.5', isMatch && 'bg-[rgba(56,189,229,0.08)]')}>
+  const content = (
+    <>
       <div className="min-w-0 flex-1">
         <p className="truncate text-[14px] font-semibold text-ink">
           {formatShiftTimeRange(shift.starts_at, shift.ends_at)}
@@ -409,6 +424,24 @@ function TeamShiftRow({ shift, isMatch }) {
         <PeriodTag period={period} />
       </div>
       {isOpen && <ChevronRight size={15} strokeWidth={2} className="shrink-0 text-chevron-muted" aria-hidden="true" />}
+    </>
+  )
+
+  if (isOpen && onOpenShift) {
+    return (
+      <button
+        type="button"
+        onClick={() => onOpenShift(shift)}
+        className={cn('flex w-full items-center gap-3 px-4 py-3.5 text-left', isMatch && 'bg-[rgba(56,189,229,0.08)]')}
+      >
+        {content}
+      </button>
+    )
+  }
+
+  return (
+    <div className={cn('flex w-full items-center gap-3 px-4 py-3.5', isMatch && 'bg-[rgba(56,189,229,0.08)]')}>
+      {content}
     </div>
   )
 }
@@ -631,13 +664,13 @@ function MonthCalendarView({
   )
 }
 
-// Team-scope month-grid Calendar view per ScheduleCalendar.dc.html — same grid
+// Team-scope month-grid Calendar view per ScheduleCalendar.dc.html, same grid
 // as MonthCalendarView, but the day-detail rows span every nurse on the unit
 // (name + credential per row, "Open · tap to claim" for unassigned shifts)
-// instead of just the signed-in nurse's own shifts. Rows aren't clickable:
-// Team Schedule has never linked out to ShiftDetail or a claim flow — open
-// shifts are claimed from the Pool tab, same as the list view above.
-function TeamMonthCalendarView({ calendarMonth, onChangeMonth, shiftsByDay, selectedDateKey, onSelectDate, selectedDayItems }) {
+// instead of just the signed-in nurse's own shifts. Open-shift rows are
+// tappable and open the Shift Detail screen, where a nurse can claim; other
+// rows stay plain.
+function TeamMonthCalendarView({ calendarMonth, onChangeMonth, shiftsByDay, selectedDateKey, onSelectDate, selectedDayItems, onOpenShift }) {
   const selectedDate = new Date(`${selectedDateKey}T00:00:00`)
 
   return (
@@ -663,7 +696,7 @@ function TeamMonthCalendarView({ calendarMonth, onChangeMonth, shiftsByDay, sele
                 {item._kind === 'personal' ? (
                   <TeamCalendarDayPersonalEventRow event={item} />
                 ) : (
-                  <TeamCalendarDayShiftRow shift={item} />
+                  <TeamCalendarDayShiftRow shift={item} onOpenShift={onOpenShift} />
                 )}
                 {index < selectedDayItems.length - 1 && <ShiftListDivider inset={false} />}
               </li>
@@ -981,6 +1014,8 @@ function TeamScheduleTab({ user, onChangeView, contentView: contentViewProp }) {
     return d
   })
   const [selectedCalendarDateKey, setSelectedCalendarDateKey] = useState(() => formatLocalDateKey(new Date()))
+  const [selectedShift, setSelectedShift] = useState(null)
+  const [refreshKey, setRefreshKey] = useState(0)
 
   useEffect(() => {
     let cancelled = false
@@ -1014,7 +1049,7 @@ function TeamScheduleTab({ user, onChangeView, contentView: contentViewProp }) {
 
     fetchTeamShifts()
     return () => { cancelled = true }
-  }, [])
+  }, [refreshKey])
 
   useEffect(() => {
     let cancelled = false
@@ -1034,7 +1069,7 @@ function TeamScheduleTab({ user, onChangeView, contentView: contentViewProp }) {
 
     fetchTeamPersonalEvents()
     return () => { cancelled = true }
-  }, [])
+  }, [refreshKey])
 
   const shiftsByDay = groupByDayKey(shifts, (shift) => shift.starts_at)
   const personalEventsByDay = groupByDayKey(personalEvents, (event) => event.starts_at)
@@ -1049,6 +1084,19 @@ function TeamScheduleTab({ user, onChangeView, contentView: contentViewProp }) {
 
   if (loading) return <p className="text-sm text-[#6B7280]">Loading team schedule…</p>
   if (error) return <p className="text-sm text-red-700">Could not load team schedule: {error}</p>
+
+  if (selectedShift) {
+    return (
+      <ShiftDetail
+        shift={selectedShift}
+        user={user}
+        onBack={() => {
+          setSelectedShift(null)
+          setRefreshKey((current) => current + 1)
+        }}
+      />
+    )
+  }
 
   // Nested (nurse) case: the persistent header ScheduleTab already renders owns
   // the title, list/calendar toggle, and segmented control, so this is just the
@@ -1067,6 +1115,7 @@ function TeamScheduleTab({ user, onChangeView, contentView: contentViewProp }) {
           selectedDateKey={selectedCalendarDateKey}
           onSelectDate={setSelectedCalendarDateKey}
           selectedDayItems={selectedDayItems}
+          onOpenShift={setSelectedShift}
         />
       ) : (
       <ul className="flex flex-col gap-4">
@@ -1121,7 +1170,7 @@ function TeamScheduleTab({ user, onChangeView, contentView: contentViewProp }) {
                     {item._kind === 'personal' ? (
                       <TeamPersonalEventRow event={item} />
                     ) : (
-                      <TeamShiftRow shift={item} isMatch={match} />
+                      <TeamShiftRow shift={item} isMatch={match} onOpenShift={setSelectedShift} />
                     )}
                     {showNoteAfter && (
                       <TeamMatchNote unit={myShift.unit} startsAt={myShift.starts_at} endsAt={myShift.ends_at} />
