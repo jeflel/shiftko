@@ -572,6 +572,49 @@ kept in sync with this file's Status section.
 The only carried-over item is the Departments feature (still a disabled
 "Soon" row), which is a product gap, not a design-fidelity one.
 
+## Post-rollout fixes and additions (2026-09-12, after the first real-device pass)
+
+A real-device test pass by the user turned up one production bug and four
+follow-up requests. All shipped the same day, each as its own commit.
+
+- **Bug: Post a Shift showed `permission denied for table saved_shift_presets`.**
+  Root cause: the table's own migration (`20260830060246`) enabled RLS and
+  added an owner policy but never granted table privileges to the
+  `authenticated` role. RLS decides which ROWS a role may touch; the GRANT is
+  what lets the role touch the table at all, so every read/write failed
+  (SQLSTATE 42501). Fixed by
+  `supabase/migrations/20260912233000_grant_saved_shift_presets.sql`
+  (additive GRANT only), applied to production and verified with
+  `has_table_privilege('authenticated', ...)`. An audit of every public table
+  found this was the only real gap (`units`/`facilities` lack grants too, but
+  nothing in the app references them). Commit `cbb15bb`.
+- **Pool rows now open the shift detail** (`447364d`). Tapping a row's left
+  area (date + text) opens ShiftDetail; the inline Claim/Withdraw buttons stay
+  outside the tappable area so no button nests inside another. The detail's
+  Claim CTA now also covers offered-to-pool shifts (Pool already treated those
+  as claimable) and is now additionally blocked for your OWN shift and for
+  non-nurses. Known pre-existing quirk left alone: Pool's inline Claim button
+  still lets a nurse claim their own offered shift.
+- **Personal Events gained a Day/Evening/Night Shift Period picker**
+  (`f64e0c9`), net-new rather than a mockup match (the mockups have only the
+  Starts/Ends time fields). Picking a period fills the two time inputs with the
+  standard shift times; the picker derives its selected state from the times,
+  so hand-editing a time simply leaves no segment highlighted.
+- **Personal Events gained a detail screen** (`88f9b26`). Tapping an event now
+  opens a read-only detail (hero with a Personal tag, plus an "Also on <unit>"
+  coworker list) with Edit and Delete, instead of jumping straight into the
+  edit form. Required an optional `period` override on the shared `HeroCard`,
+  and made `getCoworkersOnShift` return credential + times (it previously
+  returned names only, so the list had no meta line to show).
+- **Personal events now appear on Home's upcoming list** (`9ceb816`), merged
+  with shifts and sorted by start time, on the nurse view only. That section's
+  heading changed from "Upcoming Shifts" to "Upcoming" since it is no longer
+  shifts only.
+- **Noted, not fixed**: `Schedule.jsx` and `PersonalEventPanel.jsx` contain
+  pre-existing em dashes in comments (20+ lines), which the project's
+  no-em-dash rule forbids. Left alone because they predate this work and
+  touching them would bloat unrelated diffs; worth its own cleanup commit.
+
 ## Decisions made / deviations worth knowing about
 
 - **Nurse Home built on `MainHorizontalTiles.dc.html`** (icon-left quick
