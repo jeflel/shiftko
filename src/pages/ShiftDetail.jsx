@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
-import { Repeat, Upload } from 'lucide-react'
+import { Repeat, SquarePlus, Upload } from 'lucide-react'
 import { supabase } from '../lib/supabase'
+import { createClaim, deleteClaim } from '../lib/claims'
 import { NavRow } from '@/components/ui/nav-row'
 import { HeroCard } from '@/components/ui/hero-card'
 import { Button } from '@/components/ui/button'
@@ -23,6 +24,10 @@ export default function ShiftDetail({ shift, user, onBack }) {
   const [credential, setCredential] = useState(null)
   const [shiftState, setShiftState] = useState(null)
   const [hasPendingClaim, setHasPendingClaim] = useState(false)
+  const [myClaim, setMyClaim] = useState(null)
+  const [claiming, setClaiming] = useState(false)
+  const [claimError, setClaimError] = useState(null)
+  const [claimed, setClaimed] = useState(null)
   const [showSwapFlow, setShowSwapFlow] = useState(false)
   const [showOfferConfirm, setShowOfferConfirm] = useState(false)
   const [showOfferStatus, setShowOfferStatus] = useState(false)
@@ -65,11 +70,22 @@ export default function ShiftDetail({ shift, user, onBack }) {
 
       if (cancelled) return
       setHasPendingClaim((claimsData ?? []).length > 0)
+
+      const { data: myClaimData } = await supabase
+        .from('shift_claims')
+        .select('id')
+        .eq('shift_id', shift.id)
+        .eq('nurse_id', user.id)
+        .eq('status', 'pending')
+        .maybeSingle()
+
+      if (cancelled) return
+      setMyClaim(myClaimData ?? null)
     }
 
     fetchShiftState()
     return () => { cancelled = true }
-  }, [shift.id])
+  }, [shift.id, user.id])
 
   const isPastShift = new Date(shift.ends_at).getTime() < Date.now()
 
@@ -90,6 +106,9 @@ export default function ShiftDetail({ shift, user, onBack }) {
   // person's shift are two different self-scheduling paths that shouldn't
   // run at once on the same shift.
   const canRequestSwap = isMine && !hasPendingClaim && !shiftState?.is_offered
+
+  const isOpen = shiftState?.status === 'open'
+  const canClaim = isOpen && !isPastShift && !myClaim && !claimed
 
   useEffect(() => {
     let cancelled = false
@@ -154,6 +173,46 @@ export default function ShiftDetail({ shift, user, onBack }) {
     }
   }, [shift, user.id])
 
+  async function handleClaim() {
+    setClaiming(true)
+    setClaimError(null)
+
+    const { claim, error: claimErr } = await createClaim({
+      shiftId: shift.id,
+      nurseId: user.id,
+    })
+
+    setClaiming(false)
+
+    if (claimErr || !claim) {
+      setClaimError('This shift is no longer available.')
+      setClaimed(null)
+      return
+    }
+
+    setClaimed(claim)
+  }
+
+  async function handleWithdraw() {
+    setClaiming(true)
+    setClaimError(null)
+
+    const { error: deleteError } = await deleteClaim({
+      shiftId: shift.id,
+      nurseId: user.id,
+    })
+
+    setClaiming(false)
+
+    if (deleteError) {
+      setClaimError(deleteError)
+      return
+    }
+
+    setClaimed(null)
+    setMyClaim(null)
+  }
+
   if (showSwapFlow) {
     return (
       <SwapFlow
@@ -202,7 +261,11 @@ export default function ShiftDetail({ shift, user, onBack }) {
       <NavRow onBack={onBack} />
 
       <main className="flex flex-1 flex-col gap-5 overflow-y-auto px-5 pt-3 pb-6">
-        <HeroCard shift={shift} credential={credential} />
+        <HeroCard
+          shift={shift}
+          credential={credential}
+          subline={isOpen ? `${shift.unit} · No nurse assigned yet` : undefined}
+        />
 
         <section className="flex flex-col gap-2.5">
           <h2 className="text-xs font-semibold tracking-[0.05em] text-ink-secondary uppercase">
@@ -245,6 +308,40 @@ export default function ShiftDetail({ shift, user, onBack }) {
       </main>
 
       <div className="flex shrink-0 flex-col gap-2.5 px-5 pt-2 pb-1">
+        {claimError && <p className="text-sm text-red-700">{claimError}</p>}
+
+        {canClaim && (
+          <Button
+            type="button"
+            variant="primary"
+            onClick={handleClaim}
+            disabled={claiming}
+            data-testid="shift-detail-claim"
+            className="h-[50px] w-full rounded-[16px]"
+          >
+            <SquarePlus size={17} strokeWidth={1.9} />
+            {claiming ? 'Requesting…' : 'Claim this shift'}
+          </Button>
+        )}
+
+        {(myClaim || claimed) && (
+          <>
+            <p className="text-center text-sm text-ink-secondary">
+              Requested · waiting for coordinator approval
+            </p>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={handleWithdraw}
+              disabled={claiming}
+              data-testid="shift-detail-withdraw"
+              className="h-[50px] w-full rounded-[16px]"
+            >
+              Withdraw
+            </Button>
+          </>
+        )}
+
         {canRequestSwap && (
           <Button
             type="button"

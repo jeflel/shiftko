@@ -7,7 +7,7 @@ import { formatShiftDate, formatShiftTimeRange, getShiftPeriod } from '@/lib/shi
 // Offer Shift flow needed the same shape a second place, per the rollout's
 // "duplicate once, extract on second use" pattern. `credential` is optional
 // (Claims' original use never passed one, showing unit alone).
-export function HeroCard({ shift, credential }) {
+export function HeroCard({ shift, credential, subline }) {
   return (
     <div className="flex flex-col gap-2 rounded-card border border-hairline bg-card-surface px-4 py-[18px] shadow-card-lift">
       <div className="flex items-center justify-between">
@@ -20,8 +20,12 @@ export function HeroCard({ shift, credential }) {
         {formatShiftTimeRange(shift.starts_at, shift.ends_at)}
       </div>
       <div className="text-[13px] text-ink-secondary">
-        {shift.unit}
-        {credential ? ` · ${credential}` : ''}
+        {subline ?? (
+          <>
+            {shift.unit}
+            {credential ? ` · ${credential}` : ''}
+          </>
+        )}
       </div>
     </div>
   )

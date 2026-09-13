@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { ListChecks } from 'lucide-react'
 import { supabase } from '../lib/supabase'
+import { createClaim, deleteClaim } from '../lib/claims'
 import { PeriodTag } from '@/components/ui/period-tag'
 import { Button } from '@/components/ui/button'
 import { SHIFT_LIST_CLASSNAME, ShiftListDivider } from '@/components/ui/shift-list'
@@ -141,27 +142,21 @@ export default function Pool({ user, onGoToSchedule }) {
       { id: tempId, shift_id: shift.id, nurse_id: user.id, status: 'pending' },
     ])
 
-    const { data, error: claimError } = await supabase
-      .from('shift_claims')
-      .insert({
-        shift_id: shift.id,
-        nurse_id: user.id,
-        status: 'pending',
-        claimed_at: new Date().toISOString(),
-      })
-      .select('id, shift_id, nurse_id, status')
-      .single()
+    const { claim, error: claimError } = await createClaim({
+      shiftId: shift.id,
+      nurseId: user.id,
+    })
 
     setClaimingId(null)
 
-    if (claimError || !data) {
+    if (claimError || !claim) {
       // Shift is no longer open (or some other race) - roll back and tell the nurse
       setClaims((current) => current.filter((c) => c.id !== tempId))
       setUnavailableId(shift.id)
       return
     }
 
-    setClaims((current) => current.map((c) => (c.id === tempId ? data : c)))
+    setClaims((current) => current.map((c) => (c.id === tempId ? claim : c)))
   }
 
   async function handleWithdraw(shift) {
@@ -173,11 +168,10 @@ export default function Pool({ user, onGoToSchedule }) {
     // Optimistic UI: remove the claim immediately
     setClaims((current) => current.filter((c) => c.id !== existingClaim.id))
 
-    const { error: deleteError } = await supabase
-      .from('shift_claims')
-      .delete()
-      .eq('nurse_id', user.id)
-      .eq('shift_id', shift.id)
+    const { error: deleteError } = await deleteClaim({
+      shiftId: shift.id,
+      nurseId: user.id,
+    })
 
     setWithdrawingId(null)
 
