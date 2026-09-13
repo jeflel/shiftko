@@ -7,6 +7,7 @@ import Schedule from './pages/Schedule'
 import Pool from './pages/Pool'
 import Profile from './pages/Profile'
 import PostShift from './pages/PostShift'
+import ShiftEdit from './pages/ShiftEdit'
 import CoordinatorApprovals from './pages/CoordinatorApprovals'
 import CoordinatorManage from './pages/CoordinatorManage'
 import StaffRoster from './pages/StaffRoster'
@@ -27,6 +28,7 @@ function App() {
   // Post a Shift has two entry points (Home's tile, and the Manage hub's own
   // CTA) that need different back targets - tracks which one was used.
   const [postShiftReturnTo, setPostShiftReturnTo] = useState('home')
+  const [editingShift, setEditingShift] = useState(null)
 
   useEffect(() => {
     let active = true
@@ -99,6 +101,16 @@ function App() {
     setActiveTab(postShiftReturnTo)
   }
 
+  function handleGoToEditShift(shift) {
+    setEditingShift(shift)
+    setActiveTab('shiftsedit')
+  }
+
+  function handleShiftEditBack() {
+    setEditingShift(null)
+    setActiveTab('manage')
+  }
+
   function handleGoToApprovals() {
     setActiveTab('approvals')
   }
@@ -165,6 +177,14 @@ function App() {
           <Schedule user={session.user} role={role} initialTab={scheduleInitialTab} />
         )}
         {activeTab === 'postshift' && <PostShift onBack={handlePostShiftBack} />}
+        {activeTab === 'shiftsedit' && editingShift && (
+          <ShiftEdit
+            shift={editingShift}
+            onBack={handleShiftEditBack}
+            onSaved={handleShiftEditBack}
+            onRemoved={handleShiftEditBack}
+          />
+        )}
         {activeTab === 'approvals' && <CoordinatorApprovals onBack={handleBackToHome} />}
         {activeTab === 'manage' && (
           <CoordinatorManage
@@ -172,6 +192,7 @@ function App() {
             onGoToPostShift={handleGoToPostShiftFromManage}
             onGoToStaff={handleGoToStaffRoster}
             onGoToDuplicateWeek={handleGoToDuplicateWeek}
+            onEditShift={handleGoToEditShift}
           />
         )}
         {activeTab === 'staffroster' && <StaffRoster onBack={handleBackToManage} />}
