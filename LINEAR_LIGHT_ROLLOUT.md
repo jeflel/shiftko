@@ -447,12 +447,39 @@ kept in sync with this file's Status section.
       mockup's exact HTML in the prompt instead, which is now the
       required method going forward (see the rollout doc's "Core
       method" section, point 2).
-- [ ] Notifications (dedicated page): scoped separately from Profile.
-  No live Notifications page exists at all currently, only a
-  notification dropdown/banner system inside `Home.jsx`. Needs its own
-  investigation into what that existing code already does before
-  deciding what a dedicated page adds, rather than assuming the mockup's
-  shape applies directly.
+- [x] **Notifications (dedicated page)** (`Notifications.jsx` new,
+  `Home.jsx`), 2026-09-12. The last flow. Until now there was no
+  Notifications page at all, only an inline bell dropdown in `Home.jsx`.
+  Built per the mockup: a pushed screen with an inline nav header (back +
+  "Notifications" + "Mark all read"), "New" (unread) and "Earlier" (read)
+  grouped lists, and the mockup's notif-icon variants (swap = teal tint,
+  success/muted = neutral square) mapped from the real notification types
+  (`swap_requested`/`swap_approved` -> swap, `claim_approved`/`offer_claimed`
+  -> success, `claim_denied`/`swap_denied` -> muted).
+  - **The bell dropdown is gone**: tapping the bell (and Home's "Request
+    Activity" View All) opens the full page, per the mockup. User's explicit
+    call over keeping both.
+  - **Auto-mark-read removed**: previously, merely opening the bell marked
+    every unread notification read. The mockup's "Mark all read" action is
+    now the only thing that does, otherwise the "New" section would always
+    be empty. User's explicit call.
+  - **Chevron only where it navigates**: only `offer_claimed` rows actually
+    go somewhere (they open `OfferShiftUpdate`); the mockup draws a chevron
+    on every row, but a chevron on a dead row is a false affordance, so
+    other rows get none. User's explicit call.
+  - "Mark all read" renders only when there are unread notifications (a
+    small deliberate deviation from the mockup, which always draws it).
+  - The page is presentational: `Home.jsx` still owns the notification
+    fetch, the mark-read write, and the `offer_claimed` navigation, and
+    renders the page as an early-return overlay (same pattern as
+    ShiftDetail). `NavRow` was NOT modified - the mockup's header needs a
+    trailing action it does not support, so this page builds its header
+    inline (`NavRow` is imported by 18 files).
+  - Coordinators get an empty list (notifications still are not wired for
+    coordinators - unchanged from before).
+  - Verified at the code level only: build clean, diff reviewed, graphify
+    updated. No live click-through (same browser/password limitation as the
+    other flows).
 - [x] **Shift Detail (Mine / Open / Edit)** (`ShiftDetail.jsx`,
   `hero-card.jsx`, `ShiftForm.jsx`, `ShiftEdit.jsx`, `CoordinatorManage.jsx`,
   `App.jsx`, `lib/claims.js`, `Pool.jsx`, `Schedule.jsx`), 2026-09-12. All
@@ -540,6 +567,10 @@ kept in sync with this file's Status section.
     done this pass: the browser tool refuses passwords and the vault save
     was declined, so the render check is still open (user chose to commit on
     the code-level verification).
+
+**Rollout complete**: all eight flows are now on the Linear Light system.
+The only carried-over item is the Departments feature (still a disabled
+"Soon" row), which is a product gap, not a design-fidelity one.
 
 ## Decisions made / deviations worth knowing about
 
@@ -657,6 +688,20 @@ kept in sync with this file's Status section.
   reversing the earlier "Team Schedule never links out to ShiftDetail or a
   claim flow" decision. Only rows with `status === 'open'` became buttons;
   every other row stays a plain div.
+- **The Notifications bell dropdown was replaced by a full pushed page**
+  (`7acaef1`), user's explicit call. Home's "Request Activity" View All
+  opens it too (it previously opened the dropdown).
+- **Opening Notifications no longer auto-marks everything read.** Before,
+  merely opening the bell marked all unread read, which would have left the
+  mockup's "New" section permanently empty. The mockup's explicit "Mark all
+  read" action is now the only thing that marks read (user's explicit call),
+  and it renders only when there is something unread.
+- **The notification row chevron only appears where the row navigates**
+  (`offer_claimed`), not on every row as the mockup draws it - a chevron on
+  a row that goes nowhere is a false affordance (user's explicit call).
+- **The Notifications page builds its own header rather than using
+  `NavRow`**, because the mockup's header needs a trailing "Mark all read"
+  action NavRow does not support, and NavRow is imported by 18 files.
 
 ## Open product decisions (carried over from `HANDOFF.md`, still relevant)
 
