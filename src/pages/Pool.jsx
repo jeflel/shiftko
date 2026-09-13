@@ -6,13 +6,14 @@ import { PeriodTag } from '@/components/ui/period-tag'
 import { Button } from '@/components/ui/button'
 import { SHIFT_LIST_CLASSNAME, ShiftListDivider } from '@/components/ui/shift-list'
 import ClaimStatusList from './ClaimStatusList'
+import ShiftDetail from './ShiftDetail'
 import { formatShiftTimeRange, getShiftPeriod } from '../lib/shiftFormat'
 
 const weekdayFormatter = new Intl.DateTimeFormat(undefined, { weekday: 'short' })
 
-function ShiftCard({ date, title, subtitle, pill, trailing }) {
-  return (
-    <div className="flex w-full items-center gap-3 px-4 py-3.5">
+function ShiftCard({ date, title, subtitle, pill, trailing, onOpen }) {
+  const leftGroup = (
+    <>
       <div className="flex w-8 shrink-0 flex-col items-center">
         <span className="text-[11px] font-medium tracking-[0.03em] text-[#85969B] uppercase">
           {weekdayFormatter.format(date)}
@@ -26,6 +27,22 @@ function ShiftCard({ date, title, subtitle, pill, trailing }) {
         <p className="truncate text-[13px] font-medium text-ink">{title}</p>
         {subtitle}
       </div>
+    </>
+  )
+
+  return (
+    <div className="flex w-full items-center gap-3 px-4 py-3.5">
+      {onOpen ? (
+        <button
+          type="button"
+          onClick={onOpen}
+          className="flex min-w-0 flex-1 items-center gap-3 text-left"
+        >
+          {leftGroup}
+        </button>
+      ) : (
+        <div className="flex min-w-0 flex-1 items-center gap-3">{leftGroup}</div>
+      )}
 
       {pill && <div className="shrink-0">{pill}</div>}
       {trailing && <div className="ml-1 shrink-0">{trailing}</div>}
@@ -43,6 +60,8 @@ export default function Pool({ user, onGoToSchedule }) {
   const [withdrawingId, setWithdrawingId] = useState(null)
   const [unavailableId, setUnavailableId] = useState(null)
   const [showClaimStatus, setShowClaimStatus] = useState(false)
+  const [selectedShift, setSelectedShift] = useState(null)
+  const [refreshKey, setRefreshKey] = useState(0)
 
   useEffect(() => {
     let cancelled = false
@@ -129,7 +148,7 @@ export default function Pool({ user, onGoToSchedule }) {
 
     fetchOpenShifts()
     return () => { cancelled = true }
-  }, [user.id])
+  }, [user.id, refreshKey])
 
   async function handleClaim(shift) {
     setUnavailableId(null)
@@ -179,6 +198,19 @@ export default function Pool({ user, onGoToSchedule }) {
       // Roll back - keep the claim shown
       setClaims((current) => [...current, existingClaim])
     }
+  }
+
+  if (selectedShift) {
+    return (
+      <ShiftDetail
+        shift={selectedShift}
+        user={user}
+        onBack={() => {
+          setSelectedShift(null)
+          setRefreshKey((current) => current + 1)
+        }}
+      />
+    )
   }
 
   if (showClaimStatus) {
@@ -240,6 +272,7 @@ export default function Pool({ user, onGoToSchedule }) {
                       date={new Date(shift.starts_at)}
                       title={formatShiftTimeRange(shift.starts_at, shift.ends_at)}
                       pill={<PeriodTag period={getShiftPeriod(shift.starts_at)} />}
+                      onOpen={() => setSelectedShift(shift)}
                       subtitle={
                         unavailableId === shift.id ? (
                           <p className="mt-0.5 truncate text-xs text-red-700">

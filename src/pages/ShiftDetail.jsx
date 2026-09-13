@@ -112,7 +112,8 @@ export default function ShiftDetail({ shift, user, onBack }) {
   const canRequestSwap = isMine && !hasPendingClaim && !shiftState?.is_offered
 
   const isOpen = shiftState?.status === 'open'
-  const canClaim = isOpen && !isPastShift && !myClaim && !claimed && role === 'nurse'
+  const isOffered = shiftState?.status === 'scheduled' && shiftState?.is_offered
+  const canClaim = (isOpen || isOffered) && !isMine && !isPastShift && !myClaim && !claimed && role === 'nurse'
 
   useEffect(() => {
     let cancelled = false
@@ -268,7 +269,7 @@ export default function ShiftDetail({ shift, user, onBack }) {
         <HeroCard
           shift={shift}
           credential={credential}
-          subline={isOpen ? `${shift.unit} · No nurse assigned yet` : undefined}
+          subline={isOpen ? `${shift.unit} · No nurse assigned yet` : isOffered ? `${shift.unit} · Offered by ${shift.profiles?.full_name ?? 'a nurse'}` : undefined}
         />
 
         <section className="flex flex-col gap-2.5">
