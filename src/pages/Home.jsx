@@ -670,6 +670,9 @@ export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoTo
 
   useEffect(() => {
     setThemeColor(heroCovered ? PAGE_GROUND_COLOR() : HERO_TOP_COLOR())
+    // If Home unmounts (sign out, session loss) the bar must not be left
+    // wearing the hero colour over a screen that has no hero.
+    return () => setThemeColor(PAGE_GROUND_COLOR())
   }, [heroCovered])
 
   if (selectedShift) {
