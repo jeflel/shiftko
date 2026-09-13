@@ -265,6 +265,7 @@ export default function Pool({ user, onGoToSchedule }) {
                 const claimCount = claims.filter((c) => c.shift_id === shift.id).length
                 const isClaiming = claimingId === shift.id
                 const isWithdrawing = withdrawingId === shift.id
+                const isPastShift = new Date(shift.ends_at).getTime() < Date.now()
 
                 return (
                   <li key={shift.id}>
@@ -312,7 +313,7 @@ export default function Pool({ user, onGoToSchedule }) {
                             type="button"
                             size="sm"
                             onClick={() => handleClaim(shift)}
-                            disabled={isClaiming}
+                            disabled={isClaiming || isPastShift}
                             data-testid="pool-claim-shift"
                           >
                             {isClaiming ? 'Requesting…' : 'Claim'}
