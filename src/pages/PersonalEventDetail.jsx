@@ -90,7 +90,7 @@ export default function PersonalEventDetail({ event, user, onBack, onEdit, onDel
 
                   <div className="flex min-w-0 flex-col gap-px">
                     <p className="truncate text-sm font-semibold tracking-[-0.01em] text-ink">
-                      {coworker.full_name}
+                      {coworker.full_name ?? 'A teammate'}
                     </p>
                     {meta && <p className="text-xs text-ink-secondary">{meta}</p>}
                   </div>

@@ -83,12 +83,11 @@ export async function getCoworkersOnShift({ unit, startsAt, endsAt, excludeNurse
 
   return (data ?? [])
     .map((row) => ({
-      full_name: row.profiles?.full_name,
+      full_name: row.profiles?.full_name ?? null,
       credential: row.profiles?.credential ?? null,
       starts_at: row.starts_at,
       ends_at: row.ends_at,
     }))
-    .filter((row) => row.full_name)
 }
 
 export async function deletePersonalEvent(id) {

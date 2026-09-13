@@ -163,7 +163,7 @@ export default function PersonalEventPanel({ userId, event, onClose, onSaved, on
   }
 
   const eventTimes = buildEventTimes(dateKey, parseTimeValue(startTime), parseTimeValue(endTime))
-  const coworkerNames = coworkers.map((c) => c.full_name).join(', ')
+  const coworkerNames = coworkers.map((c) => c.full_name ?? 'A teammate').join(', ')
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/30 sm:items-center" onClick={onClose}>
