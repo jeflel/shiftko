@@ -247,6 +247,11 @@ export default function ShiftForm({ mode = 'create', shift = null, onSaved, onRe
     }
   }
 
+  // The inputs below always show the effective times for the current
+  // shift_type (standard preset, saved preset, or custom) so the form never
+  // displays times different from what submit will save.
+  const effectiveTimes = resolveShiftTimes()
+
   return loading ? (
     <p className="text-sm text-ink-secondary">Loading…</p>
   ) : (
@@ -378,7 +383,7 @@ export default function ShiftForm({ mode = 'create', shift = null, onSaved, onRe
         <div className="flex items-center gap-2">
           <input
             type="time"
-            value={`${String(form.customStart.hours).padStart(2, '0')}:${String(form.customStart.minutes).padStart(2, '0')}`}
+            value={`${String(effectiveTimes.start.hours).padStart(2, '0')}:${String(effectiveTimes.start.minutes).padStart(2, '0')}`}
             onChange={(e) => {
               const [hours, minutes] = e.target.value.split(':').map(Number)
               setForm({ ...form, shift_type: 'custom', customStart: { hours, minutes } })
@@ -388,7 +393,7 @@ export default function ShiftForm({ mode = 'create', shift = null, onSaved, onRe
           <span className="text-sm text-[#6B7280]">to</span>
           <input
             type="time"
-            value={`${String(form.customEnd.hours).padStart(2, '0')}:${String(form.customEnd.minutes).padStart(2, '0')}`}
+            value={`${String(effectiveTimes.end.hours).padStart(2, '0')}:${String(effectiveTimes.end.minutes).padStart(2, '0')}`}
             onChange={(e) => {
               const [hours, minutes] = e.target.value.split(':').map(Number)
               setForm({ ...form, shift_type: 'custom', customEnd: { hours, minutes } })
