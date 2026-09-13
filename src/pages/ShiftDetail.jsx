@@ -1,16 +1,13 @@
 import { useEffect, useState } from 'react'
-import { ChevronLeft, Users } from 'lucide-react'
+import { Repeat, Upload } from 'lucide-react'
 import { supabase } from '../lib/supabase'
-import { ShiftPeriodPill } from '@/components/ui/pill'
+import { NavRow } from '@/components/ui/nav-row'
+import { HeroCard } from '@/components/ui/hero-card'
 import { Button } from '@/components/ui/button'
 import SwapFlow from './SwapFlow'
 import OfferShiftConfirm from './OfferShiftConfirm'
 import OfferShiftStatus from './OfferShiftStatus'
-import {
-  formatShiftDate,
-  formatShiftTimeRange,
-  getShiftPeriod,
-} from '../lib/shiftFormat'
+import { formatShiftTimeRange } from '../lib/shiftFormat'
 
 function getInitials(fullName) {
   if (!fullName) return '?'
@@ -29,8 +26,6 @@ export default function ShiftDetail({ shift, user, onBack }) {
   const [showSwapFlow, setShowSwapFlow] = useState(false)
   const [showOfferConfirm, setShowOfferConfirm] = useState(false)
   const [showOfferStatus, setShowOfferStatus] = useState(false)
-
-  const period = getShiftPeriod(shift.starts_at)
 
   useEffect(() => {
     let cancelled = false
@@ -203,125 +198,91 @@ export default function ShiftDetail({ shift, user, onBack }) {
   }
 
   return (
-    <div className="fixed inset-0 z-[100] overflow-y-auto bg-white">
-      <main className="mx-auto w-full max-w-md px-5 pt-8 pb-12">
-        <button
-          type="button"
-          onClick={onBack}
-          data-testid="shift-detail-back"
-          className="mb-6 inline-flex items-center gap-1 text-sm font-medium text-ink-secondary"
-        >
-          <ChevronLeft size={18} strokeWidth={2} />
-          Back
-        </button>
+    <div className="fixed inset-0 z-[100] mx-auto flex w-full max-w-md flex-col bg-page-ground">
+      <NavRow onBack={onBack} />
 
-        <div className="rounded-card border border-hairline bg-white p-5 shadow-card-lift">
-          <div className="flex items-start justify-between gap-3">
-            <p className="text-2xl font-bold text-ink">
-              {formatShiftTimeRange(shift.starts_at, shift.ends_at)}
-            </p>
-            <ShiftPeriodPill period={period} />
-          </div>
+      <main className="flex flex-1 flex-col gap-5 overflow-y-auto px-5 pt-3 pb-6">
+        <HeroCard shift={shift} credential={credential} />
 
-          <div className="mt-1 flex items-center gap-1.5">
-            <p className="text-xs text-ink-secondary">{shift.unit}</p>
-            {credential && (
-              <>
-                <span className="h-3 border-l border-hairline" />
-                <p className="text-xs text-ink-secondary">{credential}</p>
-              </>
-            )}
-          </div>
-
-          <p className="mt-3 text-sm text-ink-secondary">{formatShiftDate(shift.starts_at)}</p>
-        </div>
-
-        {canStartOffer && (
-          <div className="mt-6">
-            <Button
-              type="button"
-              onClick={() => setShowOfferConfirm(true)}
-              data-testid="shift-detail-offer-toggle"
-              className="h-auto w-full py-4 text-base"
-            >
-              Offer this shift
-            </Button>
-          </div>
-        )}
-
-        {canViewOfferStatus && (
-          <div className="mt-6">
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => setShowOfferStatus(true)}
-              data-testid="shift-detail-offer-toggle"
-              className="h-auto w-full py-4 text-base"
-            >
-              View offer status
-            </Button>
-          </div>
-        )}
-
-        {canRequestSwap && (
-          <div className="mt-3">
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => setShowSwapFlow(true)}
-              data-testid="shift-detail-swap-request"
-              className="h-auto w-full py-4 text-base"
-            >
-              Request a swap
-            </Button>
-          </div>
-        )}
-
-        <section className="mt-9">
-          <h2 className="mb-4 flex items-center gap-1.5 text-sm font-semibold text-ink">
-            <Users size={14} strokeWidth={2.5} />
+        <section className="flex flex-col gap-2.5">
+          <h2 className="text-xs font-semibold tracking-[0.05em] text-ink-secondary uppercase">
             Working with
           </h2>
 
-          {loading && <p className="text-sm text-ink-secondary">Loading coworkers…</p>}
+          {loading && <p className="text-xs text-ink-secondary">Loading coworkers…</p>}
 
           {!loading && error && (
-            <p className="text-sm text-red-700">Could not load coworkers: {error}</p>
+            <p className="text-xs text-red-700">Could not load coworkers: {error}</p>
           )}
 
           {!loading && !error && coworkers.length === 0 && (
-            <p className="text-sm text-ink-secondary">No coworkers on this shift</p>
+            <p className="text-xs text-ink-secondary">No coworkers on this shift</p>
           )}
 
-          {!loading && !error && coworkers.length > 0 && (
-            <ul className="flex flex-col">
-              {coworkers.map((coworker) => (
-                <li
-                  key={coworker.nurseId}
-                  className="flex items-center gap-3 border-b border-hairline py-3 last:border-b-0"
-                >
-                  <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-page-ground text-xs font-semibold text-ink-secondary">
+          {!loading &&
+            !error &&
+            coworkers.map((coworker) => {
+              const meta = [coworker.credential, formatShiftTimeRange(coworker.starts_at, coworker.ends_at)]
+                .filter(Boolean)
+                .join(' · ')
+
+              return (
+                <div key={coworker.nurseId} className="flex items-center gap-3">
+                  <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-press-state text-[13px] font-semibold text-ink-secondary">
                     {getInitials(coworker.full_name)}
                   </div>
 
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-ink">
+                  <div className="flex min-w-0 flex-col gap-px">
+                    <p className="truncate text-sm font-semibold tracking-[-0.01em] text-ink">
                       {coworker.full_name}
                     </p>
-                    {coworker.credential && (
-                      <p className="text-xs text-ink-secondary">{coworker.credential}</p>
-                    )}
+                    {meta && <p className="text-xs text-ink-secondary">{meta}</p>}
                   </div>
-
-                  <p className="shrink-0 text-xs text-ink-secondary">
-                    {formatShiftTimeRange(coworker.starts_at, coworker.ends_at)}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          )}
+                </div>
+              )
+            })}
         </section>
       </main>
+
+      <div className="flex shrink-0 flex-col gap-2.5 px-5 pt-2 pb-1">
+        {canRequestSwap && (
+          <Button
+            type="button"
+            variant="primary"
+            onClick={() => setShowSwapFlow(true)}
+            data-testid="shift-detail-swap-request"
+            className="h-[50px] w-full rounded-[16px]"
+          >
+            <Repeat size={17} strokeWidth={1.9} />
+            Request a swap
+          </Button>
+        )}
+
+        {canStartOffer && (
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => setShowOfferConfirm(true)}
+            data-testid="shift-detail-offer-toggle"
+            className="h-[50px] w-full rounded-[16px]"
+          >
+            <Upload size={17} strokeWidth={1.9} />
+            Offer this shift
+          </Button>
+        )}
+
+        {canViewOfferStatus && (
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => setShowOfferStatus(true)}
+            data-testid="shift-detail-offer-toggle"
+            className="h-[50px] w-full rounded-[16px]"
+          >
+            View offer status
+          </Button>
+        )}
+      </div>
     </div>
   )
 }

@@ -9,7 +9,7 @@ import { formatShiftDate, formatShiftTimeRange, getShiftPeriod } from '@/lib/shi
 // (Claims' original use never passed one, showing unit alone).
 export function HeroCard({ shift, credential }) {
   return (
-    <div className="flex flex-col gap-2 rounded-card border border-hairline bg-card-surface p-4 shadow-card-lift">
+    <div className="flex flex-col gap-2 rounded-card border border-hairline bg-card-surface px-4 py-[18px] shadow-card-lift">
       <div className="flex items-center justify-between">
         <span className="text-[13px] font-semibold text-ink-secondary">
           {formatShiftDate(shift.starts_at)}
