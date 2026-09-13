@@ -1,12 +1,12 @@
 import { cn } from '@/lib/utils'
 
 // Per DESIGN.md's Segmented Controls (shiftko-design-v2-visual-pass-dup):
-// track-neutral background, 11px radius, 3px inset padding, each segment 8px
-// radius. Active state is carried by white-fill contrast alone, no shadow.
+// #F2F2F7 track, 12px radius, 3px inset padding, each segment 9px radius.
+// Active state is white fill plus a soft 1px lift shadow.
 export function SegmentedControl({ options, value, onChange, ariaLabel, testidPrefix }) {
   return (
     <div
-      className="flex gap-1 rounded-[11px] bg-track-neutral p-[3px]"
+      className="flex gap-1 rounded-[12px] bg-press-state p-[3px]"
       role="tablist"
       aria-label={ariaLabel}
     >
@@ -22,8 +22,10 @@ export function SegmentedControl({ options, value, onChange, ariaLabel, testidPr
             aria-selected={isActive}
             onClick={() => onChange(option.id)}
             className={cn(
-              'flex-1 rounded-[8px] px-3 py-2 text-[13px] font-semibold whitespace-nowrap transition-colors duration-150 ease-out',
-              isActive ? 'bg-card-surface text-ink' : 'bg-transparent text-ink-secondary',
+              'flex-1 rounded-[9px] px-3 py-2 text-[13px] font-semibold whitespace-nowrap transition-colors duration-150 ease-out',
+              isActive
+                ? 'bg-card-surface text-ink shadow-[0_1px_2px_rgba(20,20,19,0.08)]'
+                : 'bg-transparent text-ink-secondary',
             )}
           >
             {option.label}
