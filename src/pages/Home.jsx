@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import {
   Calendar,
-  CalendarPlus,
   Clock,
   Users,
   AlertTriangle,
@@ -9,7 +8,6 @@ import {
   Bell,
   ChevronLeft,
   ChevronRight,
-  Waves,
   Hourglass,
   CheckSquare,
   SquarePlus,
@@ -26,6 +24,7 @@ import { PeriodTag } from '@/components/ui/period-tag'
 import { cn } from '@/lib/utils'
 import {
   formatLocalDateKey,
+  formatShiftDayShort,
   formatShiftTimeRange,
   getShiftPeriod,
   isSameLocalDay,
@@ -76,14 +75,22 @@ function notificationTitle(type) {
 // gradient hero, deep-teal time readout, colored period tag.
 function TodayHero({ todaysShift, credential }) {
   const period = todaysShift ? getShiftPeriod(todaysShift.starts_at) : null
+  const unitLine = todaysShift ? [todaysShift.unit, credential].filter(Boolean).join(' · ') : ''
 
   return (
-    <div className="-mt-9 flex flex-col gap-2.5 rounded-card border border-hairline bg-white p-4 shadow-card-lift">
+    <div className="-mt-9 flex flex-col gap-2.5 rounded-card bg-white p-4 shadow-card-lift">
       <div className="flex items-center justify-between">
         <span className="text-xs font-semibold tracking-[0.05em] text-ink-secondary uppercase">
           Today
         </span>
-        {period && <PeriodTag period={period} />}
+        <div className="flex items-center gap-[6px]">
+          {unitLine && (
+            <span className="inline-flex items-center rounded-[8px] bg-press-state px-2 py-[3px] text-[11px] font-semibold text-ink-secondary">
+              {unitLine}
+            </span>
+          )}
+          {period && <PeriodTag period={period} />}
+        </div>
       </div>
 
       {todaysShift ? (
@@ -91,7 +98,7 @@ function TodayHero({ todaysShift, credential }) {
           <p className="text-[25px] font-semibold tracking-[-0.02em] text-status-deep">
             {formatShiftTimeRange(todaysShift.starts_at, todaysShift.ends_at)}
           </p>
-          <ShiftProgress shift={todaysShift} unit={todaysShift.unit} credential={credential} />
+          <ShiftProgress shift={todaysShift} />
         </>
       ) : (
         <p className="text-[15px] text-ink-secondary">No shift today</p>
@@ -100,9 +107,9 @@ function TodayHero({ todaysShift, credential }) {
   )
 }
 
-// Per the mockup, the shift's unit/credential live in the progress row's
-// right-hand column (status-sub), not as their own line under the time.
-function ShiftProgress({ shift, unit, credential }) {
+// Per the design, the shift's unit/credential moved up into the hero's top
+// row; the progress row's right-hand column now shows the shift date.
+function ShiftProgress({ shift }) {
   const [now, setNow] = useState(() => Date.now())
 
   useEffect(() => {
@@ -116,7 +123,6 @@ function ShiftProgress({ shift, unit, credential }) {
   const elapsedMinutes = (clampedNow - start) / 60000
   const remainingMinutes = (end - clampedNow) / 60000
   const percent = Math.round((elapsedMinutes / ((end - start) / 60000)) * 100)
-  const unitLine = [unit, credential].filter(Boolean).join(' · ')
 
   return (
     <div className="mt-1 flex flex-col gap-1.5">
@@ -132,7 +138,9 @@ function ShiftProgress({ shift, unit, credential }) {
           <span className="font-semibold text-ink">{formatHM(elapsedMinutes)}</span> in ·{' '}
           {formatHM(remainingMinutes)} left
         </p>
-        {unitLine && <p className="shrink-0 text-[13px] text-ink-secondary">{unitLine}</p>}
+        <p className="shrink-0 text-[13px] text-ink-secondary">
+          {formatShiftDayShort(shift.starts_at)}
+        </p>
       </div>
     </div>
   )
@@ -143,7 +151,7 @@ function ShiftProgress({ shift, unit, credential }) {
 function SectionHeader({ title, onViewAll, children }) {
   return (
     <div className="flex items-center justify-between px-1">
-      <span className="text-[16px] font-semibold tracking-[-0.01em] text-ink">{title}</span>
+      <span className="text-[16px] font-semibold tracking-[-0.04em] text-[#3A4A4F]">{title}</span>
       {children ??
         (onViewAll && (
           <button
@@ -170,10 +178,16 @@ function QuickActionTiles({ openCount, onGoToPool, onAddPersonalEvent }) {
         type="button"
         onClick={onAddPersonalEvent}
         data-testid="home-add-shift-row"
-        className="flex flex-1 items-center gap-2 rounded-card border border-hairline bg-white px-3 py-2.5 text-left shadow-card-lift transition-colors active:bg-press-state"
+        className="flex flex-1 items-center gap-2 rounded-card bg-white px-3 py-2.5 text-left shadow-card-lift transition-colors active:bg-press-state"
       >
-        <span className="flex size-8 shrink-0 items-center justify-center rounded-control bg-teal-tint text-teal-foreground">
-          <CalendarPlus size={17} strokeWidth={1.9} />
+        <span className="flex size-8 shrink-0 items-center justify-center rounded-control bg-[linear-gradient(135deg,#5DC7E6_0%,#0AA2CF_100%)] text-white">
+          <svg viewBox="0 0 20 20" width="18" height="18" fill="currentColor" aria-hidden="true">
+            <path
+              fillRule="evenodd"
+              clipRule="evenodd"
+              d="M5.75 2a.75.75 0 01.75.75V4h7V2.75a.75.75 0 011.5 0V4h.25A2.75 2.75 0 0118 6.75v8.5A2.75 2.75 0 0115.25 18H4.75A2.75 2.75 0 012 15.25v-8.5A2.75 2.75 0 014.75 4H5V2.75A.75.75 0 015.75 2zm-1 5.5c-.69 0-1.25.56-1.25 1.25v6.5c0 .69.56 1.25 1.25 1.25h10.5c.69 0 1.25-.56 1.25-1.25v-6.5c0-.69-.56-1.25-1.25-1.25H4.75z"
+            />
+          </svg>
         </span>
         <span className="min-w-0 flex-1">
           <p className="truncate text-[13px] font-semibold text-ink">Add a Shift</p>
@@ -185,15 +199,21 @@ function QuickActionTiles({ openCount, onGoToPool, onAddPersonalEvent }) {
         type="button"
         onClick={onGoToPool}
         data-testid="home-claim-shifts-row"
-        className="relative flex flex-1 items-center gap-2 rounded-card border border-hairline bg-white px-3 py-2.5 text-left shadow-card-lift transition-colors active:bg-press-state"
+        className="relative flex flex-1 items-center gap-2 rounded-card bg-white px-3 py-2.5 text-left shadow-card-lift transition-colors active:bg-press-state"
       >
         {openCount > 0 && (
           <span className="absolute top-2.5 right-2.5 flex h-4 min-w-4 shrink-0 items-center justify-center rounded-control-sm bg-urgency-red px-1 text-[10px] font-semibold text-white">
             {openCount}
           </span>
         )}
-        <span className="flex size-8 shrink-0 items-center justify-center rounded-control bg-teal-tint text-teal-foreground">
-          <Waves size={17} strokeWidth={1.9} />
+        <span className="flex size-8 shrink-0 items-center justify-center rounded-control bg-[linear-gradient(135deg,#5DC7E6_0%,#0AA2CF_100%)] text-white">
+          <svg viewBox="0 0 20 20" width="18" height="18" fill="currentColor" aria-hidden="true">
+            <path
+              fillRule="evenodd"
+              clipRule="evenodd"
+              d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z"
+            />
+          </svg>
         </span>
         <span className="min-w-0 flex-1">
           <p className="truncate text-[13px] font-semibold text-ink">Claim Shifts</p>
@@ -216,10 +236,8 @@ function RequestActivity({ notification, onOpen }) {
       onClick={() => onOpen(notification)}
       data-testid="home-notification-row"
       className={cn(
-        'flex items-center gap-2 rounded-card border p-3 text-left shadow-card-lift transition-colors',
-        isNegative
-          ? 'border-hairline bg-white active:bg-press-state'
-          : 'border-teal bg-teal-tint active:bg-teal-tint/70',
+        'flex items-center gap-2 rounded-card border border-[#5dc7e6] p-3 text-left shadow-card-lift transition-colors',
+        isNegative ? 'bg-white active:bg-press-state' : 'bg-teal-tint active:bg-teal-tint/70',
       )}
     >
       <span className="flex size-8 shrink-0 items-center justify-center rounded-control bg-teal-tint text-teal-foreground">
@@ -347,7 +365,7 @@ function WeeklyProgress({ shifts, weekOffset, onChangeWeekOffset }) {
         </div>
       </SectionHeader>
 
-      <div className="flex flex-col gap-3.5 rounded-card border border-hairline bg-white p-4 shadow-card-lift">
+      <div className="flex flex-col gap-3.5 rounded-card bg-white p-4 shadow-card-lift">
         <div className="flex items-stretch">
           <div className="flex flex-1 flex-col gap-2">
             <span className="flex items-center gap-1.5 text-[12px] font-medium tracking-[-0.01em] text-ink-secondary">
@@ -677,11 +695,11 @@ export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoTo
     <div className="flex min-h-screen w-full flex-col bg-page-ground">
       <main className="mx-auto flex w-full max-w-md flex-1 flex-col pb-12">
         <div className="flex flex-1 flex-col">
-          <div className="flex flex-col gap-4 bg-gradient-to-b from-hero-gradient-start to-hero-gradient-end px-5 pt-4 pb-11">
+          <div className="flex flex-col gap-4 bg-gradient-to-b from-hero-gradient-start to-hero-gradient-end bg-[length:100%_223px] bg-top bg-no-repeat px-5 pt-4 pb-11">
             <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2">
               <span
                 aria-hidden={!initials}
-                className="flex size-9 shrink-0 items-center justify-center justify-self-start rounded-control border border-white/30 bg-white/20 text-xs font-semibold tracking-[0.02em] text-white"
+                className="home-glass-ring relative flex size-9 shrink-0 items-center justify-center justify-self-start rounded-control bg-white/20 text-xs font-semibold tracking-[0.02em] text-white"
               >
                 {initials}
               </span>
@@ -697,7 +715,7 @@ export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoTo
                 {isCoordinator ? (
                   <span
                     aria-hidden="true"
-                    className="flex size-9 items-center justify-center rounded-control border border-white/30 bg-white/20 text-white"
+                    className="home-glass-ring relative flex size-9 items-center justify-center rounded-control bg-white/20 text-white"
                   >
                     <Bell size={18} strokeWidth={1.75} />
                   </span>
@@ -707,7 +725,7 @@ export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoTo
                     onClick={() => setShowNotifications(true)}
                     aria-label="Notifications"
                     data-testid="home-bell-button"
-                    className="flex size-9 items-center justify-center rounded-control border border-white/30 bg-white/20 text-white"
+                    className="home-glass-ring relative flex size-9 items-center justify-center rounded-control bg-white/20 text-white"
                   >
                     <Bell size={18} strokeWidth={1.75} />
                   </button>
@@ -715,7 +733,7 @@ export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoTo
               </div>
             </div>
 
-            <p className="ml-1 text-lg font-medium tracking-[-0.01em] text-white">
+            <p className="ml-1 text-[20px] font-medium tracking-[-0.04em] text-white">
               {getGreeting()}{nurseFirstName ? `, ${nurseFirstName}` : ''}
             </p>
           </div>
@@ -752,7 +770,7 @@ export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoTo
                 {upcomingItems.length > 0 && (
                   <section className="flex flex-col gap-2.5">
                     <SectionHeader title="Upcoming" onViewAll={onGoToSchedule} />
-                    <div className="rounded-card border border-hairline bg-white shadow-card-lift">
+                    <div className="rounded-card bg-white shadow-card-lift">
                       {upcomingItems.map((entry, index) => (
                         <div key={entry.item.id}>
                           {index > 0 && <div className="ml-[73px] h-px bg-hairline" />}
