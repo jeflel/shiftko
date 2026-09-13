@@ -732,10 +732,25 @@ coordinator's own tiles (Approvals / Post Shift / Manage) were NOT restyled -
 they are not part of that artifact.
 
 **Follow-up (same day):** the Request Activity section now sits in its own
-light-gray frame: `rounded-[20px] bg-press-state p-3` (`#F2F2F7`, on the
-`#F9F9FB` page ground), a deliberately larger radius than the 16px cards. The
-inner activity tile keeps its white fill, teal border and shadow for now.
-Commit `7e208d0`.
+light-gray frame: `rounded-[20px] bg-track-neutral p-3` (`#EDEDF2` from the
+existing `track-neutral` token, on the `#F9F9FB` page ground), a deliberately
+larger radius than the 16px cards. Commits `7e208d0`, `b4a69a5`.
+
+The fill was chosen with the `impeccable` skill (`colorize` playbook: Home is
+an **Operate** surface, so color encodes status and hierarchy, and rarity gives
+accent force). The first attempt used `press-state #F2F2F7`, which separates
+from the page ground by only 1.061:1 - barely more than the 1.052:1 a white
+card gets there - so it read as a smudge rather than a group. That was a
+separation problem, not a hue problem. `track-neutral #EDEDF2` separates
+1.110:1, roughly twice a white card, while keeping the "View All" teal link at
+4.59:1 (AA).
+
+A brand-tinted frame was considered and rejected: the activity tile *inside*
+this frame already uses `bg-teal-tint` in its approved state, so a teal-tinted
+frame would swallow it, and spending the accent on a decorative region is
+exactly what the Operate guidance warns against. The `impeccable detect`
+pass was run but only reaches the unauthenticated landing page, so it says
+nothing about this frame.
 
 ## Decisions made / deviations worth knowing about
 
