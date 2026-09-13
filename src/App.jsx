@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from './lib/supabase'
+import { PAGE_GROUND_COLOR, setThemeColor } from './lib/themeColor'
 import Auth from './components/Auth'
 import BottomNav from './components/BottomNav'
 import Home from './pages/Home'
@@ -61,6 +62,12 @@ function App() {
       subscription.unsubscribe()
     }
   }, [])
+
+  useEffect(() => {
+    if (activeTab !== 'home') {
+      setThemeColor(PAGE_GROUND_COLOR())
+    }
+  }, [activeTab])
 
   async function fetchRole(userId) {
     const { data, error } = await supabase

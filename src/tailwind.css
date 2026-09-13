@@ -203,3 +203,27 @@ body {
   mask-composite: exclude;
   pointer-events: none;
 }
+
+/* The page now paints edge to edge under the status bar (viewport-fit=cover),
+   so html/body must carry the app's own surface colour: whatever shows through
+   there is what iOS Safari tints the toolbar with. */
+html,
+body {
+  background-color: var(--color-page-ground);
+}
+
+/* Tab content clears the status bar. Home opts out via .home-hero-bleed so its
+   gradient still reaches the very top edge. */
+.app-content {
+  padding-top: env(safe-area-inset-top);
+}
+
+/* Home only: pull the gradient up under the status bar, then pad its own
+   content back down, so the hero colour reaches the top edge. */
+.home-hero-bleed {
+  margin-top: calc(-1 * env(safe-area-inset-top));
+}
+
+.home-hero-bleed-top {
+  padding-top: calc(1rem + env(safe-area-inset-top));
+}

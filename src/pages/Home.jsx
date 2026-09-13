@@ -13,6 +13,7 @@ import {
   SquarePlus,
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
+import { HERO_TOP_COLOR, PAGE_GROUND_COLOR, setThemeColor } from '../lib/themeColor'
 import ShiftDetail from './ShiftDetail'
 import PersonalEventDetail from './PersonalEventDetail'
 import OfferShiftUpdate from './OfferShiftUpdate'
@@ -658,6 +659,19 @@ export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoTo
     await supabase.from('notifications').update({ read: true }).eq('id', notification.id)
   }
 
+  const heroCovered = Boolean(
+    selectedShift ||
+      selectedPersonalEvent ||
+      editingPersonalEvent ||
+      showAddPersonalEvent ||
+      showNotifications ||
+      offerUpdateShiftId,
+  )
+
+  useEffect(() => {
+    setThemeColor(heroCovered ? PAGE_GROUND_COLOR() : HERO_TOP_COLOR())
+  }, [heroCovered])
+
   if (selectedShift) {
     return (
       <ShiftDetail
@@ -729,8 +743,8 @@ export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoTo
   return (
     <div className="flex min-h-screen w-full flex-col bg-page-ground">
       <main className="mx-auto flex w-full max-w-md flex-1 flex-col pb-12">
-        <div className="flex flex-1 flex-col bg-gradient-to-b from-hero-gradient-start to-hero-gradient-end bg-[length:100%_223px] bg-top bg-no-repeat">
-          <div className="flex flex-col gap-4 px-5 pt-4 pb-11">
+        <div className="home-hero-bleed flex flex-1 flex-col bg-gradient-to-b from-hero-gradient-start to-hero-gradient-end bg-[length:100%_223px] bg-top bg-no-repeat">
+          <div className="home-hero-bleed-top flex flex-col gap-4 px-5 pb-11">
             <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2">
               <span
                 aria-hidden={!initials}
