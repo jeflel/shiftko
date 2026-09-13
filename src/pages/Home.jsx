@@ -7,7 +7,6 @@ import {
   AlertTriangle,
   CheckCircle2,
   Bell,
-  X,
   ChevronLeft,
   ChevronRight,
   Waves,
@@ -18,13 +17,13 @@ import {
 import { supabase } from '../lib/supabase'
 import ShiftDetail from './ShiftDetail'
 import OfferShiftUpdate from './OfferShiftUpdate'
+import Notifications from './Notifications'
 import PersonalEventPanel from '@/components/PersonalEventPanel'
 import { Wordmark } from '@/components/ui/wordmark'
 import { PeriodTag } from '@/components/ui/period-tag'
 import { cn } from '@/lib/utils'
 import {
   formatLocalDateKey,
-  formatRelativeTime,
   formatShiftTimeRange,
   getShiftPeriod,
   isSameLocalDay,
@@ -395,7 +394,7 @@ export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoTo
   const [error, setError] = useState(null)
   const [selectedShift, setSelectedShift] = useState(null)
   const [offerUpdateShiftId, setOfferUpdateShiftId] = useState(null)
-  const [bellOpen, setBellOpen] = useState(false)
+  const [showNotifications, setShowNotifications] = useState(false)
   const [showAddPersonalEvent, setShowAddPersonalEvent] = useState(false)
 
   const isCoordinator = role === 'coordinator'
@@ -527,14 +526,7 @@ export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoTo
     }
   }, [isCoordinator, homeUnit])
 
-  async function handleBellClick() {
-    if (bellOpen) {
-      setBellOpen(false)
-      return
-    }
-
-    setBellOpen(true)
-
+  async function handleMarkAllRead() {
     const unreadIds = notifications.filter((n) => !n.read).map((n) => n.id)
     if (unreadIds.length === 0) return
 
@@ -544,7 +536,7 @@ export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoTo
 
   async function handleOpenNotification(notification) {
     if (notification.type === 'offer_claimed' && notification.shift_id) {
-      setBellOpen(false)
+      setShowNotifications(false)
       setOfferUpdateShiftId(notification.shift_id)
     }
 
@@ -579,6 +571,17 @@ export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoTo
     )
   }
 
+  if (showNotifications) {
+    return (
+      <Notifications
+        notifications={notifications}
+        onBack={() => setShowNotifications(false)}
+        onMarkAllRead={handleMarkAllRead}
+        onOpenNotification={handleOpenNotification}
+      />
+    )
+  }
+
   const today = new Date()
   const nurseFirstName = fullName?.trim().split(' ')[0] ?? null
   const initials = getInitials(fullName)
@@ -587,71 +590,6 @@ export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoTo
     (shift) => isWithinNextSevenDays(shift.starts_at) && shift.id !== todaysShift?.id,
   )
   const latestNotification = notifications.find((n) => !n.read) ?? notifications[0] ?? null
-
-  const notificationDropdown = bellOpen && (
-    <>
-      <button
-        type="button"
-        aria-label="Close notifications"
-        onClick={() => setBellOpen(false)}
-        className="fixed inset-0 z-10 cursor-default"
-      />
-      <div className="absolute top-full right-0 z-20 mt-2 w-80 max-w-[80vw] rounded-card border border-hairline bg-white shadow-card-lift">
-        <div className="flex items-center justify-between border-b border-hairline p-4">
-          <p className="text-sm font-semibold text-ink">Notifications</p>
-          <button
-            type="button"
-            onClick={() => setBellOpen(false)}
-            aria-label="Close notifications"
-            className="text-ink-secondary"
-          >
-            <X size={16} strokeWidth={2} />
-          </button>
-        </div>
-
-        {notifications.length === 0 ? (
-          <p className="p-4 text-sm text-ink-secondary">No notifications yet</p>
-        ) : (
-          <ul className="flex max-h-80 flex-col overflow-y-auto">
-            {notifications.map((notification) => {
-              const isApproved =
-                notification.type === 'claim_approved' || notification.type === 'offer_claimed'
-
-              return (
-                <li key={notification.id} className="border-b border-hairline last:border-b-0">
-                  <button
-                    type="button"
-                    onClick={() => handleOpenNotification(notification)}
-                    className="flex w-full items-start gap-2 p-4 text-left"
-                  >
-                    {isApproved ? (
-                      <CheckCircle2
-                        className="mt-0.5 shrink-0 text-teal-foreground"
-                        size={16}
-                        strokeWidth={2}
-                      />
-                    ) : (
-                      <AlertTriangle
-                        className="mt-0.5 shrink-0 text-ink-secondary"
-                        size={16}
-                        strokeWidth={2}
-                      />
-                    )}
-                    <div className="min-w-0">
-                      <p className="text-sm text-ink">{notification.message}</p>
-                      <p className="mt-0.5 text-xs text-ink-secondary">
-                        {formatRelativeTime(notification.created_at)}
-                      </p>
-                    </div>
-                  </button>
-                </li>
-              )
-            })}
-          </ul>
-        )}
-      </div>
-    </>
-  )
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-page-ground">
@@ -682,19 +620,15 @@ export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoTo
                     <Bell size={18} strokeWidth={1.75} />
                   </span>
                 ) : (
-                  <>
-                    <button
-                      type="button"
-                      onClick={handleBellClick}
-                      aria-label="Notifications"
-                      data-testid="home-bell-button"
-                      className="flex size-9 items-center justify-center rounded-control border border-white/30 bg-white/20 text-white"
-                    >
-                      <Bell size={18} strokeWidth={1.75} />
-                    </button>
-
-                    {notificationDropdown}
-                  </>
+                  <button
+                    type="button"
+                    onClick={() => setShowNotifications(true)}
+                    aria-label="Notifications"
+                    data-testid="home-bell-button"
+                    className="flex size-9 items-center justify-center rounded-control border border-white/30 bg-white/20 text-white"
+                  >
+                    <Bell size={18} strokeWidth={1.75} />
+                  </button>
                 )}
               </div>
             </div>
@@ -728,7 +662,7 @@ export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoTo
 
                 {latestNotification && (
                   <section className="flex flex-col gap-2.5">
-                    <SectionHeader title="Request Activity" onViewAll={handleBellClick} />
+                    <SectionHeader title="Request Activity" onViewAll={() => setShowNotifications(true)} />
                     <RequestActivity notification={latestNotification} onOpen={handleOpenNotification} />
                   </section>
                 )}
