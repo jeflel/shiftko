@@ -673,6 +673,64 @@ exactly what was removed is saved outside the repo at
 empty and its "No open shifts right now" empty state is confirmed rendering,
 so post a few real future open shifts before beta starts.
 
+## Home design pass (2026-09-12, post-rollout)
+
+The nurse Home was reworked against a new design artifact
+(`8bf42c0b-2472-4de6-b517-05a8a40bdd99`, "MainCopy" family). The artifact itself
+needs Claude auth, but the design session that produced it is on disk at
+`~/.claude/projects/-Users-jeflelegson-shiftko-design-v2-visual-pass-dup/`,
+so every value here was read out of the real CSS, not approximated from prose.
+`~/shiftko-design-v2-visual-pass-dup/.artifact-live.html` is a symlink to the
+OLDER `17d938e1` artifact, not this one. Commits `47af6b1` and `30ecb96`.
+
+Ten changes, all measured on the live site after deploy:
+
+1. **Geist app-wide.** The app had no webfont at all (`--font-sans` was a
+   system stack, and `index.html` never linked Geist despite `CLAUDE.md`
+   claiming it). Now linked and prepended to `--font-sans`. Verified via
+   `document.fonts.check('600 20px Geist')` returning true, so it is not
+   silently falling back.
+2. **Hero gradient** `#0AA2CF` -> `#F9F9FB` (was `#5DC7E6` -> `#0AA2CF`),
+   223px tall, no-repeat, anchored top.
+3. **16px radius** on the Today hero, both quick tiles, the status tile, the
+   Upcoming list and the report card. All already resolved to 16px via
+   `rounded-card`, so no churn was needed.
+4. **Borders removed** from those cards; kept and forced to `1px solid #5DC7E6`
+   on the status tile in both states.
+5. **Unit pill.** "Unit 1 · CNA" moved out of the progress row into a neutral
+   pill (`11px/600`, `3px 8px`, `8px` radius, `#F2F2F7`, `#6E6E73`) to the left
+   of the period tag; the progress row's right column now shows the shift date.
+6. **Solid tile icons.** Replaced with Heroicons solid glyphs (20x20 viewBox,
+   `fill="currentColor"`): a calendar for Add a Shift, a magnifier for Claim
+   Shifts. Lucide is stroke-only, so these are inline paths.
+7. **Icon chips** on those two tiles only: `linear-gradient(135deg, #5DC7E6 0%,
+   #0AA2CF 100%)` with a white icon.
+8. **Section headers** `#002D3A` -> `#3A4A4F`, tracking `-0.04em`.
+9. **Greeting** 18px -> 20px, tracking `-0.04em`.
+10. **Bell and avatar** get a 1px diagonal 4-stop white ring via a masked
+    `::before` (rule `.home-glass-ring` in `src/tailwind.css`), keeping the flat
+    `bg-white/20` fill and the 9px radius untouched.
+
+**Bug found and fixed by measuring, not by reading the diff:** the 223px
+gradient was first painted on a 142px-tall wrapper, and backgrounds clip to
+their element box, so the fade truncated at ~64% and hard-cut to the page
+ground in the gutters beside the hero card. `30ecb96` moved it to the parent
+that actually spans the content (now 940px tall), so the full fade renders.
+
+**Known deviations from the artifact:**
+
+- Tailwind v4 interpolates gradients in `oklab`, the artifact used sRGB. The
+  stops and geometry are exact; only the mid-gradient blend differs slightly.
+- The date uses the existing `formatShiftDayShort`, which renders "Sun, Sep 13"
+  rather than the artifact's four-letter "Sun, Sept 16". No new formatter added.
+- The glass fill stays at the app's existing 20% white (the artifact's own
+  `.icon-btn` used 22%), kept flat per the instruction not to touch the fill.
+
+**Scope note:** the Home sheet is shared by the nurse and coordinator views, so
+the gradient, greeting, bell/ring and section-header changes apply to both. The
+coordinator's own tiles (Approvals / Post Shift / Manage) were NOT restyled -
+they are not part of that artifact.
+
 ## Decisions made / deviations worth knowing about
 
 - **Nurse Home built on `MainHorizontalTiles.dc.html`** (icon-left quick
