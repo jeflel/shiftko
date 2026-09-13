@@ -656,12 +656,22 @@ prefill, the two-step delete confirm, and the full claim round trip
    show "A teammate". This is why the teal "Also on Unit 1" card looked dead
    earlier: a missing name was indistinguishable from nobody working.
 
-**Still open** (decisions, not bugs): the coordinator profile has no
-`home_unit`, so Pool shows a coordinator the nurse-facing empty state; past open
-shifts are now unclaimable but still listed; Departments remains a "Soon" stub.
-Data hygiene matters before real nurses are onboarded: the staff list still
-contains junk accounts (`devildomo`, `DLLE SHOP`, `Test Nurse`, and the
-coordinator himself listed as a nurse).
+**Open decisions**: the coordinator profile has no `home_unit`, so Pool shows a
+coordinator the nurse-facing empty state; Departments remains a "Soon" stub.
+The coordinator also still appears in the Post a Shift nurse dropdown, because
+that list is not filtered to `role = 'nurse'` (harmless, but it lets a shift be
+assigned to the coordinator).
+
+**Data hygiene: done (2026-09-12).** The staff list was cleaned on the live
+database: 8 zero-activity junk profiles deleted (`Test Nurse`, three nameless
+signups, two of Jefle's own accounts, and two accounts that were most likely
+invited testers), plus all 20 stale past open shifts (July 14 to Aug 30, in
+units the app no longer even offers). Profiles went 52 to 44, every remaining
+profile has shifts, no orphans, no dangling auth users. A rollback record of
+exactly what was removed is saved outside the repo at
+`~/.shiftko-backups/cleanup-2026-09-12.json`. The Pool is now legitimately
+empty and its "No open shifts right now" empty state is confirmed rendering,
+so post a few real future open shifts before beta starts.
 
 ## Decisions made / deviations worth knowing about
 
