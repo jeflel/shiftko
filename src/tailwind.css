@@ -212,18 +212,9 @@ body {
   background-color: var(--color-page-ground);
 }
 
-/* Tab content clears the status bar. Home opts out via .home-hero-bleed so its
-   gradient still reaches the very top edge. */
+/* Every tab keeps its content clear of the status bar, so nothing starts under
+   the clock. The strip above it shows html/body, which is the one page ground
+   every screen shares. */
 .app-content {
   padding-top: env(safe-area-inset-top);
-}
-
-/* Home only: pull the gradient up under the status bar, then pad its own
-   content back down, so the hero colour reaches the top edge. */
-.home-hero-bleed {
-  margin-top: calc(-1 * env(safe-area-inset-top));
-}
-
-.home-hero-bleed-top {
-  padding-top: calc(1rem + env(safe-area-inset-top));
 }
