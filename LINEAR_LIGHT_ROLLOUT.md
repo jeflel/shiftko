@@ -731,6 +731,12 @@ the gradient, greeting, bell/ring and section-header changes apply to both. The
 coordinator's own tiles (Approvals / Post Shift / Manage) were NOT restyled -
 they are not part of that artifact.
 
+**Follow-up (same day):** the Request Activity section now sits in its own
+light-gray frame: `rounded-[20px] bg-press-state p-3` (`#F2F2F7`, on the
+`#F9F9FB` page ground), a deliberately larger radius than the 16px cards. The
+inner activity tile keeps its white fill, teal border and shadow for now.
+Commit `7e208d0`.
+
 ## Decisions made / deviations worth knowing about
 
 - **Nurse Home built on `MainHorizontalTiles.dc.html`** (icon-left quick
