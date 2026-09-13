@@ -65,8 +65,35 @@ function getWeekBounds(weekOffset) {
 function notificationTitle(type) {
   if (type === 'offer_claimed') return 'Offer picked up'
   if (type === 'claim_approved') return 'Claim approved'
-  if (type === 'claim_denied') return 'Claim update'
+  if (type === 'claim_denied') return 'Claim not approved'
+  if (type === 'swap_approved') return 'Swap approved'
   return 'Notification'
+}
+
+// Each notification is stored as one fixed sentence, e.g. "Your claim for
+// Unit 1 · Friday, July 24, 2026 · 7:00 AM – 7:00 PM was not approved. The
+// shift is open again." The outcome sits at the END of that sentence, so a
+// single truncated line used to show which shift it was about while hiding
+// what actually happened to it. The title now carries the outcome (from
+// `type`); this pulls out the context the notification is about.
+function notificationContext(message) {
+  if (!message) return null
+  const match =
+    message.match(/^Your claim for (.+?) was (?:not )?approved/) ||
+    message.match(/^Your swap with (.+?) was approved/)
+  return match ? match[1] : null
+}
+
+// "Unit 1 · Friday, July 24, 2026 · 7:00 AM – 7:00 PM" does not fit on one
+// line. The weekday is redundant at this size, so the date collapses to
+// "Fri, Jul 24" and the whole thing fits without clipping.
+function compactContext(context) {
+  const parts = context.split(' · ')
+  if (parts.length === 3) {
+    const parsed = new Date(parts[1].replace(/^[A-Za-z]+,\s*/, ''))
+    if (!Number.isNaN(parsed.getTime())) parts[1] = formatShiftDayShort(parsed)
+  }
+  return parts.join(' · ')
 }
 
 // Today hero card: the shift the nurse is on today, or "No shift today". Per
@@ -229,6 +256,8 @@ function QuickActionTiles({ openCount, onGoToPool, onAddPersonalEvent }) {
 function RequestActivity({ notification, onOpen }) {
   const isNegative = notification.type === 'claim_denied'
   const NotifIcon = isNegative ? AlertTriangle : CheckCircle2
+  const context = notificationContext(notification.message)
+  const detail = context ? compactContext(context) : notification.message
 
   return (
     <button
@@ -243,10 +272,16 @@ function RequestActivity({ notification, onOpen }) {
       <span className="flex size-8 shrink-0 items-center justify-center rounded-control bg-teal-tint text-teal-foreground">
         <NotifIcon size={17} strokeWidth={1.75} />
       </span>
-      <div className="min-w-0 flex-1">
-        <p className="text-[13px] font-semibold text-ink">{notificationTitle(notification.type)}</p>
-        <p className="truncate text-[11px] text-ink-secondary">{notification.message}</p>
+      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <p className="truncate text-[13px] font-semibold text-ink">{notificationTitle(notification.type)}</p>
+        <p className="truncate text-[11px] text-ink-secondary">{detail}</p>
       </div>
+      <ChevronRight
+        size={16}
+        strokeWidth={2}
+        aria-hidden="true"
+        className="shrink-0 text-chevron-muted"
+      />
     </button>
   )
 }
