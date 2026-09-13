@@ -834,6 +834,36 @@ the inset behaviour itself cannot be confirmed off-device.
 Caveat worth knowing: iOS honours the tint only when the user has Safari's
 "Show Color in Tab Bar" setting on, so it is not fully in our control.
 
+## Page titles aligned to the mockup spec (2026-09-12, same day)
+
+Schedule, Pool and Profile had drifted apart: Schedule was `22px/700/-0.01em`,
+Pool `26px/600` with no tracking, and Profile `26px/600` with a hardcoded
+`#111111` instead of the ink token. The rollout mockups carry a single
+`.page-title` declaration across five screens, so that is the target:
+
+```css
+.page-title { font-size: 26px; font-weight: 600; letter-spacing: -0.02em; color: #1D1D1F; }
+```
+
+`#1D1D1F` is exactly `--color-ink`, so the fix was four byte-identical class
+strings (`3ee4404`). Measured on the deployed build, all three headers report
+`26px / 600 / -0.52px / rgb(29,29,31)` and resolve to Geist, with
+`document.fonts.check('600 26px Geist')` true, so the 600 weight is a real
+face and not a synthesised one.
+
+Two things deliberately left alone:
+
+- The mockup's `.content` has no top padding; the title sits flush under a
+  `.safe-top { height: 54px }` spacer. Live has 12px (Schedule) and 26px
+  (Pool, Profile) of extra top space, and the measured box tops still differ
+  (38 / 26 / 33) because Schedule's title lives in a sticky header while
+  Profile's sits in a flex row beside the wordmark. That is a layout question,
+  not a title-style one.
+- The Pool mockup draws its title as `<span class="nav-title">Pool</span>`
+  (the 17px pushed-screen style) because it models Pool as a sub-screen. Pool
+  is a tabbar tab in the live app and the rule is page-title for tabbar
+  screens, so 26px stands.
+
 ## Decisions made / deviations worth knowing about
 
 - **Nurse Home built on `MainHorizontalTiles.dc.html`** (icon-left quick
