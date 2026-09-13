@@ -615,6 +615,54 @@ follow-up requests. All shipped the same day, each as its own commit.
   no-em-dash rule forbids. Left alone because they predate this work and
   touching them would bloat unrelated diffs; worth its own cleanup commit.
 
+## Signed-in verification pass (2026-09-12, second pass)
+
+The rollout had only ever been verified at code level. This pass actually
+signed in on the live production site and clicked through both roles.
+Credentials were typed by the user into masked vault prompts and filled
+server-side, so no password was ever handled by the agent or placed in the
+repo. Playwright was tried first and abandoned: its browser window opened on
+a macOS Space the user could not reach.
+
+**Coordinator pass**: login, Home (coverage, stats, gaps, tiles), Post a Shift
+(the form now loads with saved presets and no `permission denied`), Manage hub,
+Edit Shift (prefills times, nurse, unit and date correctly), Schedule 4-week
+view, Profile.
+
+**Nurse pass**: login, Home, Upcoming, the Notifications page, Pool, the shift
+detail opened from a Pool row (including the WORKING WITH coworker rows), the
+Day/Evening/Night period picker on Add Personal Event (Night to 23:00-07:30,
+Day to 07:00-15:30, Evening to 15:00-23:30, identical to Post a Shift's
+presets), personal events appearing in Home's Upcoming list, the personal event
+detail screen (hero plus "Also on <unit>" plus Edit/Delete), the Edit panel
+prefill, the two-step delete confirm, and the full claim round trip
+(Claim this shift, then Requested, then Withdraw).
+
+**Three real bugs found and fixed** (`03b6b10`, `534b8ef`, `c3daca2`):
+
+1. `ShiftForm` displayed stale times. The Shift Period cards set `shift_type`
+   only, while the visible time inputs rendered `form.customStart` /
+   `customEnd`, which never synced with it. Picking "Evening" saved 15:00-23:30
+   while the form still showed 07:00-15:00. The inputs now render
+   `resolveShiftTimes()`, so what is displayed always matches what submit
+   saves; editing a time still switches the selection to custom.
+2. `Pool` offered Claim on shifts already in the past (three July shifts had
+   enabled Claim buttons). Now guarded with the same
+   `isPastShift = ends_at < now` predicate ShiftDetail already used.
+3. `getCoworkersOnShift` ended with `.filter((row) => row.full_name)`, silently
+   dropping any coworker whose `profiles!nurse_id` join returned null, which
+   happens when the shift row is readable but the profile is not. The
+   "Also on <unit>" list and the Edit-mode match card now keep those rows and
+   show "A teammate". This is why the teal "Also on Unit 1" card looked dead
+   earlier: a missing name was indistinguishable from nobody working.
+
+**Still open** (decisions, not bugs): the coordinator profile has no
+`home_unit`, so Pool shows a coordinator the nurse-facing empty state; past open
+shifts are now unclaimable but still listed; Departments remains a "Soon" stub.
+Data hygiene matters before real nurses are onboarded: the staff list still
+contains junk accounts (`devildomo`, `DLLE SHOP`, `Test Nurse`, and the
+coordinator himself listed as a nurse).
+
 ## Decisions made / deviations worth knowing about
 
 - **Nurse Home built on `MainHorizontalTiles.dc.html`** (icon-left quick
