@@ -453,7 +453,55 @@ kept in sync with this file's Status section.
   investigation into what that existing code already does before
   deciding what a dedicated page adds, rather than assuming the mockup's
   shape applies directly.
-- [ ] Shift Detail (Mine / Open / Edit)
+- [x] **Shift Detail (Mine / Open / Edit)** (`ShiftDetail.jsx`,
+  `hero-card.jsx`, `ShiftForm.jsx`, `ShiftEdit.jsx`, `CoordinatorManage.jsx`,
+  `App.jsx`, `lib/claims.js`, `Pool.jsx`, `Schedule.jsx`), 2026-09-12. All
+  three mockup screens, built in four stages, each routed to DeepSeek
+  v4.1-flash and reviewed before commit:
+  - **Mine** (`9665e4a`): adopted the shared `NavRow` (bare back button, no
+    title) and `HeroCard`; dropped the `Users` icon and the row dividers from
+    "Working with"; coworker rows now carry one "credential · time" meta
+    line; actions moved to a bottom actions-bar in the mockup's order and
+    emphasis (Request a swap primary, Offer this shift secondary); page
+    ground switched to `bg-page-ground`. Also fixed `HeroCard`'s padding to
+    the mockup's `18px 16px` (was 16px all round), which converges Claims and
+    Offer Shift too.
+  - **Edit** (`23bd7d2`, `e2c273f`): the coordinator's inline edit form in
+    the Manage hub is gone, replaced by a pushed `ShiftEdit` screen per the
+    mockup. To avoid a second copy of the form, Post a Shift's form was
+    extracted into a shared `ShiftForm` (mode="create" | "edit"); `PostShift`
+    is now a thin shell. The hub's per-row delete icon was dropped (the
+    mockup draws edit only) since delete now lives in Edit Shift as "Remove
+    Shift". Two real bugs found in review and fixed: the edit path snapped
+    any non-preset shift's times to the nearest Day/Evening/Night preset on
+    save (silently rewriting its hours) - it now falls back to 'custom' when
+    the times don't match a preset exactly; and the Manage hub's Upcoming
+    Shifts query did not select `notes`, so an edit would have blanked a
+    shift's notes.
+  - **Open** (`443061c`, `7a62c17`): built the mockup's open-shift screen - a
+    "Claim this shift" primary CTA on ShiftDetail (hero subline "No nurse
+    assigned yet") plus a Requested/Withdraw state mirroring Pool's
+    established pattern. Pool's claim insert/delete were extracted into a
+    shared `src/lib/claims.js` (second use). ShiftDetail loads the viewer's
+    own pending claim to drive that state.
+  - **Entry point**: Team Schedule's "Open · tap to claim" rows (list and
+    calendar) are now tappable and open Shift Detail; previously they were
+    plain rows that never linked out. Claiming is gated on the viewer being a
+    nurse (`role === 'nurse'`), because Team Schedule also renders for
+    coordinators and an ungated CTA would let a coordinator create a claim.
+  - **Known deviation**: `ShiftEdit` deliberately reuses Post a Shift's live
+    form, so it inherits Post a Shift's own live deviations from its mockup
+    (inline `CalendarStrip` date picker, icon-tile shift presets,
+    saved-presets strip) rather than the mockup's single-row Date field and
+    Day/Evening/Night segmented control. Same form was the user's explicit
+    call (DRY over a duplicated form).
+  - Verified at the code level only: `npm run build` clean after every stage,
+    each stage's diff reviewed, `graphify` updated per commit. The live
+    signed-in click-through was NOT done (the browser tool refuses passwords
+    and the vault save was declined - same limitation as Personal Events).
+    Open items to check on a real device: the claim/withdraw round trip from
+    Team Schedule, the Edit Shift save/remove round trip as a coordinator,
+    and that a coordinator sees no claim CTA.
 - [x] **Personal Events (Add / Edit)** (`PersonalEventPanel.jsx`,
   `personalEvents.js`, `ui/segmented-control.jsx`), 2026-09-12. Token-fidelity
   pass plus two real feature additions, not a pure reskin. Built with
@@ -585,6 +633,30 @@ kept in sync with this file's Status section.
   every extracted token value and caught two deviations Claude missed, so
   token-fidelity and other mechanical flow work routes to OpenCode now.
   See the `shiftko-linear-light-rollout` skill's routing section.
+- **Shift Detail's Edit screen reuses Post a Shift's live form**
+  (`ShiftForm`, mode prop) rather than duplicating it. Consequence:
+  `ShiftEdit` inherits Post a Shift's own live deviations from its mockup
+  (inline `CalendarStrip` date picker, icon-tile shift presets,
+  saved-presets strip) instead of the mockup's single-row Date field and
+  Day/Evening/Night segmented control. User's explicit call (DRY over a
+  second copy of the form).
+- **The Manage hub's per-row delete icon was removed** (`e2c273f`). The
+  mockup draws edit only, and delete now lives in the pushed Edit Shift
+  screen as "Remove Shift", so no capability is lost. This supersedes the
+  earlier "kept both icons" call from the Coordinator Manage flow.
+- **Open-shift claiming is gated on `role === 'nurse'`.** Team Schedule
+  renders for coordinators too and its open rows are now tappable, so
+  without the gate a coordinator could create a shift claim (RLS only
+  requires `nurse_id = auth.uid()`, which a coordinator's own profile
+  satisfies).
+- **ShiftDetail's post-claim "Requested + Withdraw" state is not in any
+  mockup.** It mirrors Pool's established post-claim pattern rather than
+  inventing a new one, so a nurse claiming from the detail screen isn't
+  left at a dead end. Revisit if a mockup ever covers that state.
+- **Team Schedule's open-shift rows are now tappable** (`7a62c17`),
+  reversing the earlier "Team Schedule never links out to ShiftDetail or a
+  claim flow" decision. Only rows with `status === 'open'` became buttons;
+  every other row stays a plain div.
 
 ## Open product decisions (carried over from `HANDOFF.md`, still relevant)
 
