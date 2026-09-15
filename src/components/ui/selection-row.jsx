@@ -72,7 +72,7 @@ export function ShiftPickerRow({ shift, meta, selected, onClick }) {
 
       <div className="h-full min-h-9 w-px shrink-0 self-stretch bg-hairline" aria-hidden="true" />
 
-      <div className="min-w-0 flex-1">
+      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <p className="truncate text-[13px] font-medium text-ink">
           {formatShiftTimeRange(shift.starts_at, shift.ends_at)}
         </p>

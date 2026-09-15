@@ -63,7 +63,7 @@ export default function SwapPickShift({ coworker, selectedShift, onSelect, onCon
           <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-press-state text-xs font-semibold text-ink-secondary">
             {getInitials(coworker.full_name)}
           </span>
-          <div className="min-w-0 flex-1">
+          <div className="flex min-w-0 flex-1 flex-col gap-0.5">
             <div className="text-[11px] font-semibold tracking-[0.04em] text-ink-secondary uppercase">
               Swapping with
             </div>

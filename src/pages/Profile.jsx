@@ -229,7 +229,7 @@ export default function Profile({ user, onWorkspaceLeft }) {
       {/* Facility */}
       {profile && (
         <div className="mt-6">
-          <div className={SHIFT_LIST_CLASSNAME}>
+          <div className={`${SHIFT_LIST_CLASSNAME} py-1.5`}>
             <SettingsRow
               icon={<Building2 size={16} strokeWidth={1.75} className="text-ink-secondary" />}
               label="Facility"
@@ -244,7 +244,7 @@ export default function Profile({ user, onWorkspaceLeft }) {
       {profile && (
         <div className="mt-6">
           <p className="mb-2 px-1 text-xs font-medium tracking-wide text-ink-secondary uppercase">Account</p>
-          <div className={SHIFT_LIST_CLASSNAME}>
+          <div className={`${SHIFT_LIST_CLASSNAME} py-1.5`}>
             <SettingsRow label="Name" value={profile.full_name} />
             <SettingsRow label="Role" value={capitalize(profile.role)} />
             <SettingsRow label="Credential" value={profile.credential} />
@@ -339,7 +339,7 @@ export default function Profile({ user, onWorkspaceLeft }) {
       {/* Security */}
       <div className="mt-4">
         <p className="mb-2 px-1 text-xs font-medium tracking-wide text-ink-secondary uppercase">Security</p>
-        <div className={SHIFT_LIST_CLASSNAME}>
+        <div className={`${SHIFT_LIST_CLASSNAME} py-1.5`}>
           <button
             type="button"
             onClick={() => toggleAction('password')}
@@ -419,7 +419,7 @@ export default function Profile({ user, onWorkspaceLeft }) {
 
       {/* Delete account */}
       <div className="mt-4">
-        <div className={SHIFT_LIST_CLASSNAME}>
+        <div className={`${SHIFT_LIST_CLASSNAME} py-1.5`}>
           <button
             type="button"
             onClick={() => toggleAction('delete')}

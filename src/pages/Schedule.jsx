@@ -647,7 +647,7 @@ function MonthCalendarView({
             Day off
           </div>
         ) : (
-          <ul className={SHIFT_LIST_CLASSNAME}>
+          <ul className={`${SHIFT_LIST_CLASSNAME} py-1.5`}>
             {selectedDayShifts.map((item, index) => (
               <li key={item._kind === 'personal' ? `personal-${item.id}` : item.id}>
                 {item._kind === 'personal' ? (
@@ -691,7 +691,7 @@ function TeamMonthCalendarView({ calendarMonth, onChangeMonth, shiftsByDay, sele
             No shifts
           </div>
         ) : (
-          <ul className={SHIFT_LIST_CLASSNAME}>
+          <ul className={`${SHIFT_LIST_CLASSNAME} py-1.5`}>
             {selectedDayItems.map((item, index) => (
               <li key={item._kind === 'personal' ? `personal-${item.id}` : item.id}>
                 {item._kind === 'personal' ? (
@@ -958,7 +958,7 @@ function MyShiftsTab({ user, contentView }) {
                   <p className="text-[12px] font-semibold tracking-wide text-ink-secondary uppercase">
                     {getWeekGroupLabel(offset, days[0])}
                   </p>
-                  <ul className={SHIFT_LIST_CLASSNAME}>
+                  <ul className={`${SHIFT_LIST_CLASSNAME} py-1.5`}>
                     {rows.map((row, index) => (
                       <li key={row.key}>
                         {row.node}
@@ -1175,7 +1175,7 @@ function TeamScheduleTab({ user, onChangeView, contentView: contentViewProp }) {
               {dayHeaderLabel}
             </p>
 
-            <ul className={SHIFT_LIST_CLASSNAME}>
+            <ul className={`${SHIFT_LIST_CLASSNAME} py-1.5`}>
               {dayItems.map((item, index) => {
                 const isLast = index === dayItems.length - 1
                 const match = item._kind === 'shift' && isMatch(item)

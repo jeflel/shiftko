@@ -89,7 +89,7 @@ export default function CoordinatorManage({ onBack, onGoToPostShift, onGoToStaff
 
           {!upcomingLoading && upcomingShifts.length > 0 && (
             <>
-              <ul className={SHIFT_LIST_CLASSNAME}>
+              <ul className={`${SHIFT_LIST_CLASSNAME} py-1.5`}>
                 {visibleUpcoming.map((shift, index) => {
                   const date = new Date(shift.starts_at)
                   const period = getShiftPeriod(shift.starts_at)
@@ -106,7 +106,7 @@ export default function CoordinatorManage({ onBack, onGoToPostShift, onGoToStaff
 
                         <div className="h-full min-h-9 w-px shrink-0 self-stretch bg-hairline" aria-hidden="true" />
 
-                        <div className="min-w-0 flex-1">
+                        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                           <p className="truncate text-[14px] font-semibold text-ink">
                             {formatShiftTimeRange(shift.starts_at, shift.ends_at)}
                           </p>

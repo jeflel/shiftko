@@ -23,7 +23,7 @@ function ShiftCard({ date, title, subtitle, pill, trailing, onOpen }) {
 
       <div className="h-full min-h-9 w-px shrink-0 self-stretch bg-hairline" aria-hidden="true" />
 
-      <div className="min-w-0 flex-1">
+      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <p className="truncate text-[13px] font-medium text-ink">{title}</p>
         {subtitle}
       </div>
@@ -259,7 +259,7 @@ export default function Pool({ user, onGoToSchedule }) {
           {shifts.length === 0 ? (
             <p className="text-sm text-ink-secondary">No open shifts right now</p>
           ) : (
-            <ul className={SHIFT_LIST_CLASSNAME}>
+            <ul className={`${SHIFT_LIST_CLASSNAME} py-1.5`}>
               {shifts.map((shift, index) => {
                 const myClaim = claims.find((c) => c.shift_id === shift.id && c.nurse_id === user.id)
                 const claimCount = claims.filter((c) => c.shift_id === shift.id).length

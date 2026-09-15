@@ -55,7 +55,7 @@ export default function SwapPickCoworker({ user, shift, selectedCoworker, onSele
       <main className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-5 pt-2.5 pb-4">
         <div className="flex items-center gap-2.5 rounded-card border border-hairline bg-card-surface p-3.5 shadow-card-lift">
           <PeriodTag period={getShiftPeriod(shift.starts_at)} />
-          <div className="min-w-0 flex-1">
+          <div className="flex min-w-0 flex-1 flex-col gap-0.5">
             <div className="text-[11px] font-semibold tracking-[0.04em] text-ink-secondary uppercase">
               Your shift
             </div>
