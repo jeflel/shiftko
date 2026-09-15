@@ -260,7 +260,7 @@ function MyPersonalEventRow({ event, isPast, onClick }) {
       </div>
 
       <div className="shrink-0">
-        <PeriodTag period="Personal" />
+        <PeriodTag period={getShiftPeriod(event.starts_at)} />
       </div>
     </button>
   )
@@ -325,7 +325,7 @@ function CalendarDayPersonalEventRow({ event, onClick }) {
         {meta && <p className="truncate text-[12px] text-ink-secondary">{meta}</p>}
       </div>
       <div className="shrink-0">
-        <PeriodTag period="Personal" />
+        <PeriodTag period={getShiftPeriod(event.starts_at)} />
       </div>
     </button>
   )
@@ -392,7 +392,7 @@ function TeamCalendarDayPersonalEventRow({ event }) {
         {meta && <p className="truncate text-[12px] text-ink-secondary">{meta}</p>}
       </div>
       <div className="shrink-0">
-        <PeriodTag period="Personal" />
+        <PeriodTag period={getShiftPeriod(event.starts_at)} />
       </div>
     </div>
   )
@@ -462,7 +462,7 @@ function TeamPersonalEventRow({ event }) {
         {meta && <p className="truncate text-[12px] text-ink-secondary">{meta}</p>}
       </div>
       <div className="shrink-0">
-        <PeriodTag period="Personal" />
+        <PeriodTag period={getShiftPeriod(event.starts_at)} />
       </div>
     </div>
   )

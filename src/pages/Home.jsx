@@ -127,7 +127,6 @@ function TodayHero({ todaysShift, todaysEvent, credential }) {
             </span>
           )}
           {period && <PeriodTag period={period} />}
-          {isEvent && <PeriodTag period="Personal" />}
         </div>
       </div>
 
@@ -373,7 +372,7 @@ function UpcomingPersonalEventRow({ event, isFirst, isLast, onSelectEvent }) {
         <p className="truncate text-xs text-ink-secondary">{event.unit || event.name}</p>
       </div>
 
-      <PeriodTag period="Personal" />
+      <PeriodTag period={getShiftPeriod(event.starts_at)} />
     </button>
   )
 }

@@ -64,7 +64,7 @@ export default function PersonalEventDetail({ event, user, onBack, onEdit, onDel
       <NavRow onBack={onBack} />
 
       <main className="flex flex-1 flex-col gap-5 overflow-y-auto px-5 pt-3 pb-6">
-        <HeroCard shift={event} period="Personal" subline={event.unit || event.name || ''} />
+        <HeroCard shift={event} subline={event.unit || event.name || ''} />
 
         {showCoworkers && (
           <section className="flex flex-col gap-2.5">
