@@ -11,6 +11,8 @@ import {
   Hourglass,
   CheckSquare,
   SquarePlus,
+  CalendarDays,
+  Moon,
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import ShiftDetail from './ShiftDetail'
@@ -18,6 +20,7 @@ import PersonalEventDetail from './PersonalEventDetail'
 import OfferShiftUpdate from './OfferShiftUpdate'
 import Notifications from './Notifications'
 import PersonalEventPanel from '@/components/PersonalEventPanel'
+import { EmptyState } from '@/components/ui/empty-state'
 import { fetchMyPersonalEvents } from '@/lib/personalEvents'
 import { Wordmark } from '@/components/ui/wordmark'
 import { PeriodTag } from '@/components/ui/period-tag'
@@ -128,7 +131,12 @@ function TodayHero({ todaysShift, credential }) {
           <ShiftProgress shift={todaysShift} />
         </>
       ) : (
-        <p className="text-[15px] text-ink-secondary">No shift today</p>
+        <EmptyState
+          icon={Moon}
+          title="No shift today"
+          subline="Enjoy the day off"
+          size="inline"
+        />
       )}
     </div>
   )
@@ -802,9 +810,9 @@ export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoTo
                   </section>
                 )}
 
-                {upcomingItems.length > 0 && (
-                  <section className="flex flex-col gap-2.5">
-                    <SectionHeader title="Upcoming" onViewAll={onGoToSchedule} />
+                <section className="flex flex-col gap-2.5">
+                  <SectionHeader title="Upcoming" onViewAll={onGoToSchedule} />
+                  {upcomingItems.length > 0 ? (
                     <div className="rounded-card bg-white py-1.5 shadow-card-lift">
                       {upcomingItems.map((entry, index) => (
                         <div key={entry.item.id}>
@@ -827,8 +835,16 @@ export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoTo
                         </div>
                       ))}
                     </div>
-                  </section>
-                )}
+                  ) : (
+                    <div className="rounded-card bg-white shadow-card-lift">
+                      <EmptyState
+                        icon={CalendarDays}
+                        title="Nothing on the horizon"
+                        subline="Shifts you pick up will show here"
+                      />
+                    </div>
+                  )}
+                </section>
 
                 <WeeklyProgress
                   shifts={shifts}
