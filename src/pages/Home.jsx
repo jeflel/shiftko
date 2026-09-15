@@ -109,9 +109,9 @@ function TodayHero({ todaysShift, todaysEvent, credential }) {
   // A shift wins when both land on the same day.
   const item = todaysShift ?? todaysEvent
   const isEvent = !todaysShift && Boolean(todaysEvent)
-  const period = todaysShift ? getShiftPeriod(todaysShift.starts_at) : null
+  const period = item ? getShiftPeriod(item.starts_at) : null
   const titleLine = isEvent
-    ? todaysEvent.name || 'Personal event'
+    ? todaysEvent.unit || todaysEvent.name || ''
     : [todaysShift?.unit, credential].filter(Boolean).join(' · ')
 
   return (
