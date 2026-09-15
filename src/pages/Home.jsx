@@ -12,7 +12,7 @@ import {
   CheckSquare,
   SquarePlus,
   CalendarDays,
-  Moon,
+  MoonStar,
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import ShiftDetail from './ShiftDetail'
@@ -132,10 +132,11 @@ function TodayHero({ todaysShift, credential }) {
         </>
       ) : (
         <EmptyState
-          icon={Moon}
+          icon={MoonStar}
           title="No shift today"
           subline="Enjoy the day off"
-          size="inline"
+          layout="row"
+          tone="night"
         />
       )}
     </div>
@@ -841,6 +842,7 @@ export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoTo
                         icon={CalendarDays}
                         title="Nothing on the horizon"
                         subline="Shifts you pick up will show here"
+                        layout="row"
                       />
                     </div>
                   )}
