@@ -844,17 +844,28 @@ renders an icon in a soft tinted tile, reusing the quick-tile chip pattern
 language, plus a short title and an optional subline, in `section` and
 `inline` sizes.
 
-Applied so far to the nurse Home only (`26ef4b4`):
+Applied so far to the nurse Home only (`26ef4b4`, refined in `aeff41b`):
 
-- no shift today: a `Moon` tile, "No shift today" / "Enjoy the day off"
+- no shift today: a `MoonStar` tile, "No shift today" / "Enjoy the day off"
 - empty Upcoming list: a `CalendarDays` tile, "Nothing on the horizon" /
   "Shifts you pick up will show here". The section previously hid itself
   entirely when there were no items, so it now always renders.
 
-Verified live, signed in as a real nurse, on a day they genuinely had no
-shift: the today card reads "TODAY / No shift today / Enjoy the day off", the
-tile measures 40x40 at `rgba(56,189,229,0.15)`, the icon is an 18px SVG, the
-title is 14px/600 and the subline 13px.
+Both use `layout="row"`: icon beside left-aligned text with no vertical padding
+of its own, so it sits inside a card without ballooning it. The first version
+used the centred `stack` layout and made the today card 189px tall, which read
+as an empty card with a hole in it.
+
+The moon tile uses the night shift period tint (`period-night-bg` `#F5DFFA` on
+`period-night-fg` `#5132AE`) rather than the teal chip, since a moon in the
+same lavender as the night shift tag is the app's own vocabulary rather than a
+generic grey placeholder.
+
+Verified live, signed in as a real nurse, on a day they genuinely had no shift:
+the today card is 106px (was 189px), the tile is 36x36 at `rgb(245,223,250)`
+with a `rgb(81,50,174)` icon, the icon is a 17px SVG rendered from three paths
+(MoonStar's crescent plus star), the layout reports `flexDirection: row`, and
+the title is 15px/600.
 
 The empty Upcoming branch is not exercisable on the test account (it always
 has shifts in the next seven days), so that one is built and compiling but
