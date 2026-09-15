@@ -33,7 +33,7 @@ function ClaimRow({ claim, onClick }) {
         <p className="truncate text-[13px] font-medium text-ink">
           {formatShiftTimeRange(shift.starts_at, shift.ends_at)}
         </p>
-        <p className="mt-0.5 truncate text-xs text-ink-secondary">{shift.unit}</p>
+        <p className="truncate text-xs text-ink-secondary">{shift.unit}</p>
       </div>
 
       <ClaimStatusTag status={claim.status} label={claim.status === 'pending' ? 'Pending Approval' : undefined} />

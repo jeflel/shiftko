@@ -76,7 +76,7 @@ export function ShiftPickerRow({ shift, meta, selected, onClick }) {
         <p className="truncate text-[13px] font-medium text-ink">
           {formatShiftTimeRange(shift.starts_at, shift.ends_at)}
         </p>
-        {meta && <p className="mt-0.5 truncate text-xs text-ink-secondary">{meta}</p>}
+        {meta && <p className="truncate text-xs text-ink-secondary">{meta}</p>}
       </div>
 
       <PeriodTag period={getShiftPeriod(shift.starts_at)} />

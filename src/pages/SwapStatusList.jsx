@@ -44,7 +44,7 @@ function SwapRow({ swap, viewerId, onClick }) {
         <p className="truncate text-[13px] font-medium text-ink">
           {formatShiftTimeRange(myShift.starts_at, myShift.ends_at)}
         </p>
-        <p className="mt-0.5 truncate text-xs text-ink-secondary">with {otherParty?.full_name ?? 'a coworker'}</p>
+        <p className="truncate text-xs text-ink-secondary">with {otherParty?.full_name ?? 'a coworker'}</p>
       </div>
 
       <SwapStatusTag status={swap.status} />

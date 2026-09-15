@@ -276,11 +276,11 @@ export default function Pool({ user, onGoToSchedule }) {
                       onOpen={() => setSelectedShift(shift)}
                       subtitle={
                         unavailableId === shift.id ? (
-                          <p className="mt-0.5 truncate text-xs text-red-700">
+                          <p className="truncate text-xs text-red-700">
                             This shift is no longer available.
                           </p>
                         ) : (
-                          <p className="mt-0.5 truncate text-xs text-ink-secondary">
+                          <p className="truncate text-xs text-ink-secondary">
                             {shift.nurse_id
                               ? `Offered by ${shift.profiles?.full_name ?? 'a nurse'}`
                               : 'Open · unassigned'}
