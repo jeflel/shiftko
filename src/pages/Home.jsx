@@ -219,10 +219,10 @@ function QuickActionTiles({ openCount, onGoToPool, onAddPersonalEvent }) {
   return (
     <div className="-mt-1 flex gap-2">
       <button
-        type="button"
-        onClick={onAddPersonalEvent}
-        data-testid="home-add-shift-row"
-        className="flex flex-1 items-center gap-2 rounded-card bg-white px-3 py-2.5 text-left shadow-card-lift transition-colors active:bg-press-state"
+              type="button"
+              onClick={onAddPersonalEvent}
+              data-testid="home-quick-add-shift"
+              className="flex flex-1 items-center gap-2 rounded-card bg-white py-4 pr-3 pl-4 text-left shadow-card-lift transition-colors active:bg-press-state"
       >
         <span className="flex size-8 shrink-0 items-center justify-center rounded-control bg-[linear-gradient(135deg,#5DC7E6_0%,#0AA2CF_100%)] text-white">
           <svg viewBox="0 0 20 20" width="18" height="18" fill="currentColor" aria-hidden="true">
@@ -243,7 +243,7 @@ function QuickActionTiles({ openCount, onGoToPool, onAddPersonalEvent }) {
         type="button"
         onClick={onGoToPool}
         data-testid="home-claim-shifts-row"
-        className="relative flex flex-1 items-center gap-2 rounded-card bg-white px-3 py-2.5 text-left shadow-card-lift transition-colors active:bg-press-state"
+        className="relative flex flex-1 items-center gap-2 rounded-card bg-white py-4 pr-3 pl-4 text-left shadow-card-lift transition-colors active:bg-press-state"
       >
         {openCount > 0 && (
           <span className="absolute top-2.5 right-2.5 flex h-4 min-w-4 shrink-0 items-center justify-center rounded-control-sm bg-urgency-red px-1 text-[10px] font-semibold text-white">
