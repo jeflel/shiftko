@@ -875,6 +875,50 @@ Still on bare text, to move onto the component later: Schedule (My Shifts, Open
 shifts), Pool, Manage recent shifts, Approvals, the swap picker, Duplicate week
 and Staff roster.
 
+## A personal event fills the today card (2026-09-15)
+
+The today card only ever looked at `shifts`, so an event a nurse added never
+appeared there even when it was on today. For beta the intent is that nurses
+add their own shifts and events into the same workspace and see coworkers on
+them, so an event should read as a shift rather than as a separate class of
+thing.
+
+`TodayHero` now takes `todaysEvent` and renders whichever of the two lands on
+today (a shift wins), through the same skeleton: the header pill, the period
+tag, the 25px time range, and the progress row. `ShiftProgress` now takes a
+generic `item`, since it only ever reads `starts_at`/`ends_at`, which an event
+has.
+
+Two things were wrong in the first cut and are worth remembering:
+
+- The period was computed from `todaysShift` only, so an event showed no
+  Day/Evening/Night pill. It comes from whichever item is on today now.
+- The pill fell back to an invented `'Personal event'` string for a nameless
+  event, which then duplicated the `Personal` tag beside it. It uses the unit
+  instead, following the app's own `unit || name` convention.
+
+## Personal tags removed (2026-09-15)
+
+All seven `PeriodTag period="Personal"` instances are gone (`889e962`): Home's
+today card and its Upcoming event row, four Schedule event rows, and the
+personal event detail's hero. Each shows the item's real period now, so an
+event row is indistinguishable from a shift row except by its content.
+
+This is a deliberate beta decision and it is reversible: the distinction still
+exists in the data and in the edit panel, it just is not surfaced as a tag.
+
+## Quick tiles matched to the artifact (2026-09-15)
+
+The Add a Shift and Claim Shifts tiles were `px-3 py-2.5` (12px/10px) against
+the artifact's `padding: 16px 12px 16px 16px`. Matched (`98001b5`), measured
+after deploy at 16/12/16/16 and 200x68 each. The row gap (8px) already
+matched; the artifact's `.quick-row` also pulls up by -12px where the app uses
+-4px, unchanged and worth a look since the hero composition differs.
+
+Note: the artifact URL is behind Claude auth, so these values came from the
+design source on disk (the mockup plus the latest `.quick-tile` edit in the
+design session), both of which agree on 16/12/16/16.
+
 ## Row spacing applied to every shift list (2026-09-12, same day)
 
 The 2px info gap and the 6px card padding that Home's Upcoming card got were
