@@ -834,6 +834,36 @@ the inset behaviour itself cannot be confirmed off-device.
 Caveat worth knowing: iOS honours the tint only when the user has Safari's
 "Show Color in Tab Bar" setting on, so it is not fully in our control.
 
+## Empty states (started, Home only) (2026-09-15)
+
+Every empty state in the app was a single line of grey text, and the mockups
+carry no empty-state vocabulary to port from (only "Day off"), so this is new
+vocabulary rather than a fidelity task. `src/components/ui/empty-state.jsx`
+renders an icon in a soft tinted tile, reusing the quick-tile chip pattern
+(`bg-teal-tint` on `text-teal-foreground`) rather than inventing a new visual
+language, plus a short title and an optional subline, in `section` and
+`inline` sizes.
+
+Applied so far to the nurse Home only (`26ef4b4`):
+
+- no shift today: a `Moon` tile, "No shift today" / "Enjoy the day off"
+- empty Upcoming list: a `CalendarDays` tile, "Nothing on the horizon" /
+  "Shifts you pick up will show here". The section previously hid itself
+  entirely when there were no items, so it now always renders.
+
+Verified live, signed in as a real nurse, on a day they genuinely had no
+shift: the today card reads "TODAY / No shift today / Enjoy the day off", the
+tile measures 40x40 at `rgba(56,189,229,0.15)`, the icon is an 18px SVG, the
+title is 14px/600 and the subline 13px.
+
+The empty Upcoming branch is not exercisable on the test account (it always
+has shifts in the next seven days), so that one is built and compiling but
+unproven on a device.
+
+Still on bare text, to move onto the component later: Schedule (My Shifts, Open
+shifts), Pool, Manage recent shifts, Approvals, the swap picker, Duplicate week
+and Staff roster.
+
 ## Row spacing applied to every shift list (2026-09-12, same day)
 
 The 2px info gap and the 6px card padding that Home's Upcoming card got were
