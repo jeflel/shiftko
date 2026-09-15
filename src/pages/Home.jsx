@@ -103,9 +103,16 @@ function compactContext(context) {
 // DESIGN.md's Today Hero + Shift Progress spec (Main.dc.html), reskinned per
 // MainHorizontalTiles.dc.html (home-linear-light): pulled up over the
 // gradient hero, deep-teal time readout, colored period tag.
-function TodayHero({ todaysShift, credential }) {
+function TodayHero({ todaysShift, todaysEvent, credential }) {
+  // A personal event fills the same card as a shift, so a nurse adding their
+  // own events for beta gets the same layout rather than a second-class row.
+  // A shift wins when both land on the same day.
+  const item = todaysShift ?? todaysEvent
+  const isEvent = !todaysShift && Boolean(todaysEvent)
   const period = todaysShift ? getShiftPeriod(todaysShift.starts_at) : null
-  const unitLine = todaysShift ? [todaysShift.unit, credential].filter(Boolean).join(' · ') : ''
+  const titleLine = isEvent
+    ? todaysEvent.name || 'Personal event'
+    : [todaysShift?.unit, credential].filter(Boolean).join(' · ')
 
   return (
     <div className="-mt-9 flex flex-col gap-2.5 rounded-card bg-white p-4 shadow-card-lift">
@@ -113,22 +120,23 @@ function TodayHero({ todaysShift, credential }) {
         <span className="text-xs font-semibold tracking-[0.05em] text-ink-secondary uppercase">
           Today
         </span>
-        <div className="flex items-center gap-[6px]">
-          {unitLine && (
-            <span className="inline-flex items-center rounded-[8px] bg-press-state px-2 py-[3px] text-[11px] font-semibold text-ink-secondary">
-              {unitLine}
+        <div className="flex min-w-0 items-center gap-[6px]">
+          {titleLine && (
+            <span className="inline-flex max-w-[180px] items-center truncate rounded-[8px] bg-press-state px-2 py-[3px] text-[11px] font-semibold text-ink-secondary">
+              {titleLine}
             </span>
           )}
           {period && <PeriodTag period={period} />}
+          {isEvent && <PeriodTag period="Personal" />}
         </div>
       </div>
 
-      {todaysShift ? (
+      {item ? (
         <>
           <p className="text-[25px] font-semibold tracking-[-0.02em] text-status-deep">
-            {formatShiftTimeRange(todaysShift.starts_at, todaysShift.ends_at)}
+            {formatShiftTimeRange(item.starts_at, item.ends_at)}
           </p>
-          <ShiftProgress shift={todaysShift} />
+          <ShiftProgress item={item} />
         </>
       ) : (
         <EmptyState
@@ -145,7 +153,7 @@ function TodayHero({ todaysShift, credential }) {
 
 // Per the design, the shift's unit/credential moved up into the hero's top
 // row; the progress row's right-hand column now shows the shift date.
-function ShiftProgress({ shift }) {
+function ShiftProgress({ item }) {
   const [now, setNow] = useState(() => Date.now())
 
   useEffect(() => {
@@ -153,8 +161,8 @@ function ShiftProgress({ shift }) {
     return () => clearInterval(tick)
   }, [])
 
-  const start = new Date(shift.starts_at).getTime()
-  const end = new Date(shift.ends_at).getTime()
+  const start = new Date(item.starts_at).getTime()
+  const end = new Date(item.ends_at).getTime()
   const clampedNow = Math.min(end, Math.max(start, now))
   const elapsedMinutes = (clampedNow - start) / 60000
   const remainingMinutes = (end - clampedNow) / 60000
@@ -175,7 +183,7 @@ function ShiftProgress({ shift }) {
           {formatHM(remainingMinutes)} left
         </p>
         <p className="shrink-0 text-[13px] text-ink-secondary">
-          {formatShiftDayShort(shift.starts_at)}
+          {formatShiftDayShort(item.starts_at)}
         </p>
       </div>
     </div>
@@ -723,6 +731,10 @@ export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoTo
   const nurseFirstName = fullName?.trim().split(' ')[0] ?? null
   const initials = getInitials(fullName)
   const todaysShift = shifts.find((shift) => isSameLocalDay(new Date(shift.starts_at), today))
+  const todaysEvent =
+    personalEvents
+      .filter((event) => isSameLocalDay(new Date(event.starts_at), today))
+      .sort((a, b) => new Date(a.starts_at) - new Date(b.starts_at))[0] ?? null
   const upcomingShifts = shifts.filter(
     (shift) => isWithinNextSevenDays(shift.starts_at) && shift.id !== todaysShift?.id,
   )
@@ -796,7 +808,7 @@ export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoTo
 
             {!loading && !error && !isCoordinator && (
               <>
-                <TodayHero todaysShift={todaysShift} credential={credential} />
+                <TodayHero todaysShift={todaysShift} todaysEvent={todaysEvent} credential={credential} />
 
                 <QuickActionTiles
                   openCount={openCount}
