@@ -834,6 +834,30 @@ the inset behaviour itself cannot be confirmed off-device.
 Caveat worth knowing: iOS honours the tint only when the user has Safari's
 "Show Color in Tab Bar" setting on, so it is not fully in our control.
 
+## Row spacing applied to every shift list (2026-09-12, same day)
+
+The 2px info gap and the 6px card padding that Home's Upcoming card got were
+then applied to the rest of the shift lists (`6be4b7e`, `2aa2b9c`):
+
+- `py-1.5` (6px) on 12 list containers: Claim Status, Schedule (four),
+  Coordinator Manage, Swap Status, Pool, and Profile (four). Applied per usage
+  rather than inside `SHIFT_LIST_CLASSNAME`, so Profile's Workspace card, which
+  reuses the class but carries its own `p-4`, keeps its padding.
+- The 2px `.shift-info` gap added to the remaining shift-info blocks: Pool,
+  Claim Status, Swap Status, Coordinator Manage, the two swap pickers, and
+  `ui/selection-row`.
+- Five hand-rolled `mt-0.5` (2px) margins on the second line, written before
+  the gap existed, were removed so the total stays 2px rather than 4px.
+
+Measured after deploy: Schedule's 10 list containers and the Claim Status
+container all report `padTop=6px padBottom=6px` with an info gap of exactly
+2.0px.
+
+Deliberately untouched, because the mockup specs them differently: person rows
+use `.coworker-body { gap: 1px }` (a separate family), and the quick tiles and
+Manage nav rows have no gap in the mockup at all, which is why they already
+look right.
+
 ## Upcoming card got breathing room top and bottom (2026-09-12, same day)
 
 The Upcoming list card had no padding of its own, so its content sat flush
