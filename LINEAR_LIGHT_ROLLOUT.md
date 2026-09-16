@@ -926,6 +926,33 @@ does. Comparing its rect to a header's rect is only meaningful at scrollTop 0
 - otherwise the gap reads as a huge negative number. Reset the scrollable
 ancestor (`.app-content`) first.
 
+## Schedule week dividers (2026-09-15)
+
+The 4-week list's week headers were relative labels ("This Week", "Next Week",
+"Week of August 16"). They now follow the design's section divider: month
+abbreviation then week-of-month, so `AUG WEEK 4` and `SEP WEEK 1`
+(`Schedule.jsx`, `getWeekGroupLabel`). Week-of-month is `ceil(day / 7)` —
+Aug 24 -> 4, Sep 1 -> 1 — which reproduces the design's pair exactly.
+
+The label is now left-aligned with a single hairline running from it out to the
+right edge of the list, replacing the design's two-sided centred bars:
+
+```jsx
+<div className="flex items-center gap-2.5">
+  <p className="text-[12px] font-medium tracking-wide text-ink-secondary uppercase">…</p>
+  <div className="h-px flex-1 bg-hairline" aria-hidden="true" />
+</div>
+```
+
+Weight came down from `font-semibold` to `font-medium` to match the design's
+regular-to-medium weight. Colours stay on the app's tokens rather than the
+mockup's iOS grays (label `#6E6E73` vs `#8E8E93`; rule `#E5E5EA` vs `#D1D1D6`).
+
+Measured live: label `12px / 500 / 0.3px / uppercase / rgb(110,110,115)`; rule
+`1px x 325px` in `rgb(229,229,234)`, 10px after the text, vertically centred
+with it, and its right edge lands at 844px — exactly the shift card's right
+edge — with the label and the card sharing a 436px left edge.
+
 ## A personal event fills the today card (2026-09-15)
 
 The today card only ever looked at `shifts`, so an event a nurse added never
