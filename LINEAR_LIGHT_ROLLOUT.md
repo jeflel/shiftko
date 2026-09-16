@@ -1250,6 +1250,37 @@ Note: the artifact URL is behind Claude auth, so these values came from the
 design source on disk (the mockup plus the latest `.quick-tile` edit in the
 design session), both of which agree on 16/12/16/16.
 
+## UI fix batch (2026-09-15)
+
+Five fixes Jefle dumped in one session, each its own commit, each verified on the
+deployed build while signed in as the nurse test account (geometry read with
+`getBoundingClientRect`, not a screenshot glance):
+
+1. Home's top bar only pinned for about an inch. Its containing block was the
+   greeting block (154px tall) and a sticky element cannot travel past its
+   containing block. The bar is now a direct child of the hero wrapper, which
+   spans the page, with `px-5 pt-2` moved up to that wrapper and `pt-4` down to
+   the greeting so nothing lands a pixel off (`7f838cd`). After: bar top stays 0
+   through the whole scroll, greeting gap still 16px.
+2. Schedule's week header read `AUG WEEK 4`, which does not say which dates the
+   week covers. It is now `SEP 7 - 13`, and `AUG 31 - SEP 6` when the week
+   crosses a month (`9351d9d`).
+3. Fraunces is back for the four page titles. The v2 reskin had dropped the
+   webfont from `index.html` entirely, so the link is restored from that commit
+   plus a `--font-display-title` token (`0bd5920`). Checked on live with
+   `document.fonts.check`, which catches a silent fallback to Geist.
+4. The top bar reads left to right now: wordmark + Beta at the left edge, then
+   the bell, then the avatar flush right, and tapping the avatar opens Profile,
+   which was previously dead because no page passed `onOpenProfile` (`89cb35b`).
+5. The My Shifts week label pins directly under the Schedule header while you
+   scroll and hands over week by week (`28c1805`). Its `top` is measured from the
+   pinned stack (56px bar plus the 130px header), never hardcoded: live it
+   resolves to `185.5px`, sits at `z-index 5` under the header's `10`, and is
+   opaque, so rows pass behind it cleanly.
+
+Per-fix specs, file lists and measured evidence: the vault's
+`03 Projects/Shiftko/00 Plan/(C) Shiftko Agent Queue.md`.
+
 ## Row spacing applied to every shift list (2026-09-12, same day)
 
 The 2px info gap and the 6px card padding that Home's Upcoming card got were
