@@ -84,7 +84,7 @@ export function TopBar({ user, initials: initialsProp, onOpenProfile }) {
   }
 
   return (
-    <div className="sticky top-0 z-30 -mx-5 bg-[#0AA2CF] px-5 py-2.5">
+    <div data-testid="app-top-bar" className="sticky top-0 z-30 -mx-5 bg-[#0AA2CF] px-5 py-2.5">
       <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2">
         <button
           type="button"

@@ -91,10 +91,14 @@ function ScheduleTab({ user }) {
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Title header. Deliberately NOT sticky: the shared TopBar pins above
-          it at z-30, so a second sticky here just slid the title underneath the
-          bar. pt-4 is the same 16px gap every other tab page uses under the bar. */}
-      <div className="-mx-5 flex flex-col gap-4 border-b border-hairline bg-page-ground px-5 pt-4 pb-4">
+      {/* Sticky header stack. The shared TopBar pins at top-0 z-30 and is 56px
+          tall, so this pins at top-14 z-10 directly under it, leaving the list
+          body as the only thing that scrolls. Its own opaque bg-page-ground is
+          load-bearing: without it, rows scrolling underneath show through. */}
+      <div
+        data-testid="schedule-sticky-header"
+        className="sticky top-14 z-10 -mx-5 flex flex-col gap-4 border-b border-hairline bg-page-ground px-5 pt-4 pb-4"
+      >
         <div className="flex items-center justify-between">
           <h1 className="text-[26px] font-semibold tracking-[-0.02em] text-ink">Schedule</h1>
           <div className="flex items-center gap-2">
@@ -824,16 +828,36 @@ function MyShiftsTab({ user, contentView }) {
     weekOffsets.push(offset)
   }
 
-  // Land on today's week on first load — the user opens Schedule already
-  // looking at the current week, not scrolled 8 weeks back. Natural document
-  // flow throughout (no fixed-height/overflow-hidden wrapper, no sticky
-  // panel) per the Reskin Plan's carried-over responsive rule.
+  // Land on today's week on first load, so the user opens Schedule already
+  // looking at the current week instead of scrolled 8 weeks back. The header
+  // stack is pinned (56px TopBar plus the Schedule header beneath it), so the
+  // scroll target is pulled down by that stack's measured height:
+  // scrollIntoView({ block: 'start' }) on its own parks the "AUG WEEK 4" label
+  // behind the pinned header. Measured, never hardcoded, so the offset follows
+  // the header if its contents change.
   useEffect(() => {
     if (loading || hasScrolledInitiallyRef.current) return
     const target = weekMarkerRefs.current[0]
     if (!target) return
     hasScrolledInitiallyRef.current = true
-    target.scrollIntoView({ behavior: 'auto', block: 'start' })
+
+    const scroller = target.closest('.app-content')
+    if (!scroller) {
+      target.scrollIntoView({ behavior: 'auto', block: 'start' })
+      return
+    }
+
+    // BOTH pinned things sit above the target: the shared TopBar and this
+    // page's sticky header. Measuring only the header left the week label
+    // tucked behind it.
+    const pinnedHeight = [
+      document.querySelector('[data-testid="app-top-bar"]'),
+      document.querySelector('[data-testid="schedule-sticky-header"]'),
+    ].reduce((sum, el) => sum + (el?.getBoundingClientRect().height ?? 0), 0)
+    const scrollerTop = scroller.getBoundingClientRect().top
+    const targetTop = target.getBoundingClientRect().top - scrollerTop + scroller.scrollTop
+
+    scroller.scrollTop = targetTop - pinnedHeight
   }, [loading])
 
   if (selectedShift) {
@@ -1210,7 +1234,14 @@ function TeamScheduleTab({ user, onChangeView, contentView: contentViewProp }) {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="-mx-5 flex flex-col gap-4 border-b border-hairline bg-page-ground px-5 pt-4 pb-4">
+      {/* Coordinator's own copy of the sticky header, same top-14 z-10 pin under
+          the 56px TopBar. No swap button and no segmented control here: a
+          coordinator has a single schedule scope, so there is nothing to switch
+          between and nothing to offer a swap against. */}
+      <div
+        data-testid="schedule-sticky-header"
+        className="sticky top-14 z-10 -mx-5 flex flex-col gap-4 border-b border-hairline bg-page-ground px-5 pt-4 pb-4"
+      >
         <div className="flex items-center justify-between">
           <h1 className="text-[26px] font-semibold tracking-[-0.02em] text-ink">Schedule</h1>
           <div className="flex gap-1 rounded-[11px] bg-track-neutral p-[3px]">
