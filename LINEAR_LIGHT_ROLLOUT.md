@@ -985,6 +985,35 @@ the list body scrolls under it.
 - The `+ Add a shift` button and the week/day group labels stay in the scrolling
   body: Jefle asked for the header block only to pin.
 
+## Pool seeded for beta readiness (2026-09-15)
+
+The Pool was genuinely empty (7 future shifts existed, all `scheduled`, zero
+`open`), so a nurse opening the app had nothing actionable. Seeded 12 open
+shifts through the coordinator's own Post a Shift flow (Leave Open, unit, a
+period chip, a note) rather than by writing rows by hand.
+
+- 7 on Unit 1, 5 on Unit 2, spread 17 Sep to 6 Oct, exactly 4 Day / 4 Evening /
+  4 Night. Every row `status = 'open'` with `nurse_id = null`.
+- Marked with `notes = 'beta seed, removable'` so they can be found and removed.
+  Rollback record: `~/.shiftko-backups/beta-seed-2026-09-15.json`.
+  Remove with: `delete from shifts where notes = 'beta seed, removable'`.
+
+Verified live as the nurse: the Pool reads "7 open across Unit 1" with 7 rows,
+each "Open · unassigned" with a real period tag and a Claim button. Unit 2's 5
+opens are correctly NOT visible, so RLS scopes the Pool to the nurse's home
+unit. The coordinator's own Pool reads "Your home unit hasn't been set yet",
+which is true of that account (its `home_unit` is null).
+
+**Driving a form with the browser tool: one `js()` call PER interaction.** A
+single `js()` that clicks the day, the period, the unit, the note and submit in
+one synchronous run does NOT work. React has not re-rendered between the clicks,
+so the later ones hit nodes from the previous render and the form silently stays
+invalid, yet the submit button still reports a click, so a naive script looks
+like it succeeded. The first attempt posted 1 of 12 that way; one call per step
+posted 12 of 12. Assert the form's own state (the selected day, the time inputs,
+the select values) immediately before submitting, and verify in the database
+after, not from the click log.
+
 ## Remaining empty states moved onto the shared component (2026-09-15)
 
 Every empty state in the app now uses `EmptyState` from
