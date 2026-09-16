@@ -159,6 +159,14 @@ function App() {
     return <Auth initialView={authView} />
   }
 
+  // A profile whose onboarding is still incomplete gets the flow before the app
+  // shell. The signup trigger creates the profile, this fills it in.
+  if (onboardingCompleted === false) {
+    return (
+      <OnboardingFlow user={session.user} onComplete={() => setOnboardingCompleted(true)} />
+    )
+  }
+
   return (
     <div className="app-shell">
       <div className="app-content">

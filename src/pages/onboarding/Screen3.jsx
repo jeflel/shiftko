@@ -122,6 +122,12 @@ export default function Screen3({ firstName = '', onBack, onContinue }) {
           })}
         </div>
 
+        {role === 'coordinator' && (
+          <p className="mt-3 text-[15px] tracking-[0.15px] text-ink-secondary">
+            Your facility's coordinator confirms this before it takes effect.
+          </p>
+        )}
+
         <Button type="submit" data-testid="screen3-continue" className="mt-auto h-[54px] w-full translate-y-[23px]">
           Continue
         </Button>

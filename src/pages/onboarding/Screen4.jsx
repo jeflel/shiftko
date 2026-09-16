@@ -1,10 +1,21 @@
+import { useState } from 'react'
 import { ArrowLeft, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
+// Which unit the nurse works on. Shiftko is single facility, so this replaces the
+// old facility picker (which showed one locked card anyway) and is the one field
+// here the coordinator would otherwise have to set by hand in the staff roster.
+//
+// Units match the values already used on shifts and profiles.
+const UNITS = ['Unit 1', 'Unit 2', 'Unit 3', 'Unit 4']
+
 export default function Screen4({ onBack, onContinue }) {
+  const [unit, setUnit] = useState(null)
+
   function handleSubmit(event) {
     event.preventDefault()
-    onContinue()
+    if (!unit) return
+    onContinue(unit)
   }
 
   return (
@@ -25,29 +36,58 @@ export default function Screen4({ onBack, onContinue }) {
       </div>
 
       <h1 className="mt-10 text-[30px] font-semibold tracking-[-0.6px] text-ink">
-        Where do you work?
+        Which unit do you work on?
       </h1>
       <p className="mt-3 text-[17px] tracking-[-0.34px] text-ink-secondary">
-        Search or select your facility.
+        This is the unit whose open shifts you will see.
       </p>
 
       <form className="flex flex-1 flex-col" onSubmit={handleSubmit}>
-        <div className="mt-8 flex h-[94px] w-full items-center justify-between rounded-card border border-teal-foreground bg-white px-6 shadow-[0px_7px_20px_2px_rgba(46,73,92,0.06)]">
-          <span>
-            <span className="block text-[17px] font-semibold text-ink">
-              Burlingame Skilled Nursing
-            </span>
-            <span className="mt-1.5 block text-[15px] tracking-[0.15px] text-ink-secondary">
-              (selected, locked)
-            </span>
-          </span>
+        <div className="mt-8 flex flex-col gap-2.5">
+          {UNITS.map((option) => {
+            const selected = unit === option
+            return (
+              <button
+                key={option}
+                type="button"
+                onClick={() => setUnit(option)}
+                data-testid={`screen4-unit-${option.replace(' ', '-').toLowerCase()}`}
+                className={`flex h-[62px] w-full items-center justify-between rounded-card border bg-white px-6 text-left transition-colors ${
+                  selected
+                    ? 'border-teal-foreground shadow-[0px_7px_20px_2px_rgba(46,73,92,0.06)]'
+                    : 'border-hairline'
+                }`}
+              >
+                <span
+                  className={`text-[17px] font-semibold ${
+                    selected ? 'text-ink' : 'text-ink-secondary'
+                  }`}
+                >
+                  {option}
+                </span>
 
-          <span className="flex size-[22px] shrink-0 items-center justify-center rounded-full bg-teal-foreground">
-            <Check size={14} strokeWidth={2} className="text-white" />
-          </span>
+                <span
+                  className={`flex size-[22px] shrink-0 items-center justify-center rounded-full ${
+                    selected ? 'bg-teal-foreground' : 'border border-hairline'
+                  }`}
+                >
+                  {selected && <Check size={14} strokeWidth={2} className="text-white" />}
+                </span>
+              </button>
+            )
+          })}
         </div>
 
-        <Button type="submit" data-testid="screen4-continue" className="mt-auto h-[54px] w-full translate-y-[23px]">
+        <p className="mt-3 text-[15px] tracking-[0.15px] text-ink-secondary">
+          Ask your coordinator if you cover more than one.
+        </p>
+
+        <Button
+          type="submit"
+          disabled={!unit}
+          data-testid="screen4-continue"
+          className="mt-auto h-[54px] w-full translate-y-[23px]"
+        >
           Continue
         </Button>
       </form>

@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import { NavRow } from '@/components/ui/nav-row'
 import { inputClassName, labelClassName } from '@/components/ui/field'
 import { EmptyState } from '@/components/ui/empty-state'
+import { Button } from '@/components/ui/button'
 import { getInitials } from '@/lib/manageFormat'
 import { getWeekRange, getWeekStart } from '../lib/shiftFormat'
 import { cn } from '@/lib/utils'
@@ -40,7 +41,7 @@ export default function StaffRoster({ onBack }) {
 
       const { data: nurseData, error: nurseError } = await supabase
         .from('profiles')
-        .select('id, full_name, credential, home_unit, email')
+        .select('id, full_name, credential, home_unit, email, role, requested_role')
         .eq('role', 'nurse')
         .order('full_name', { ascending: true })
 
@@ -112,6 +113,27 @@ export default function StaffRoster({ onBack }) {
     setSaveError(null)
   }
 
+  async function handleConfirmCoordinator(nurse) {
+    setSaving(true)
+    setSaveError(null)
+
+    const { error: confirmError } = await supabase
+      .from('profiles')
+      .update({ role: 'coordinator', requested_role: null })
+      .eq('id', nurse.id)
+
+    setSaving(false)
+
+    if (confirmError) {
+      setSaveError(confirmError.message)
+      return
+    }
+
+    setNurses((current) =>
+      current.map((n) => (n.id === nurse.id ? { ...n, role: 'coordinator', requested_role: null } : n)),
+    )
+  }
+
   async function handleSave(nurse) {
     setSaving(true)
     setSaveError(null)
@@ -159,6 +181,11 @@ export default function StaffRoster({ onBack }) {
     })
   }, [nurses, search, selectedUnit])
 
+  // Self-signups who asked to be a coordinator. They stay nurses until an
+  // existing coordinator confirms, because is_coordinator() grants full access
+  // to every shift, claim and notification.
+  const pendingCoordinators = nurses.filter((n) => n.requested_role === 'coordinator')
+
   return (
     <div
       className="fixed inset-0 z-[100] mx-auto flex w-full max-w-md flex-col overflow-y-auto bg-page-ground"
@@ -172,6 +199,38 @@ export default function StaffRoster({ onBack }) {
 
         {!loading && !error && (
           <>
+            {pendingCoordinators.length > 0 && (
+              <div className="flex flex-col gap-2.5 rounded-card border border-teal-foreground bg-card-surface p-4">
+                <p className="text-xs font-semibold tracking-[0.05em] text-ink-secondary uppercase">
+                  Coordinator access requested
+                </p>
+                {pendingCoordinators.map((nurse) => (
+                  <div key={nurse.id} className="flex flex-row items-center gap-3">
+                    <span className="flex size-[38px] shrink-0 items-center justify-center rounded-full bg-press-state text-[13px] font-semibold text-ink-secondary">
+                      {getInitials(nurse.full_name)}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold tracking-[-0.01em] text-ink">
+                        {nurse.full_name}
+                      </p>
+                      <p className="truncate text-xs text-ink-secondary">
+                        {nurse.home_unit ?? 'No unit'} &middot; asked to be a coordinator
+                      </p>
+                    </span>
+                    <Button
+                      type="button"
+                      onClick={() => handleConfirmCoordinator(nurse)}
+                      disabled={saving}
+                      data-testid={`confirm-coordinator-${nurse.id}`}
+                      className="h-9 shrink-0 px-4 text-[13px]"
+                    >
+                      Confirm
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+
             <div className="flex flex-row items-center gap-2 rounded-field border border-hairline bg-card-surface p-3 text-sm text-ink-secondary">
               <Search size={15} strokeWidth={1.75} className="shrink-0" />
               <input

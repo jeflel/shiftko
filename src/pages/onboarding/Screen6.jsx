@@ -11,7 +11,7 @@ const Lottie = LottieImport.default || LottieImport
 const INVITE_CODE = 'BURLINGAME'
 const MASCOT_SPEED = 0.7
 
-export default function Screen6({ firstName = '', onFinish }) {
+export default function Screen6({ firstName = '', saving = false, onFinish }) {
   const mascotRef = useRef(null)
 
   async function handleShare() {
@@ -80,8 +80,14 @@ export default function Screen6({ firstName = '', onFinish }) {
         </button>
       </div>
 
-      <Button type="button" onClick={onFinish} data-testid="screen6-finish" className="mt-auto h-[54px] w-full">
-        Let's Go
+      <Button
+        type="button"
+        onClick={onFinish}
+        disabled={saving}
+        data-testid="screen6-finish"
+        className="mt-auto h-[54px] w-full"
+      >
+        {saving ? 'Saving...' : "Let's Go"}
       </Button>
     </main>
   )

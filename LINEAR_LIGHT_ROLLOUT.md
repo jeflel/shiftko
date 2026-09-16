@@ -985,6 +985,55 @@ the list body scrolls under it.
 - The `+ Add a shift` button and the week/day group labels stay in the scrolling
   body: Jefle asked for the header block only to pin.
 
+## Duplicate profiles at signup, and the onboarding (2026-09-16)
+
+**The bug.** `handle_new_user()` inserted a profile unconditionally and ended
+with `on conflict (id) do nothing`, which only catches an id collision, so an
+existing profile with the same email was never matched. A real nurse signing in
+got a second profile, role nurse with null credential and home_unit, while her
+seeded one kept the shift history. `profiles.email` had no unique constraint.
+
+**The fix**, `supabase/migrations/20260916061057_merge_profile_on_signup.sql`,
+applied and reconciled so local == remote:
+
+- adds `requested_role`, a self-signup coordinator claim. `role` is never written
+  by a signup, because `is_coordinator()` grants full access to every shift,
+  claim and notification in the facility and RLS offers nothing else
+- rewrites the trigger to find a profile by lowercased email, re-point its
+  dependents onto the new auth id, then delete it, wrapped in an inner
+  `exception when others then null` so a merge failure can never block a signup
+- adds `profiles_email_unique` on `lower(email)` where email is not null
+
+There are **10** foreign keys to `profiles(id)`, not the 4 the spec guessed:
+`claims.nurse_id`, `notifications.user_id`, `personal_events.nurse_id`,
+`saved_shift_presets.user_id`, `schedule_patterns.nurse_id`,
+`shift_claims.nurse_id`, `shift_swaps.recipient_id`, `shift_swaps.requester_id`,
+`shifts.nurse_id`, `shifts.previous_nurse_id`. Claude Code enumerated them from
+`pg_constraint` instead of trusting the list, which is the only reason the merge
+is complete.
+
+**The backfill.** `onboarding_completed` defaults to false and 43 of 44 profiles
+were false, so the new gate in `App.jsx` would have pushed every seeded staff
+member and both test accounts into a first-run onboarding. Backfilled to true
+(verified 44 complete, 0 incomplete), record at
+`~/.shiftko-backups/onboarding-backfill-2026-09-16.json`.
+
+**The onboarding**, re-wired from the orphaned flow: name, role, unit, credential,
+then it saves to the profile. `App.jsx` only imported Screen0 and initialised
+`onboardingCompleted` to true, so the flow could never render. Screen4 (a locked
+facility card, since Shiftko is single facility) became the unit picker, and
+Screen6 honours a saving flag so the finish button cannot double-submit.
+
+**The confirm.** The staff roster shows a "Coordinator access requested" card
+above the search whenever a profile has `requested_role = 'coordinator'`, with a
+Confirm that sets `role` and clears the claim. The roster already edits a nurse's
+email inline, which is the pre-invite step: set her real email on her existing
+profile before inviting her, so the merge can find it.
+
+**Not verified end to end.** No real signup has run through this yet. The gate
+only fires on `onboarding_completed === false`, so the existing 44 are unaffected
+by the app half either way.
+
 ## Pool seeded for beta readiness (2026-09-15)
 
 The Pool was genuinely empty (7 future shifts existed, all `scheduled`, zero
