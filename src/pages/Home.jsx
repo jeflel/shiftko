@@ -21,6 +21,7 @@ import OfferShiftUpdate from './OfferShiftUpdate'
 import Notifications from './Notifications'
 import PersonalEventPanel from '@/components/PersonalEventPanel'
 import { EmptyState } from '@/components/ui/empty-state'
+import { TopBar } from '@/components/ui/top-bar'
 import { fetchMyPersonalEvents } from '@/lib/personalEvents'
 import { Wordmark } from '@/components/ui/wordmark'
 import { PeriodTag } from '@/components/ui/period-tag'
@@ -750,43 +751,8 @@ export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoTo
     <div className="flex min-h-screen w-full flex-col bg-page-ground">
       <main className="mx-auto flex w-full max-w-md flex-1 flex-col pb-12">
         <div className="flex flex-1 flex-col bg-gradient-to-b from-hero-gradient-start via-hero-gradient-mid via-70% to-hero-gradient-end bg-[length:100%_223px] bg-top bg-no-repeat">
-          <div className="flex flex-col gap-4 px-5 pt-4 pb-11">
-            <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2">
-              <span
-                aria-hidden={!initials}
-                className="home-glass-ring relative flex size-9 shrink-0 items-center justify-center justify-self-start rounded-control bg-white/20 text-xs font-semibold tracking-[0.02em] text-white"
-              >
-                {initials}
-              </span>
-
-              <div className="flex items-center justify-center justify-self-center gap-1.5">
-                <Wordmark size={16} className="text-white" />
-                <span className="rounded-full border border-white/30 bg-white/20 px-[7px] py-[2px] text-[9px] font-bold tracking-[0.04em] text-white uppercase">
-                  Beta
-                </span>
-              </div>
-
-              <div className="relative shrink-0 justify-self-end">
-                {isCoordinator ? (
-                  <span
-                    aria-hidden="true"
-                    className="home-glass-ring relative flex size-9 items-center justify-center rounded-control bg-white/20 text-white"
-                  >
-                    <Bell size={18} strokeWidth={1.75} />
-                  </span>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => setShowNotifications(true)}
-                    aria-label="Notifications"
-                    data-testid="home-bell-button"
-                    className="home-glass-ring relative flex size-9 items-center justify-center rounded-control bg-white/20 text-white"
-                  >
-                    <Bell size={18} strokeWidth={1.75} />
-                  </button>
-                )}
-              </div>
-            </div>
+          <div className="flex flex-col gap-4 px-5 pt-2 pb-11">
+            <TopBar user={user} initials={initials} />
 
             <p className="ml-1 text-[20px] font-medium tracking-[-0.04em] text-white">
               {getGreeting()}{nurseFirstName ? `, ${nurseFirstName}` : ''}

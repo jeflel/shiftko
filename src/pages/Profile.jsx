@@ -3,8 +3,8 @@ import { Building2, ChevronDown, LogOut } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Wordmark } from '@/components/ui/wordmark'
 import { SHIFT_LIST_CLASSNAME, ShiftListDivider } from '@/components/ui/shift-list'
+import { TopBar } from '@/components/ui/top-bar'
 import JoinWorkspaceForm from '../components/JoinWorkspaceForm'
 
 function initials(name) {
@@ -202,13 +202,10 @@ export default function Profile({ user, onWorkspaceLeft }) {
   }
 
   return (
-    <main className="mx-auto w-full max-w-md px-5 pt-[26px] pb-12">
+    <main className="mx-auto w-full max-w-md px-5 pb-12">
+      <TopBar user={user} />
       <div className="flex items-center justify-between">
         <h1 className="text-[26px] font-semibold tracking-[-0.02em] text-ink">Profile</h1>
-        <div className="flex flex-col items-end gap-1">
-          <Wordmark />
-          <span className="rounded-full bg-[#E0F7FA] px-2 py-0.5 text-xs font-medium text-teal-mid">Beta</span>
-        </div>
       </div>
 
       {/* Identity header */}

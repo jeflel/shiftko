@@ -5,6 +5,7 @@ import { createClaim, deleteClaim } from '../lib/claims'
 import { PeriodTag } from '@/components/ui/period-tag'
 import { Button } from '@/components/ui/button'
 import { SHIFT_LIST_CLASSNAME, ShiftListDivider } from '@/components/ui/shift-list'
+import { TopBar } from '@/components/ui/top-bar'
 import ClaimStatusList from './ClaimStatusList'
 import ShiftDetail from './ShiftDetail'
 import { formatShiftTimeRange, getShiftPeriod } from '../lib/shiftFormat'
@@ -224,7 +225,8 @@ export default function Pool({ user, onGoToSchedule }) {
   }
 
   return (
-    <main className="mx-auto w-full max-w-md px-5 pt-[26px] pb-12">
+    <main className="mx-auto w-full max-w-md px-5 pb-12">
+      <TopBar user={user} />
       <div className="mb-1 flex items-center justify-between">
         <h1 className="text-[26px] font-semibold tracking-[-0.02em] text-ink">Pool</h1>
         <button

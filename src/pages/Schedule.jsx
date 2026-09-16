@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import { CalendarStrip } from '@/components/ui/calendar-strip'
 import { SegmentedControl } from '@/components/ui/segmented-control'
 import { SHIFT_LIST_CLASSNAME, ShiftListDivider } from '@/components/ui/shift-list'
+import { TopBar } from '@/components/ui/top-bar'
 import { inputClassName, labelClassName } from '@/components/ui/field'
 import { SHIFT_PRESETS, buildShiftTimes } from '@/lib/shiftPresets'
 import { cn } from '@/lib/utils'
@@ -1516,7 +1517,8 @@ export default function Schedule({ user, role, initialTab = 'schedule' }) {
   }, [isCoordinator])
 
   return (
-    <main className="mx-auto w-full max-w-md px-5 pt-[26px] pb-12">
+    <main className="mx-auto w-full max-w-md px-5 pb-12">
+      <TopBar user={user} />
       {tabs.length > 1 && (
         <div className="mb-6 flex border-b border-[#E5E5EA]" role="tablist" aria-label="Schedule views">
           {tabs.map((tab) => (
