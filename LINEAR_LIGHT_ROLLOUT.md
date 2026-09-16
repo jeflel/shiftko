@@ -662,6 +662,32 @@ The coordinator also still appears in the Post a Shift nurse dropdown, because
 that list is not filtered to `role = 'nurse'` (harmless, but it lets a shift be
 assigned to the coordinator).
 
+### Opening Profile signed you out (found and fixed 2026-09-15)
+
+Symptom Jefle hit on the live app: sign in, move between tabs, tap Profile, and
+the app drops straight back to the Screen0 welcome screen, as if signed out. It
+looked like a leftover onboarding debug feature, but there is no such code and
+no version in git history ever signed out on mount.
+
+The cause was `Profile.jsx`'s `fetchIdentities` effect, which called
+`supabase.auth.getUser()`. That is the only `getUser()` call in the app, and
+the only call path that can end a session that no user action asked to end:
+`getUser()` round-trips to the auth server, and when the server answers
+`session_not_found` (a session revoked or expired server side), auth-js treats
+it as dead, calls `_removeSession()` (`GoTrueClient.ts:3172`), wipes the stored
+session and emits `SIGNED_OUT`. Every other screen only uses `getSession()` or
+plain table reads, which is exactly why Home, Schedule and Pool stayed logged in
+while Profile did not.
+
+Reproduced on live before the fix by intercepting `fetch` so `/auth/v1/user`
+returned `session_not_found`: Schedule, Pool and Home were unaffected, and the
+next tap on Profile cleared localStorage and rendered Screen0.
+
+The fix reads the linked providers from `getSession()` instead, with
+`app_metadata.providers` as the fallback, so rendering a settings screen cannot
+end the session. If the session is genuinely dead, the token refresh path still
+handles it, but never as a side effect of drawing a page.
+
 **Data hygiene: done (2026-09-12).** The staff list was cleaned on the live
 database: 8 zero-activity junk profiles deleted (`Test Nurse`, three nameless
 signups, two of Jefle's own accounts, and two accounts that were most likely

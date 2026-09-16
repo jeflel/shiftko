@@ -86,9 +86,30 @@ export default function Profile({ user, onWorkspaceLeft }) {
   useEffect(() => {
     let active = true
 
+    // Read the linked providers from the session already in storage.
+    //
+    // This used to call supabase.auth.getUser(), which round-trips to the auth
+    // server to validate the session. When the server answers that call with
+    // "session_not_found" (a session revoked or expired server side), auth-js
+    // treats it as a dead session: it wipes the stored session and emits
+    // SIGNED_OUT, dropping the whole app back to the welcome screen. That made
+    // Profile the one screen that could sign a signed-in user out on sight.
+    // getSession() reads the same user object locally, with no server
+    // validation, so merely rendering a settings screen can no longer end the
+    // session. If the session really is dead, the token refresh path handles it
+    // on its own terms, not while a page is being drawn.
     async function fetchIdentities() {
-      const { data } = await supabase.auth.getUser()
-      if (active && data?.user) setIdentities(data.user.identities ?? [])
+      const { data } = await supabase.auth.getSession()
+      const sessionUser = data?.session?.user
+      if (!active || !sessionUser) return
+
+      // The stored user carries identities; app_metadata.providers is the
+      // fallback for a session whose user object lost them.
+      const providers = sessionUser.identities?.length
+        ? sessionUser.identities.map((identity) => identity.provider)
+        : (sessionUser.app_metadata?.providers ?? [])
+
+      setIdentities(providers.map((provider) => ({ provider })))
     }
 
     fetchIdentities()
