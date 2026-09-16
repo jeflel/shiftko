@@ -751,16 +751,28 @@ export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoTo
   return (
     <div className="flex min-h-screen w-full flex-col bg-page-ground">
       <main className="mx-auto flex w-full max-w-md flex-1 flex-col pb-12">
-        <div className="flex flex-1 flex-col bg-gradient-to-b from-hero-gradient-start via-hero-gradient-mid via-70% to-hero-gradient-end bg-[length:100%_223px] bg-top bg-no-repeat">
-          <div className="flex flex-col gap-4 px-5 pt-2 pb-11">
-            <TopBar user={user} initials={initials} />
+        {/* TopBar is a direct child of the hero wrapper, not of the greeting
+            block below it. position: sticky is constrained by its containing
+            block, so inside the greeting block the bar could only travel the
+            height of that box (about 100px) before sliding up under the
+            content, which is the bug. The hero wrapper's box spans the whole
+            page like the plain main on the other three tabs, so the bar pins
+            for the full scroll here too.
+            The hero carries px-5/pt-2 and the greeting block carries pt-4
+            instead, so the bar and the greeting land on exactly the same
+            pixels they did before, TopBar's own -mx-5/px-5 still bleeds the
+            blue band to both screen edges, and the 223px gradient is untouched
+            (a background paints the padding box, and the hero has no border). */}
+        <div className="flex flex-1 flex-col px-5 pt-2 bg-gradient-to-b from-hero-gradient-start via-hero-gradient-mid via-70% to-hero-gradient-end bg-[length:100%_223px] bg-top bg-no-repeat">
+          <TopBar user={user} initials={initials} />
 
+          <div className="flex flex-col gap-4 pt-4 pb-11">
             <p className="ml-1 text-[20px] font-medium tracking-[-0.04em] text-white">
               {getGreeting()}{nurseFirstName ? `, ${nurseFirstName}` : ''}
             </p>
           </div>
 
-          <div className="flex flex-1 flex-col gap-5 px-5 pt-0 pb-10">
+          <div className="flex flex-1 flex-col gap-5 pt-0 pb-10">
             {!loading && !error && isCoordinator && (
               <CoordinatorHomeContent
                 shifts={shifts}
