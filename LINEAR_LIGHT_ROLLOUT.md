@@ -891,7 +891,9 @@ thing NOT ported from them.
 - Schedule, Pool and Profile gained it at the top of `<main>`; their
   `pt-[26px]` came off since the bar supplies its own padding.
 - Per Jefle's call, page titles stay below the bar, and Schedule's title is no
-  longer sticky, so only the bar pins.
+  longer sticky, so only the bar pins. (Reversed on 2026-09-15 by the pinned
+  Schedule header section below, which re-pins the Schedule header under the
+  bar on purpose.)
 - Profile's own Wordmark + Beta came out of its header, since the bar renders
   both and they would have duplicated.
 - The bar is self-contained: it fetches its own notifications and owns the
@@ -925,6 +927,37 @@ Measurement note: the bar is `sticky`, so it does not move while page content
 does. Comparing its rect to a header's rect is only meaningful at scrollTop 0
 - otherwise the gap reads as a huge negative number. Reset the scrollable
 ancestor (`.app-content`) first.
+
+## Pinned Schedule header (2026-09-15)
+
+Follow-up to `2958184`, per Jefle: the Schedule header is sticky again, and only
+the list body scrolls under it.
+
+- Both headers are `sticky top-14 z-10`: the nurse one in `ScheduleTab`
+  (`Schedule.jsx:97`) and the coordinator's standalone one in
+  `TeamScheduleTab`. `top-14` is 56px, which is TopBar's exact height (36px
+  avatar plus 2 x 10px of `py-2.5`), so the header parks flush under the bar.
+  `z-10` keeps it under the bar's `z-30` and under BottomNav's `z-20`.
+- The header's own opaque `bg-page-ground` and its `border-b border-hairline`
+  are load-bearing once it pins. Drop the background and rows scrolling
+  underneath show straight through it.
+- Both headers carry `data-testid="schedule-sticky-header"`. Only one of them
+  renders at a time, since the coordinator's copy is the standalone path.
+- Pinned with `position: sticky` rather than a fixed-height wrapper with its own
+  `overflow-y: auto`. The user-visible result ("only the list scrolls") is the
+  same, and a nested scroller would break `weekMarkerRefs`, `scrollIntoView`,
+  and `.app-content`'s bottom-nav padding.
+- Real bug this created, fixed in the same commit: `MyShiftsTab` lands on the
+  current week on first load with `scrollIntoView({ block: 'start' })`, which
+  with the header pinned parked the `AUG WEEK 4` label straight behind it. The
+  landing now measures BOTH pinned elements (the 56px TopBar, which gained
+  `data-testid="app-top-bar"` for this, plus the sticky header), sums their
+  heights, and subtracts that from the target's offset inside `.app-content`.
+  Measured rather than hardcoded, so it follows either one if its contents
+  change. Measuring the header alone still left the label tucked behind the
+  bar.
+- The `+ Add a shift` button and the week/day group labels stay in the scrolling
+  body: Jefle asked for the header block only to pin.
 
 ## Schedule week dividers (2026-09-15)
 
