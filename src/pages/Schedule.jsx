@@ -268,12 +268,21 @@ function MyPersonalEventRow({ event, isPast, onClick }) {
   )
 }
 
-// "AUG WEEK 4" per the design's section divider: month the week starts in,
-// then the week of that month (Aug 24 -> 4, Sep 1 -> 1). Replaced the old
-// relative This Week / Next Week / Last Week labels.
+// "SEP 7 - 13" per the design's section divider: the month the week starts in
+// plus the Sunday-to-Saturday day range, naming both months when the week
+// crosses a month boundary ("AUG 31 - SEP 6"). Replaced the old relative This
+// Week / Next Week / Last Week labels and then the "AUG WEEK 4" week-number
+// form, which did not say which dates the week covered.
 function getWeekGroupLabel(weekStart) {
-  const weekOfMonth = Math.ceil(weekStart.getDate() / 7)
-  return `${monthFormatter.format(weekStart).toUpperCase()} WEEK ${weekOfMonth}`
+  const weekEnd = new Date(weekStart)
+  weekEnd.setDate(weekStart.getDate() + 6)
+
+  const startMonth = monthFormatter.format(weekStart).toUpperCase()
+  const endMonth = monthFormatter.format(weekEnd).toUpperCase()
+  const start = `${startMonth} ${weekStart.getDate()}`
+  const end = endMonth === startMonth ? `${weekEnd.getDate()}` : `${endMonth} ${weekEnd.getDate()}`
+
+  return `${start} - ${end}`
 }
 
 // Simpler shift row for the calendar's day-detail panel, per ScheduleCalendarMine.dc.html:
@@ -832,7 +841,7 @@ function MyShiftsTab({ user, contentView }) {
   // looking at the current week instead of scrolled 8 weeks back. The header
   // stack is pinned (56px TopBar plus the Schedule header beneath it), so the
   // scroll target is pulled down by that stack's measured height:
-  // scrollIntoView({ block: 'start' }) on its own parks the "AUG WEEK 4" label
+  // scrollIntoView({ block: 'start' }) on its own parks the "SEP 7 - 13" label
   // behind the pinned header. Measured, never hardcoded, so the offset follows
   // the header if its contents change.
   useEffect(() => {
