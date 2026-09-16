@@ -748,6 +748,27 @@ function MyShiftsTab({ user, contentView }) {
   const weekMarkerRefs = useRef({})
   const hasScrolledInitiallyRef = useRef(false)
 
+  // Where each week's "SEP 7 - 13" label pins: directly under the pinned header
+  // stack, so the user always sees the week the visible rows belong to. Sticky
+  // only travels inside the week's own block, so when the next week arrives its
+  // label takes the pinned spot and pushes this one up and out. The offset is
+  // the stack's measured height (the shared TopBar plus this page's sticky
+  // header), never a hardcoded number, so it follows either one if its contents
+  // change. The label sits at z-[5], below the header's z-10, so the header is
+  // never covered.
+  const [weekLabelTop, setWeekLabelTop] = useState(null)
+
+  useEffect(() => {
+    const pinnedHeight = [
+      document.querySelector('[data-testid="app-top-bar"]'),
+      document.querySelector('[data-testid="schedule-sticky-header"]'),
+    ].reduce((sum, el) => sum + (el?.getBoundingClientRect().height ?? 0), 0)
+
+    // No pinned stack in the DOM means no measured offset to pin against, so the
+    // label stays in normal flow rather than parking at top 0 over the header.
+    if (pinnedHeight > 0) setWeekLabelTop(pinnedHeight)
+  }, [])
+
   useEffect(() => {
     let cancelled = false
     const currentSunday = getSundayWeekStart(new Date())
@@ -987,11 +1008,17 @@ function MyShiftsTab({ user, contentView }) {
                   ref={(el) => { weekMarkerRefs.current[offset] = el }}
                   className="flex flex-col gap-2.5"
                 >
-                  <div className="flex items-center gap-2.5">
-                    <p className="text-[12px] font-medium tracking-wide text-ink-secondary uppercase">
-                      {getWeekGroupLabel(days[0])}
-                    </p>
-                    <div className="h-px flex-1 bg-hairline" aria-hidden="true" />
+                  {/* The opaque -mx-5/px-5 strip spans the full width the rows
+                      occupy (it cancels the page container's px-5, same as the
+                      sticky header above does) so nothing scrolling under the
+                      pinned label shows through at the edges. */}
+                  <div className="sticky z-[5] -mx-5 bg-page-ground px-5" style={{ top: weekLabelTop }}>
+                    <div className="flex items-center gap-2.5">
+                      <p className="text-[12px] font-medium tracking-wide text-ink-secondary uppercase">
+                        {getWeekGroupLabel(days[0])}
+                      </p>
+                      <div className="h-px flex-1 bg-hairline" aria-hidden="true" />
+                    </div>
                   </div>
                   <ul className={`${SHIFT_LIST_CLASSNAME} py-1.5`}>
                     {rows.map((row, index) => (
