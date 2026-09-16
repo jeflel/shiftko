@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { CalendarOff } from 'lucide-react'
 import { NavRow } from '@/components/ui/nav-row'
 import { Button } from '@/components/ui/button'
+import { EmptyState } from '@/components/ui/empty-state'
 import { ShiftPickerRow } from '@/components/ui/selection-row'
 
 function getInitials(fullName) {
@@ -83,9 +85,13 @@ export default function SwapPickShift({ coworker, selectedShift, onSelect, onCon
             <p className="text-sm text-red-700">Could not load shifts: {error}</p>
           )}
           {!loading && !error && shifts.length === 0 && (
-            <p className="text-sm text-ink-secondary">
-              {coworker.full_name} has no upcoming shifts to swap.
-            </p>
+            <EmptyState
+              icon={CalendarOff}
+              title={`${coworker.full_name} has no upcoming shifts to swap`}
+              subline="Try another coworker."
+              size="inline"
+              tone="neutral"
+            />
           )}
 
           {!loading && !error && (

@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Search } from 'lucide-react'
+import { Search, Users } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { NavRow } from '@/components/ui/nav-row'
 import { inputClassName, labelClassName } from '@/components/ui/field'
+import { EmptyState } from '@/components/ui/empty-state'
 import { getInitials } from '@/lib/manageFormat'
 import { getWeekRange, getWeekStart } from '../lib/shiftFormat'
 import { cn } from '@/lib/utils'
@@ -203,9 +204,20 @@ export default function StaffRoster({ onBack }) {
             )}
 
             {nurses.length === 0 ? (
-              <p className="text-sm text-ink-secondary">No nurses found.</p>
+              <EmptyState
+                icon={Users}
+                title="No nurses on your roster yet"
+                size="inline"
+                tone="neutral"
+              />
             ) : visibleNurses.length === 0 ? (
-              <p className="text-sm text-ink-secondary">No staff match this search.</p>
+              <EmptyState
+                icon={Search}
+                title="No staff match this search"
+                subline="Try a different name or unit."
+                size="inline"
+                tone="neutral"
+              />
             ) : (
               <div className="flex flex-col gap-2.5">
                 <p className="text-xs font-semibold tracking-[0.05em] text-ink-secondary uppercase">

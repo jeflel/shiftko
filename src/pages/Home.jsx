@@ -12,6 +12,7 @@ import {
   CheckSquare,
   SquarePlus,
   CalendarDays,
+  CalendarOff,
   MoonStar,
 } from 'lucide-react'
 import { supabase } from '../lib/supabase'
@@ -987,7 +988,12 @@ function CoverageHero({ totalToday, staffedToday, gapsToday, nursesScheduled, un
           </div>
         </>
       ) : (
-        <p className="text-[15px] text-ink-secondary">No shifts scheduled today</p>
+        <EmptyState
+          icon={CalendarOff}
+          title="No shifts scheduled today"
+          layout="row"
+          tone="neutral"
+        />
       )}
     </div>
   )

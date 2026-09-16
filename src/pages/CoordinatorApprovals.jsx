@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { CircleCheck } from 'lucide-react'
 import { NavRow } from '@/components/ui/nav-row'
 import { PeriodTag } from '@/components/ui/period-tag'
+import { EmptyState } from '@/components/ui/empty-state'
 import { getInitials, formatTimeAgo } from '@/lib/manageFormat'
 import { formatShiftDate, formatShiftTimeRange, getShiftPeriod } from '../lib/shiftFormat'
 
@@ -356,7 +358,15 @@ export default function CoordinatorApprovals({ onBack }) {
         {actionError && <p className="text-sm text-red-700">{actionError}</p>}
         {swapActionError && <p className="text-sm text-red-700">{swapActionError}</p>}
 
-        {isEmpty && <p className="text-sm text-ink-secondary">Nothing waiting on you right now.</p>}
+        {isEmpty && (
+          <EmptyState
+            icon={CircleCheck}
+            title="Nothing waiting on you right now"
+            subline="Requests that need your approval will appear here."
+            size="inline"
+            tone="teal"
+          />
+        )}
 
         {!loading &&
           claimGroups.map((group) =>

@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { Users } from 'lucide-react'
 import { NavRow } from '@/components/ui/nav-row'
 import { Button } from '@/components/ui/button'
+import { EmptyState } from '@/components/ui/empty-state'
 import { PersonPickerRow } from '@/components/ui/selection-row'
 import { formatShiftDayShort, formatShiftTimeRange, getShiftPeriod } from '../lib/shiftFormat'
 import { PeriodTag } from '@/components/ui/period-tag'
@@ -73,7 +75,13 @@ export default function SwapPickCoworker({ user, shift, selectedCoworker, onSele
             <p className="text-sm text-red-700">Could not load coworkers: {error}</p>
           )}
           {!loading && !error && coworkers.length === 0 && (
-            <p className="text-sm text-ink-secondary">No other nurses on your unit yet.</p>
+            <EmptyState
+              icon={Users}
+              title="No other nurses on your unit yet"
+              subline="Swaps need a coworker to swap with."
+              size="inline"
+              tone="neutral"
+            />
           )}
 
           {!loading && !error && (

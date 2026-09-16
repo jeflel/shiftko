@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
-import { AlertTriangle } from 'lucide-react'
+import { AlertTriangle, CalendarOff } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { NavRow } from '@/components/ui/nav-row'
 import { Button } from '@/components/ui/button'
+import { EmptyState } from '@/components/ui/empty-state'
 import { fieldInputClassName, labelClassName } from '@/components/ui/field'
 import { formatWeekRangeLabel } from '@/lib/manageFormat'
 import { addLocalDays, diffInCalendarDays, getWeekRange, getWeekStart } from '../lib/shiftFormat'
@@ -191,7 +192,13 @@ export default function DuplicateWeek({ onBack }) {
         </div>
 
         {dupSourceDate && !dupSourceLoading && dupSourceShifts.length === 0 && (
-          <p className="text-sm text-ink-secondary">No shifts in the selected week.</p>
+          <EmptyState
+            icon={CalendarOff}
+            title="No shifts in the selected week"
+            subline="Pick a week that has shifts to copy."
+            size="inline"
+            tone="neutral"
+          />
         )}
 
         {dupError && <p className="text-sm text-red-700">{dupError}</p>}

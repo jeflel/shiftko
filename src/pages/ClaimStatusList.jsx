@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
-import { ChevronRight } from 'lucide-react'
+import { ChevronRight, ClipboardList } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { NavRow } from '@/components/ui/nav-row'
 import { ClaimStatusTag } from '@/components/ui/status-tag'
+import { EmptyState } from '@/components/ui/empty-state'
 import { SHIFT_LIST_CLASSNAME, ShiftListDivider } from '@/components/ui/shift-list'
 import ClaimStatusDetail from './ClaimStatusDetail'
 import { formatShiftTimeRange } from '../lib/shiftFormat'
@@ -121,7 +122,13 @@ export default function ClaimStatusList({ user, onBack, onGoToSchedule }) {
           <p className="text-sm text-red-700">Could not load claim status: {error}</p>
         )}
         {!loading && !error && claims.length === 0 && (
-          <p className="text-sm text-ink-secondary">You haven&apos;t claimed any shifts yet.</p>
+          <EmptyState
+            icon={ClipboardList}
+            title="You haven&apos;t claimed any shifts yet"
+            subline="Shifts you claim will show up here."
+            size="inline"
+            tone="neutral"
+          />
         )}
         {!loading && !error && (
           <>

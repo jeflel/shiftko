@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
-import { ChevronRight } from 'lucide-react'
+import { ArrowLeftRight, ChevronRight } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { NavRow } from '@/components/ui/nav-row'
 import { SwapStatusTag } from '@/components/ui/status-tag'
+import { EmptyState } from '@/components/ui/empty-state'
 import { SHIFT_LIST_CLASSNAME, ShiftListDivider } from '@/components/ui/shift-list'
 import SwapStatusDetail from './SwapStatusDetail'
 import { formatShiftTimeRange } from '../lib/shiftFormat'
@@ -134,7 +135,13 @@ export default function SwapStatusList({ user, onBack, onGoToSchedule }) {
         {loading && <p className="text-sm text-ink-secondary">Loading…</p>}
         {!loading && error && <p className="text-sm text-red-700">Could not load swaps: {error}</p>}
         {!loading && !error && swaps.length === 0 && (
-          <p className="text-sm text-ink-secondary">You haven&apos;t requested or received any swaps yet.</p>
+          <EmptyState
+            icon={ArrowLeftRight}
+            title="No swaps yet"
+            subline="Requests you send or receive will show up here."
+            size="inline"
+            tone="neutral"
+          />
         )}
         {!loading && !error && (
           <>

@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
-import { Building2, Calendar, ChevronRight, Pencil, Users } from 'lucide-react'
+import { Building2, Calendar, CalendarRange, ChevronRight, Pencil, Users } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { NavRow } from '@/components/ui/nav-row'
 import { Button } from '@/components/ui/button'
+import { EmptyState } from '@/components/ui/empty-state'
 import { PeriodTag } from '@/components/ui/period-tag'
 import { SHIFT_LIST_CLASSNAME, ShiftListDivider } from '@/components/ui/shift-list'
 import { formatShiftTimeRange, getShiftPeriod } from '../lib/shiftFormat'
@@ -84,7 +85,13 @@ export default function CoordinatorManage({ onBack, onGoToPostShift, onGoToStaff
           )}
 
           {!upcomingLoading && !upcomingError && upcomingShifts.length === 0 && (
-            <p className="text-sm text-ink-secondary">No upcoming shifts.</p>
+            <EmptyState
+              icon={CalendarRange}
+              title="No upcoming shifts yet"
+              subline="Shifts you post will show up here."
+              size="section"
+              tone="teal"
+            />
           )}
 
           {!upcomingLoading && upcomingShifts.length > 0 && (

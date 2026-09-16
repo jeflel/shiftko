@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
-import { ListChecks } from 'lucide-react'
+import { CalendarPlus, ListChecks } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { createClaim, deleteClaim } from '../lib/claims'
 import { PeriodTag } from '@/components/ui/period-tag'
 import { Button } from '@/components/ui/button'
+import { EmptyState } from '@/components/ui/empty-state'
 import { SHIFT_LIST_CLASSNAME, ShiftListDivider } from '@/components/ui/shift-list'
 import { TopBar } from '@/components/ui/top-bar'
 import ClaimStatusList from './ClaimStatusList'
@@ -259,7 +260,13 @@ export default function Pool({ user, onGoToSchedule }) {
           </p>
 
           {shifts.length === 0 ? (
-            <p className="text-sm text-ink-secondary">No open shifts right now</p>
+            <EmptyState
+              icon={CalendarPlus}
+              title="No open shifts right now"
+              subline="Shifts posted for pickup will appear here."
+              size="section"
+              tone="teal"
+            />
           ) : (
             <ul className={`${SHIFT_LIST_CLASSNAME} py-1.5`}>
               {shifts.map((shift, index) => {
