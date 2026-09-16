@@ -52,7 +52,7 @@ function ShiftCard({ date, title, subtitle, pill, trailing, onOpen }) {
   )
 }
 
-export default function Pool({ user, onGoToSchedule }) {
+export default function Pool({ user, onGoToSchedule, onOpenProfile }) {
   const [shifts, setShifts] = useState([])
   const [claims, setClaims] = useState([])
   const [homeUnit, setHomeUnit] = useState(undefined)
@@ -227,7 +227,7 @@ export default function Pool({ user, onGoToSchedule }) {
 
   return (
     <main className="mx-auto w-full max-w-md px-5 pb-12">
-      <TopBar user={user} />
+      <TopBar user={user} onOpenProfile={onOpenProfile} />
       <div className="mt-4 mb-1 flex items-center justify-between">
         <h1 className="font-display-title text-[26px] font-semibold tracking-[-0.02em] text-ink">Pool</h1>
         <button

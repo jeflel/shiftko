@@ -1526,7 +1526,7 @@ function AddMyShiftPanel({ userId, homeUnit, onClose, onSaved }) {
   )
 }
 
-export default function Schedule({ user, role, initialTab = 'schedule' }) {
+export default function Schedule({ user, role, initialTab = 'schedule', onOpenProfile }) {
   const isCoordinator = role === 'coordinator'
 
   const tabs = isCoordinator
@@ -1550,7 +1550,7 @@ export default function Schedule({ user, role, initialTab = 'schedule' }) {
 
   return (
     <main className="mx-auto w-full max-w-md px-5 pb-12">
-      <TopBar user={user} />
+      <TopBar user={user} onOpenProfile={onOpenProfile} />
       {tabs.length > 1 && (
         <div className="mb-6 flex border-b border-[#E5E5EA]" role="tablist" aria-label="Schedule views">
           {tabs.map((tab) => (

@@ -4,13 +4,16 @@ import { supabase } from '@/lib/supabase'
 import { Wordmark } from '@/components/ui/wordmark'
 import Notifications from '@/pages/Notifications'
 
-// Sticky app bar for the four tab pages: avatar, Shiftko wordmark, bell.
+// Sticky app bar for the four tab pages: wordmark, bell, avatar.
 //
 // The mockups only put this topbar on the Home screens (`.topbar`, a
 // 1fr/auto/1fr grid, transparent over the hero gradient). Jefle asked for the
 // same bar pinned on Schedule, Pool and Profile too, on a solid
 // `#0AA2CF` band, which is the gradient's own start colour, so on Home it is
 // seamless against the hero and elsewhere it reads as the "blue bar".
+//
+// The wordmark + Beta pill sit on the left, then the bell, then the avatar at
+// the far right edge (the avatar opens the Profile tab).
 //
 // Self-contained on purpose: it fetches its own notifications and owns the
 // panel, so a page only has to render `<TopBar user={user} />`. Home keeps its
@@ -85,18 +88,8 @@ export function TopBar({ user, initials: initialsProp, onOpenProfile }) {
 
   return (
     <div data-testid="app-top-bar" className="sticky top-0 z-30 -mx-5 bg-[#0AA2CF] px-5 py-2.5">
-      <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2">
-        <button
-          type="button"
-          onClick={onOpenProfile}
-          aria-label="Profile"
-          data-testid="top-bar-profile"
-          className="home-glass-ring relative flex size-9 shrink-0 items-center justify-center justify-self-start rounded-control bg-white/20 text-xs font-semibold tracking-[0.02em] text-white"
-        >
-          {initials}
-        </button>
-
-        <div className="flex items-center justify-center gap-1.5">
+      <div className="grid grid-cols-[1fr_auto_auto] items-center gap-2">
+        <div className="flex items-center gap-1.5">
           <Wordmark size={16} className="text-white" />
           <span className="rounded-full border border-white/30 bg-white/20 px-[7px] py-[2px] text-[9px] font-bold tracking-[0.04em] text-white uppercase">
             Beta
@@ -108,12 +101,22 @@ export function TopBar({ user, initials: initialsProp, onOpenProfile }) {
           onClick={() => setShowNotifications(true)}
           aria-label="Notifications"
           data-testid="top-bar-bell"
-          className="home-glass-ring relative flex size-9 shrink-0 items-center justify-center justify-self-end rounded-control bg-white/20 text-white"
+          className="home-glass-ring relative flex size-9 shrink-0 items-center justify-center rounded-control bg-white/20 text-white"
         >
           <Bell size={18} strokeWidth={1.75} />
           {hasUnread && (
             <span className="absolute top-[6px] right-[6px] size-2 rounded-full bg-urgency-red ring-2 ring-[#0AA2CF]" />
           )}
+        </button>
+
+        <button
+          type="button"
+          onClick={onOpenProfile}
+          aria-label="Profile"
+          data-testid="top-bar-profile"
+          className="home-glass-ring relative flex size-9 shrink-0 items-center justify-center justify-self-end rounded-control bg-white/20 text-xs font-semibold tracking-[0.02em] text-white"
+        >
+          {initials}
         </button>
       </div>
     </div>

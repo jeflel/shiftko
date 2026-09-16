@@ -140,6 +140,11 @@ function App() {
     setActiveTab('schedule')
   }
 
+  // The TopBar avatar on all four tabs opens the Profile tab.
+  function handleOpenProfile() {
+    setActiveTab('more')
+  }
+
   if (loading) {
     return (
       <div className="flex h-screen w-screen items-center justify-center bg-white">
@@ -179,10 +184,16 @@ function App() {
             onGoToApprovals={handleGoToApprovals}
             onGoToPool={handleGoToPool}
             onGoToSchedule={handleGoToSchedule}
+            onOpenProfile={handleOpenProfile}
           />
         )}
         {activeTab === 'schedule' && (
-          <Schedule user={session.user} role={role} initialTab={scheduleInitialTab} />
+          <Schedule
+            user={session.user}
+            role={role}
+            initialTab={scheduleInitialTab}
+            onOpenProfile={handleOpenProfile}
+          />
         )}
         {activeTab === 'postshift' && <PostShift onBack={handlePostShiftBack} />}
         {activeTab === 'shiftsedit' && editingShift && (
@@ -206,10 +217,18 @@ function App() {
         {activeTab === 'staffroster' && <StaffRoster onBack={handleBackToManage} />}
         {activeTab === 'duplicateweek' && <DuplicateWeek onBack={handleBackToManage} />}
         {activeTab === 'pool' && (
-          <Pool user={session.user} onGoToSchedule={handleGoToSchedule} />
+          <Pool
+            user={session.user}
+            onGoToSchedule={handleGoToSchedule}
+            onOpenProfile={handleOpenProfile}
+          />
         )}
         {activeTab === 'more' && (
-          <Profile user={session.user} onWorkspaceLeft={() => setWorkspaceId(null)} />
+          <Profile
+            user={session.user}
+            onWorkspaceLeft={() => setWorkspaceId(null)}
+            onOpenProfile={handleOpenProfile}
+          />
         )}
       </div>
       <BottomNav activeTab={activeTab} onTabChange={handleBottomNavChange} />

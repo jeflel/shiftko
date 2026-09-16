@@ -35,7 +35,7 @@ function capitalize(value) {
   return value.charAt(0).toUpperCase() + value.slice(1)
 }
 
-export default function Profile({ user, onWorkspaceLeft }) {
+export default function Profile({ user, onWorkspaceLeft, onOpenProfile }) {
   const [signingOut, setSigningOut] = useState(false)
   const [profile, setProfile] = useState(null)
   const [workspace, setWorkspace] = useState(null)
@@ -224,7 +224,7 @@ export default function Profile({ user, onWorkspaceLeft }) {
 
   return (
     <main className="mx-auto w-full max-w-md px-5 pb-12">
-      <TopBar user={user} />
+      <TopBar user={user} onOpenProfile={onOpenProfile} />
       <div className="mt-4 flex items-center justify-between">
         <h1 className="font-display-title text-[26px] font-semibold tracking-[-0.02em] text-ink">Profile</h1>
       </div>

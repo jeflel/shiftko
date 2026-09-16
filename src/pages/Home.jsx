@@ -491,7 +491,7 @@ function getInitials(fullName) {
   return (first + last).toUpperCase() || null
 }
 
-export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoToApprovals, onGoToPool, onGoToSchedule }) {
+export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoToApprovals, onGoToPool, onGoToSchedule, onOpenProfile }) {
   const [fullName, setFullName] = useState(null)
   const [credential, setCredential] = useState(null)
   const [homeUnit, setHomeUnit] = useState(null)
@@ -764,7 +764,7 @@ export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoTo
             blue band to both screen edges, and the 223px gradient is untouched
             (a background paints the padding box, and the hero has no border). */}
         <div className="flex flex-1 flex-col px-5 pt-2 bg-gradient-to-b from-hero-gradient-start via-hero-gradient-mid via-70% to-hero-gradient-end bg-[length:100%_223px] bg-top bg-no-repeat">
-          <TopBar user={user} initials={initials} />
+          <TopBar user={user} initials={initials} onOpenProfile={onOpenProfile} />
 
           <div className="flex flex-col gap-4 pt-4 pb-11">
             <p className="ml-1 text-[20px] font-medium tracking-[-0.04em] text-white">
