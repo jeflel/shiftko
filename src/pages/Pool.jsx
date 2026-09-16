@@ -227,7 +227,7 @@ export default function Pool({ user, onGoToSchedule }) {
   return (
     <main className="mx-auto w-full max-w-md px-5 pb-12">
       <TopBar user={user} />
-      <div className="mb-1 flex items-center justify-between">
+      <div className="mt-4 mb-1 flex items-center justify-between">
         <h1 className="text-[26px] font-semibold tracking-[-0.02em] text-ink">Pool</h1>
         <button
           type="button"

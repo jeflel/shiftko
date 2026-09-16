@@ -91,13 +91,10 @@ function ScheduleTab({ user }) {
 
   return (
     <div className="flex flex-col gap-4">
-      {/* -mt-[26px] cancels the parent <main>'s pt-[26px] and pt-[38px] puts that
-          same 26px (plus the header's own 12px) back as the header's own padding.
-          A sticky element pinned at container-top-0 loses whatever gap came from
-          an ancestor's padding the instant you scroll past it, but never loses
-          its own padding — baking the gap in here keeps it constant regardless
-          of scroll position. */}
-      <div className="sticky top-0 z-10 -mx-5 -mt-[26px] flex flex-col gap-4 border-b border-hairline bg-page-ground px-5 pt-[38px] pb-4">
+      {/* Title header. Deliberately NOT sticky: the shared TopBar pins above
+          it at z-30, so a second sticky here just slid the title underneath the
+          bar. pt-4 is the same 16px gap every other tab page uses under the bar. */}
+      <div className="-mx-5 flex flex-col gap-4 border-b border-hairline bg-page-ground px-5 pt-4 pb-4">
         <div className="flex items-center justify-between">
           <h1 className="text-[26px] font-semibold tracking-[-0.02em] text-ink">Schedule</h1>
           <div className="flex items-center gap-2">
@@ -1209,7 +1206,7 @@ function TeamScheduleTab({ user, onChangeView, contentView: contentViewProp }) {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="sticky top-0 z-10 -mx-5 flex flex-col gap-4 border-b border-hairline bg-page-ground px-5 pt-3 pb-4">
+      <div className="-mx-5 flex flex-col gap-4 border-b border-hairline bg-page-ground px-5 pt-4 pb-4">
         <div className="flex items-center justify-between">
           <h1 className="text-[26px] font-semibold tracking-[-0.02em] text-ink">Schedule</h1>
           <div className="flex gap-1 rounded-[11px] bg-track-neutral p-[3px]">
