@@ -1064,9 +1064,28 @@ auth user. (The original migration's own comment claims a seeded profile has no
 auth row at all, which is wrong: `profiles.id` has a foreign key to
 `auth.users(id)`, so every profile has one.)
 
-The real fix, in flight: a transaction-local `app.profile_merge` flag that both
-guards honour, set by the merge and cleared after it, plus an exception handler
-around the insert so nothing can abort a signup, then the index re-created.
+The real fix, `20260916062912_fix_profile_merge_trigger_bypass.sql`, applied and
+recorded (all 8 migrations `local == remote`): a transaction-local
+`app.profile_merge` flag that BOTH `shifts` guards honour, set only around the ten
+re-points and cleared on every exit path (success and exception), plus its own
+exception handler around the profile insert so nothing can ever abort a signup,
+and `profiles_email_unique` re-created.
+
+**Verified by the same throwaway test, which then passed on every assertion:**
+1 profile with the address, the old mirror profile gone, the fixture shift and
+notification both re-pointed to the new auth id, and 0 rows left on the old id.
+Fixture fully removed afterwards: back to 44 profiles and 44 auth users, with the
+Pool's 12 open shifts untouched.
+
+The fix also corrected an ordering bug in the original: none of the ten foreign
+keys are deferrable, so the new profile row must exist BEFORE the re-points can
+target it. The insert therefore has to run first, and it takes the email only
+after the mirror's email is nulled, which the partial index permits.
+
+One gap worth knowing: the merge moves shift history but does not carry
+`credential` or `home_unit` across from the mirror. The onboarding collects both
+for a new signup, so a real nurse is covered, but a merge triggered by anything
+that skips onboarding would leave those null for the coordinator to set.
 
 ## Pool seeded for beta readiness (2026-09-15)
 
