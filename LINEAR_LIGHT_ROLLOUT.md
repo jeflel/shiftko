@@ -875,6 +875,34 @@ Still on bare text, to move onto the component later: Schedule (My Shifts, Open
 shifts), Pool, Manage recent shifts, Approvals, the swap picker, Duplicate week
 and Staff roster.
 
+## Sticky top bar on every tab page (2026-09-15)
+
+Every tab page now carries the same pinned bar: avatar, Shiftko wordmark with
+the Beta pill, and the bell, on a solid `#0AA2CF` band (the hero gradient's own
+start colour, so it is seamless against Home's hero and reads as the blue bar
+everywhere else). Lives in `src/components/ui/top-bar.jsx`.
+
+This is a new decision rather than a port: the mockups only put `.topbar` on
+the Home screens, and the standing rule was that the navbar/tabbar is the one
+thing NOT ported from them.
+
+- Home's inline `.topbar` grid was replaced by the shared component, so the
+  markup lives in one place now.
+- Schedule, Pool and Profile gained it at the top of `<main>`; their
+  `pt-[26px]` came off since the bar supplies its own padding.
+- Per Jefle's call, page titles stay below the bar, and Schedule's title is no
+  longer sticky, so only the bar pins.
+- Profile's own Wordmark + Beta came out of its header, since the bar renders
+  both and they would have duplicated.
+- The bar is self-contained: it fetches its own notifications and owns the
+  panel, so the bell works from any tab. Home keeps its own notifications
+  fetch because its Request Activity card needs the same data.
+
+Verified live at 430px wide, signed in: all four tabs report a 56px sticky bar
+at z-index 30 with `rgb(10,162,207)`, the avatar initials, the Beta pill and
+the bell. It stays at `top: 0` after scrolling 400px, and tapping the bell on
+Profile opens the notifications overlay with real data.
+
 ## A personal event fills the today card (2026-09-15)
 
 The today card only ever looked at `shifts`, so an event a nurse added never
