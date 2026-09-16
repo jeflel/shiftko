@@ -1034,6 +1034,40 @@ profile before inviting her, so the merge can find it.
 only fires on `onboarding_completed === false`, so the existing 44 are unaffected
 by the app half either way.
 
+**The merge did not actually work. Found by testing (`eb7485b`).** A throwaway
+fixture (a profile, a shift it owned, a notification it owned, and the auth users
+either side of it) proved the merge cannot run at all. `public.shifts` carries two
+BEFORE UPDATE triggers, `shifts_guard_claim_update()` and
+`enforce_shift_claim_immutable_fields()`, and the first rejects any change to
+`nurse_id` unless `is_coordinator()`. During a signup trigger `auth.uid()` is
+null, so it always rejects. The merge's error was then swallowed by its own
+exception block, and the profile insert collided with `profiles_email_unique`,
+which **aborted the entire `auth.users` insert: a signup in the pre-invite flow
+failed outright, which is worse than the duplicate it was meant to fix.**
+
+Mitigation applied: `profiles_email_unique` dropped, verified. Signups work
+again, the merge is inert, duplicates persist unchanged from the original bug.
+
+Test evidence at the time: the fixture's shift `3b7df0ee-...` and notification
+`6390014f-...` both still pointed at the old profile id, and profile
+`11111111-...` still existed. The guard's error verbatim:
+
+```
+ERROR: P0001: Nurses may only change status, claimed_by, and claimed_at when claiming a shift
+CONTEXT: PL/pgSQL function shifts_guard_claim_update() line 10 at RAISE
+```
+
+Also learned: `auth.users` enforces unique emails (`users_email_partial_key`), so
+a mirror's auth row can never be given the nurse's real address. The coordinator
+changes the PROFILE's email, and the nurse's signup arrives as a genuinely new
+auth user. (The original migration's own comment claims a seeded profile has no
+auth row at all, which is wrong: `profiles.id` has a foreign key to
+`auth.users(id)`, so every profile has one.)
+
+The real fix, in flight: a transaction-local `app.profile_merge` flag that both
+guards honour, set by the merge and cleared after it, plus an exception handler
+around the insert so nothing can abort a signup, then the index re-created.
+
 ## Pool seeded for beta readiness (2026-09-15)
 
 The Pool was genuinely empty (7 future shifts existed, all `scheduled`, zero
