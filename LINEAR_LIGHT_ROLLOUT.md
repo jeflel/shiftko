@@ -1022,10 +1022,18 @@ Notes from the pass:
   renders when the count is zero. Not touched, it was outside the approved
   change, but it reads oddly and is a one-line follow-up.
 
-Verified live, signed in: the Pool's empty state, the roster's no-search-match
-state, and the approvals screen. The claim and swap status lists, both swap
-pickers and Duplicate week did not render empty for either test account, so
-those branches are built and code-checked but NOT exercised end to end.
+Verified live, signed in, both roles: the Pool (`section`, 48x48 teal tile), the
+Home coverage card (`row`, 36x36 neutral tile, confirmed `display:flex` with
+`flex-direction:row` and the icon and text side by side), the Approvals screen
+(`inline`, 40x40 teal tile, 14px/600 title) and the roster's no-search-match
+state (`inline`, 40x40 neutral tile).
+
+NOT exercised end to end, because neither seeded account reaches an empty state
+there: ClaimStatusList and SwapStatusList (the nurse has claims and swaps),
+both swap pickers (her unit has coworkers), the roster's "no nurses on your
+roster yet" (43 nurses exist), CoordinatorManage (7 upcoming shifts exist, seen
+rendering on the hub) and DuplicateWeek. Those branches are built and
+code-checked, not seen rendering.
 
 ## Schedule week dividers (2026-09-15)
 
