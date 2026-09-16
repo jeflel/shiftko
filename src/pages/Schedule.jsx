@@ -264,11 +264,12 @@ function MyPersonalEventRow({ event, isPast, onClick }) {
   )
 }
 
-function getWeekGroupLabel(offset, weekStart) {
-  if (offset === 0) return 'This Week'
-  if (offset === 1) return 'Next Week'
-  if (offset === -1) return 'Last Week'
-  return `Week of ${monthFormatter.format(weekStart)} ${weekStart.getDate()}`
+// "AUG WEEK 4" per the design's section divider: month the week starts in,
+// then the week of that month (Aug 24 -> 4, Sep 1 -> 1). Replaced the old
+// relative This Week / Next Week / Last Week labels.
+function getWeekGroupLabel(weekStart) {
+  const weekOfMonth = Math.ceil(weekStart.getDate() / 7)
+  return `${monthFormatter.format(weekStart).toUpperCase()} WEEK ${weekOfMonth}`
 }
 
 // Simpler shift row for the calendar's day-detail panel, per ScheduleCalendarMine.dc.html:
@@ -953,9 +954,12 @@ function MyShiftsTab({ user, contentView }) {
                   ref={(el) => { weekMarkerRefs.current[offset] = el }}
                   className="flex flex-col gap-2.5"
                 >
-                  <p className="text-[12px] font-semibold tracking-wide text-ink-secondary uppercase">
-                    {getWeekGroupLabel(offset, days[0])}
-                  </p>
+                  <div className="flex items-center gap-2.5">
+                    <p className="text-[12px] font-medium tracking-wide text-ink-secondary uppercase">
+                      {getWeekGroupLabel(days[0])}
+                    </p>
+                    <div className="h-px flex-1 bg-hairline" aria-hidden="true" />
+                  </div>
                   <ul className={`${SHIFT_LIST_CLASSNAME} py-1.5`}>
                     {rows.map((row, index) => (
                       <li key={row.key}>
