@@ -985,6 +985,48 @@ the list body scrolls under it.
 - The `+ Add a shift` button and the week/day group labels stay in the scrolling
   body: Jefle asked for the header block only to pin.
 
+## Remaining empty states moved onto the shared component (2026-09-15)
+
+Every empty state in the app now uses `EmptyState` from
+`src/components/ui/empty-state.jsx`. Home's today card and its empty Upcoming
+list were already on it; this pass covers the other nine.
+
+| screen | title | icon, tone, size |
+| --- | --- | --- |
+| Pool | No open shifts right now | `CalendarPlus`, teal, section |
+| CoordinatorManage | No upcoming shifts yet | `CalendarRange`, teal, section |
+| CoordinatorApprovals | Nothing waiting on you right now | `CircleCheck`, teal, inline |
+| ClaimStatusList | You haven't claimed any shifts yet | `ClipboardList`, neutral, inline |
+| SwapStatusList | No swaps yet | `ArrowLeftRight`, neutral, inline |
+| SwapPickCoworker | No other nurses on your unit yet | `Users`, neutral, inline |
+| SwapPickShift | <coworker> has no upcoming shifts to swap | `CalendarOff`, neutral, inline |
+| StaffRoster | No nurses on your roster yet | `Users`, neutral, inline |
+| StaffRoster (search) | No staff match this search | `Search`, neutral, inline |
+| DuplicateWeek | No shifts in the selected week | `CalendarOff`, neutral, inline |
+| Home (coordinator coverage card) | No shifts scheduled today | `CalendarOff`, neutral, row |
+
+Rules used: `layout="row"` inside a card, `size="section"` on a tab page,
+`size="inline"` on a pushed screen, and the tone matched to meaning (teal for a
+calm or positive state, neutral for nothing here). Each title carries a subline
+except where the title already says it all.
+
+Notes from the pass:
+
+- Three files had no `lucide-react` import at all (`CoordinatorApprovals`,
+  `SwapPickCoworker`, `SwapPickShift`) and needed one added alongside the icon.
+  A build does not catch this, it is only a runtime ReferenceError, so every
+  `icon={...}` was checked against its file's imports by script before building.
+- `Schedule.jsx:694` and `:1175` were left alone on purpose, that file was being
+  edited by another agent at the time.
+- The Pool's "0 open across <unit>" coverage line above the empty state still
+  renders when the count is zero. Not touched, it was outside the approved
+  change, but it reads oddly and is a one-line follow-up.
+
+Verified live, signed in: the Pool's empty state, the roster's no-search-match
+state, and the approvals screen. The claim and swap status lists, both swap
+pickers and Duplicate week did not render empty for either test account, so
+those branches are built and code-checked but NOT exercised end to end.
+
 ## Schedule week dividers (2026-09-15)
 
 The 4-week list's week headers were relative labels ("This Week", "Next Week",
