@@ -903,6 +903,29 @@ at z-index 30 with `rgb(10,162,207)`, the avatar initials, the Beta pill and
 the bell. It stays at `top: 0` after scrolling 400px, and tapping the bell on
 Profile opens the notifications overlay with real data.
 
+Follow-up (`2958184`): the pages that gained the bar needed their old top
+spacing reworked, and the first pass had a real bug in it.
+
+- Schedule's two title headers were still `sticky top-0 z-10` and still
+  carried `-mt-[26px]`, which existed only to cancel the `<main>`'s
+  `pt-[26px]` that the bar replaced. So their boxes were pulled 26px up under
+  the bar, and being z-10 under the bar's z-30 they slid underneath it on
+  scroll. The earlier note claiming they had been un-stuck was wrong; they
+  were not. Both are `static` with `pt-4` now, and the stale comment
+  explaining the old trick is gone.
+- Pool and Profile's title rows gained `mt-4`.
+
+Measured after deploy: all three put the page title 16px below the bar, and
+left-align it with the bar's contents (both at 436px at 430px wide), with an
+identical `26px / 600 / -0.52px` title. Schedule carries that 16px as padding
+on its header, whose box starts flush at the bar, rather than as a margin,
+which is visually identical.
+
+Measurement note: the bar is `sticky`, so it does not move while page content
+does. Comparing its rect to a header's rect is only meaningful at scrollTop 0
+- otherwise the gap reads as a huge negative number. Reset the scrollable
+ancestor (`.app-content`) first.
+
 ## A personal event fills the today card (2026-09-15)
 
 The today card only ever looked at `shifts`, so an event a nurse added never
