@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
-import { Repeat, SquarePlus, Upload } from 'lucide-react'
+import { Repeat, SquarePlus, Upload, Users } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { createClaim, deleteClaim } from '../lib/claims'
 import { NavRow } from '@/components/ui/nav-row'
 import { HeroCard } from '@/components/ui/hero-card'
 import { Button } from '@/components/ui/button'
+import { EmptyState } from '@/components/ui/empty-state'
 import SwapFlow from './SwapFlow'
 import OfferShiftConfirm from './OfferShiftConfirm'
 import OfferShiftStatus from './OfferShiftStatus'
@@ -284,7 +285,12 @@ export default function ShiftDetail({ shift, user, onBack }) {
           )}
 
           {!loading && !error && coworkers.length === 0 && (
-            <p className="text-xs text-ink-secondary">No coworkers on this shift</p>
+            <EmptyState
+              icon={Users}
+              title="No coworkers on this shift"
+              layout="row"
+              tone="neutral"
+            />
           )}
 
           {!loading &&

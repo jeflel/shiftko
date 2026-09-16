@@ -1,4 +1,5 @@
-import { CheckCircle2, ChevronLeft, ChevronRight, Repeat, XCircle } from 'lucide-react'
+import { Bell, CheckCircle2, ChevronLeft, ChevronRight, Repeat, XCircle } from 'lucide-react'
+import { EmptyState } from '@/components/ui/empty-state'
 import { formatRelativeTime } from '@/lib/shiftFormat'
 
 function getIconMeta(type) {
@@ -99,7 +100,13 @@ export default function Notifications({ notifications, onBack, onMarkAllRead, on
 
       <main className="flex flex-1 flex-col gap-[18px] px-5 pt-2.5 pb-4">
         {notifications.length === 0 ? (
-          <p className="text-sm text-ink-secondary">No notifications yet</p>
+          <EmptyState
+            icon={Bell}
+            title="No notifications yet"
+            subline="Claims, swaps and shift updates will show up here."
+            size="section"
+            tone="teal"
+          />
         ) : (
           <>
             <NotificationSection title="New" items={unread} onOpen={onOpenNotification} />

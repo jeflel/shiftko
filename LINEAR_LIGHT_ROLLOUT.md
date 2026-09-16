@@ -1010,6 +1010,19 @@ Rules used: `layout="row"` inside a card, `size="section"` on a tab page,
 calm or positive state, neutral for nothing here). Each title carries a subline
 except where the title already says it all.
 
+Two more moved onto it in the same pass: Notifications (`size="section"`, teal
+`Bell`, "No notifications yet") and Shift Detail's coworker list
+(`layout="row"`, neutral `Users`, "No coworkers on this shift"). Both files
+needed `Bell` and `Users` added to an existing lucide import, the same
+missing-icon trap as the three files above. That leaves only `Schedule.jsx:694`
+(a bordered card with plain text inside) and `:1175` (a per-day label in the
+calendar list, where an icon per empty day would be wrong) still on bare text.
+
+Also audited for the worse case, a list that renders nothing at all when empty:
+none. `Profile.jsx`'s four `map()` calls are over derived strings (initials,
+provider names), not fetched collections. `Home.jsx:1134`'s "No nurse assigned"
+is a warning chip on a shift row, not an empty state.
+
 Notes from the pass:
 
 - Three files had no `lucide-react` import at all (`CoordinatorApprovals`,
