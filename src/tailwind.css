@@ -3,6 +3,8 @@
 @theme {
   --font-sans: 'Geist', -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI',
     system-ui, sans-serif;
+  --font-display-title: 'Fraunces', 'Geist', -apple-system, BlinkMacSystemFont, 'SF Pro Text',
+    'Segoe UI', system-ui, sans-serif;
 
   /* v2 design tokens, see DESIGN.md in shiftko-design-v2-visual-pass-dup */
   --color-page-ground: #f9f9fb;

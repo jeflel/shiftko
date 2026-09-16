@@ -226,7 +226,7 @@ export default function Profile({ user, onWorkspaceLeft }) {
     <main className="mx-auto w-full max-w-md px-5 pb-12">
       <TopBar user={user} />
       <div className="mt-4 flex items-center justify-between">
-        <h1 className="text-[26px] font-semibold tracking-[-0.02em] text-ink">Profile</h1>
+        <h1 className="font-display-title text-[26px] font-semibold tracking-[-0.02em] text-ink">Profile</h1>
       </div>
 
       {/* Identity header */}
