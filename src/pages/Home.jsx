@@ -22,7 +22,7 @@ import OfferShiftUpdate from './OfferShiftUpdate'
 import Notifications from './Notifications'
 import PersonalEventPanel from '@/components/PersonalEventPanel'
 import { EmptyState } from '@/components/ui/empty-state'
-import { TopBar } from '@/components/ui/top-bar'
+import { HomeHeaderActions } from '@/components/ui/home-header-actions'
 import { fetchMyPersonalEvents } from '@/lib/personalEvents'
 import { Wordmark } from '@/components/ui/wordmark'
 import { PeriodTag } from '@/components/ui/period-tag'
@@ -751,25 +751,19 @@ export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoTo
   return (
     <div className="flex min-h-screen w-full flex-col bg-page-ground">
       <main className="mx-auto flex w-full max-w-md flex-1 flex-col pb-12">
-        {/* TopBar is a direct child of the hero wrapper, not of the greeting
-            block below it. position: sticky is constrained by its containing
-            block, so inside the greeting block the bar could only travel the
-            height of that box (about 100px) before sliding up under the
-            content, which is the bug. The hero wrapper's box spans the whole
-            page like the plain main on the other three tabs, so the bar pins
-            for the full scroll here too.
-            The hero carries px-5/pt-2 and the greeting block carries pt-4
-            instead, so the bar and the greeting land on exactly the same
-            pixels they did before, TopBar's own -mx-5/px-5 still bleeds the
-            blue band to both screen edges, and the 223px gradient is untouched
-            (a background paints the padding box, and the hero has no border). */}
+        {/* The greeting row is the top row of the page now: the shared top bar
+            that used to sit above it is gone (2026-09-16), so the bell and the
+            avatar ride on the greeting's own line and nothing is pinned over the
+            hero. The 223px gradient is untouched, and the hero still carries the
+            horizontal padding (a background paints the padding box). */}
         <div className="flex flex-1 flex-col px-5 pt-2 bg-gradient-to-b from-hero-gradient-start via-hero-gradient-mid via-70% to-hero-gradient-end bg-[length:100%_223px] bg-top bg-no-repeat">
-          <TopBar user={user} initials={initials} onOpenProfile={onOpenProfile} />
-
           <div className="flex flex-col gap-4 pt-4 pb-11">
-            <p className="ml-1 text-[20px] font-medium tracking-[-0.04em] text-white">
-              {getGreeting()}{nurseFirstName ? `, ${nurseFirstName}` : ''}
-            </p>
+            <div className="flex items-center justify-between gap-3">
+              <p className="ml-1 text-[20px] font-medium tracking-[-0.04em] text-white">
+                {getGreeting()}{nurseFirstName ? `, ${nurseFirstName}` : ''}
+              </p>
+              <HomeHeaderActions user={user} initials={initials} onOpenProfile={onOpenProfile} />
+            </div>
           </div>
 
           <div className="flex flex-1 flex-col gap-5 pt-0 pb-10">

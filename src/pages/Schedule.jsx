@@ -748,21 +748,18 @@ function MyShiftsTab({ user, contentView }) {
   const weekMarkerRefs = useRef({})
   const hasScrolledInitiallyRef = useRef(false)
 
-  // Where each week's "SEP 7 - 13" label pins: directly under the pinned header
-  // stack, so the user always sees the week the visible rows belong to. Sticky
-  // only travels inside the week's own block, so when the next week arrives its
-  // label takes the pinned spot and pushes this one up and out. The offset is
-  // the stack's measured height (this page's sticky header, plus the shared
-  // TopBar where it exists, which is Home only), never a hardcoded number, so
-  // it follows either one if its contents change. The label sits at z-[5],
-  // below the header's z-10, so the header is never covered.
+  // Where each week's "SEP 7 - 13" label pins: directly under the pinned header,
+  // so the user always sees the week the visible rows belong to. Sticky only
+  // travels inside the week's own block, so when the next week arrives its label
+  // takes the pinned spot and pushes this one up and out. The offset is that
+  // header's measured height, never a hardcoded number, so it follows the header
+  // if its contents change. The label sits at z-[5], below the header's z-10, so
+  // the header is never covered.
   const [weekLabelTop, setWeekLabelTop] = useState(null)
 
   useEffect(() => {
-    const pinnedHeight = [
-      document.querySelector('[data-testid="app-top-bar"]'),
-      document.querySelector('[data-testid="schedule-sticky-header"]'),
-    ].reduce((sum, el) => sum + (el?.getBoundingClientRect().height ?? 0), 0)
+    const pinnedHeader = document.querySelector('[data-testid="schedule-sticky-header"]')
+    const pinnedHeight = pinnedHeader?.getBoundingClientRect().height ?? 0
 
     // No pinned stack in the DOM means no measured offset to pin against, so the
     // label stays in normal flow rather than parking at top 0 over the header.
@@ -859,12 +856,11 @@ function MyShiftsTab({ user, contentView }) {
   }
 
   // Land on today's week on first load, so the user opens Schedule already
-  // looking at the current week instead of scrolled 8 weeks back. The header
-  // stack is pinned (the shared TopBar on Home, plus the Schedule header
-  // beneath it), so the scroll target is pulled down by that stack's measured
-  // height: scrollIntoView({ block: 'start' }) on its own parks the "SEP 7 - 13"
-  // label behind the pinned header. Measured, never hardcoded, so the offset
-  // follows the header if its contents change.
+  // looking at the current week instead of scrolled 8 weeks back. The Schedule
+  // header is pinned, so the scroll target is pulled down by that header's
+  // measured height: scrollIntoView({ block: 'start' }) on its own parks the
+  // "SEP 7 - 13" label behind the pinned header. Measured, never hardcoded, so
+  // the offset follows the header if its contents change.
   useEffect(() => {
     if (loading || hasScrolledInitiallyRef.current) return
     const target = weekMarkerRefs.current[0]
@@ -877,13 +873,10 @@ function MyShiftsTab({ user, contentView }) {
       return
     }
 
-    // Both pinned things sit above the target where they exist: the shared
-    // TopBar (Home only, so 0 here) and this page's sticky header. Measuring
-    // only the header left the week label tucked behind it.
-    const pinnedHeight = [
-      document.querySelector('[data-testid="app-top-bar"]'),
-      document.querySelector('[data-testid="schedule-sticky-header"]'),
-    ].reduce((sum, el) => sum + (el?.getBoundingClientRect().height ?? 0), 0)
+    // The pinned header sits above the target, so without this the week label
+    // lands tucked behind it.
+    const pinnedHeader = document.querySelector('[data-testid="schedule-sticky-header"]')
+    const pinnedHeight = pinnedHeader?.getBoundingClientRect().height ?? 0
     const scrollerTop = scroller.getBoundingClientRect().top
     const targetTop = target.getBoundingClientRect().top - scrollerTop + scroller.scrollTop
 

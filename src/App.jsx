@@ -140,7 +140,7 @@ function App() {
     setActiveTab('schedule')
   }
 
-  // The TopBar avatar opens the Profile tab. The bar renders on Home only.
+  // Home's greeting-row avatar opens the Profile tab.
   function handleOpenProfile() {
     setActiveTab('more')
   }
