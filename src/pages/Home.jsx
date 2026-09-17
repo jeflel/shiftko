@@ -848,23 +848,18 @@ export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoTo
           <div className="flex flex-col gap-4 pt-4 pb-15">
             <div className="flex items-center justify-between gap-3">
               {/* Two stacked lines on the left, the two controls on the right, all
-                  on one row centred against their 36px.
-                  The lines sit on a status-deep glass plate: measured where the
-                  text really lands, white on this gradient is 2.68:1 at the
-                  greeting and 2.31:1 at the 12px line, both under the 4.5 they
-                  need at those sizes. At 55 percent the plate reads 5.49:1 and
-                  4.59:1 and leaves the gradient untouched.
-                  min-h-9 with no vertical padding keeps the plate exactly the
-                  height of the controls, so the row still measures 36 and the
-                  two lines (31.6px at these line-heights) centre inside it with
-                  2.2px of slack. pb-15 above is what puts this row 24px above
-                  the Today card: the gap measures pb - 36. */}
-              <div className="flex min-h-9 min-w-0 flex-col justify-center gap-px rounded-control bg-status-deep/55 px-2">
-                <p className="font-display-title truncate text-[16px] leading-[1.05] font-semibold tracking-[-0.03em] text-white">
+                  on one row centred against their 36px. The stack measures 34.6px
+                  at 16px/1.1 plus 12px/1.25, so the row is exactly the height of
+                  the controls and nothing recomputes when the name is long. The
+                  greeting drops from the 20px it shipped at because 18px and up
+                  grows the row past the icons. pb-15 above is what puts this row
+                  24px above the Today card: the gap measures pb - 36. */}
+              <div className="flex min-w-0 flex-col gap-0.5 pl-1">
+                <p className="font-display-title truncate text-[16px] leading-[1.1] font-semibold tracking-[-0.03em] text-white">
                   {getGreeting()}{nurseFirstName ? `, ${nurseFirstName}` : ''}
                 </p>
                 {headerLine && (
-                  <p className="truncate text-xs leading-[1.15] tracking-[-0.01em] text-white/90">
+                  <p className="truncate text-xs leading-[1.25] tracking-[-0.01em] text-white/90">
                     {headerLine}
                   </p>
                 )}
