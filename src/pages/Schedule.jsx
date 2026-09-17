@@ -795,7 +795,7 @@ function MyShiftsTab({ user, contentView }) {
 
       const { data, error: fetchError } = await supabase
         .from('shifts')
-        .select('id, unit, starts_at, ends_at, status, is_offered')
+        .select('id, unit, starts_at, ends_at, status, is_offered, team_confirmed')
         .eq('nurse_id', user.id)
         .gte('starts_at', start.toISOString())
         .lt('starts_at', end.toISOString())
