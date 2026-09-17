@@ -1666,9 +1666,14 @@ Three things worth knowing before anyone tunes it:
   pixels are on `#1eabd5` (2.68:1 for white) and the 12px line's on `#2ab0d8`
   (2.31:1 at white/90). The old 20px greeting was 2.97:1, which passed as large
   text; at 16px it is normal text and does not. `#004458` ink would be 3.98:1 and
-  4.22:1, still under 4.5. The fix that keeps the gradient is a translucent
-  status-deep plate behind the two lines: at `rgba(0,68,88,.55)` the greeting
-  reaches 5.49:1 and the line 4.59:1.
+  4.22:1, still under 4.5, so the fix went behind the text instead (`4821952`):
+  a `bg-status-deep/55` plate, which composites over those same two gradients
+  to `#0e7290` and `#127592`, putting the greeting at 5.49:1 and the line at
+  4.59:1. The plate is `min-h-9` with no vertical padding, so it is exactly the
+  36px of the controls beside it and the row still measures 36; the lines tighten
+  to 1.05 and 1.15 with a 1px gap to leave 2.2px of slack inside, and the
+  plate's left edge sits on the hero's 20px padding, which moved the text 4px
+  right of where `pl-1` had it.
 
 Behaviour kept as it was: the sentence is derived, never stored (the period comes
 from `getShiftPeriod`, lowercased with its article, so `a day shift`,
