@@ -1690,7 +1690,10 @@ Files: `src/components/BottomNav.jsx`.
   The mockup specifies 16px (`MainHorizontalTiles.dc.html`'s `.section-header`),
   so this is a deliberate departure rather than a fidelity fix. It now matches
   the greeting's own 20px exactly, which is worth knowing because the two are no
-  longer distinguishable by size. Reverting is one value in `Home.jsx`.
+  longer distinguishable by size. Reverting is one value in `Home.jsx`. The same
+  pass renamed the second heading from `Upcoming` to `My Upcoming` (the mockup
+  calls it `Upcoming Shifts`), which matches the nurse-facing `My Shifts` voice
+  on Schedule.
 
 - **Nurse Home built on `MainHorizontalTiles.dc.html`** (icon-left quick
   tiles), not `Main.dc.html` (icon-top). Matches what was already shipped

@@ -908,7 +908,7 @@ export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoTo
                   )}
 
                 <section className="flex flex-col gap-2.5">
-                  <SectionHeader title="Upcoming" onViewAll={onGoToSchedule} />
+                  <SectionHeader title="My Upcoming" onViewAll={onGoToSchedule} />
                   {upcomingItems.length > 0 ? (
                     <div className="rounded-card bg-white py-1.5 shadow-card-lift">
                       {upcomingItems.map((entry, index) => (
