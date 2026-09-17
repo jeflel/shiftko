@@ -15,9 +15,21 @@ export const SHIFT_LIST_CLASSNAME = `${SHIFT_LIST_BASE} border border-hairline`
 // as a box drawn around the list on that page.
 export const SHIFT_LIST_BORDERLESS_CLASSNAME = SHIFT_LIST_BASE
 
-// `.shift-row-divider`: inset 73px when rows carry a date column (My Shifts
-// week lists, Pool, Claim Status), 16px when they don't (day-detail lists,
-// Team Schedule list), per the established Linear Light vocabulary.
-export function ShiftListDivider({ inset = true }) {
-  return <div className={cn('h-px bg-hairline', inset ? 'ml-[73px]' : 'ml-4')} aria-hidden="true" />
+// `.shift-row-divider`: inset so its start lines up with the info column's text.
+// 73px matches the artifact's 34px date column (Pool, Claim Status, Manage,
+// Swap Status, the day-detail lists' siblings); `wide` is 81px, for Schedule's
+// deliberately bigger 42px date column. 16px (`inset={false}`) is for lists
+// whose rows carry no date column at all.
+const DIVIDER_INSET = {
+  default: 'ml-[73px]',
+  wide: 'ml-[81px]',
+}
+
+export function ShiftListDivider({ inset = true, variant = 'default' }) {
+  return (
+    <div
+      className={cn('h-px bg-hairline', inset ? DIVIDER_INSET[variant] : 'ml-4')}
+      aria-hidden="true"
+    />
+  )
 }
