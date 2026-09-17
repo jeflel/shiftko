@@ -1581,6 +1581,11 @@ function AddMyShiftPanel({ userId, homeUnit, onClose, onSaved }) {
 
       {error && <p className="text-sm text-red-700">{error}</p>}
 
+      <p className="text-xs leading-relaxed text-ink-secondary">
+        Saves to your schedule first. Open the shift and tap Add to team schedule to put
+        it on Team Schedule.
+      </p>
+
       <Button type="button" onClick={handleSubmit} disabled={saving} className="w-full">
         {saving ? 'Saving…' : 'Save shift'}
       </Button>
