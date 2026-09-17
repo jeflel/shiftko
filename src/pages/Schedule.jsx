@@ -97,7 +97,7 @@ function ScheduleTab({ user }) {
           show through. */}
       <div
         data-testid="schedule-sticky-header"
-        className="sticky top-0 z-10 -mx-5 flex flex-col gap-4 border-b border-hairline bg-page-ground px-5 pt-4 pb-4"
+        className="sticky top-0 z-10 -mx-5 flex flex-col gap-4 bg-page-ground px-5 pt-4 pb-4"
       >
         <div className="flex items-center justify-between">
           <h1 className="font-display-title text-[26px] font-semibold tracking-[-0.02em] text-ink">Schedule</h1>
@@ -1276,7 +1276,7 @@ function TeamScheduleTab({ user, onChangeView, contentView: contentViewProp }) {
           offer a swap against. */}
       <div
         data-testid="schedule-sticky-header"
-        className="sticky top-0 z-10 -mx-5 flex flex-col gap-4 border-b border-hairline bg-page-ground px-5 pt-4 pb-4"
+        className="sticky top-0 z-10 -mx-5 flex flex-col gap-4 bg-page-ground px-5 pt-4 pb-4"
       >
         <div className="flex items-center justify-between">
           <h1 className="font-display-title text-[26px] font-semibold tracking-[-0.02em] text-ink">Schedule</h1>
