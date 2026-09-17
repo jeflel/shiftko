@@ -90,8 +90,9 @@ function ScheduleTab({ user }) {
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Sticky header stack. The shared TopBar lives on Home only, so nothing
-          pins above this page any more and the header pins at top-0 z-10,
+      {/* Sticky header. Nothing is pinned above it any more: the shared top bar
+          was removed on 2026-09-16 and its two controls now live on Home's
+          greeting row. The header pins at top-0 z-10,
           leaving the list body as the only thing that scrolls. Its own opaque
           bg-page-ground is load-bearing: without it, rows scrolling underneath
           show through. */}
