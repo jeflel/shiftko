@@ -1479,14 +1479,17 @@ Two traps worth keeping if this is ever re-derived:
   coordinator-assigned shifts land in that same array, so a nurse handed a shift
   on day one would complete a step she never did.
 
-**The finished card turns green and keeps a way forward.** Once every step is
-done the card becomes the mockup's done-banner treatment: a green ground
-(`status-approved-bg`) with a green check, and one line, `You're all set, Alex!`.
-The track gives way there, because the journey is over and four ticks say less
-than the message does. Zone 3 stays, repurposed from a task to the handoff: a
-real button reading `View your requests` that opens the same notifications panel
-this slot hands over to. The card therefore keeps a tap target in BOTH states
-instead of going inert, and the affordance never lies about being tappable.
+**The finished card keeps its shape, and gains a way forward.** Every step done
+does NOT recolour the card or drop the track: Jefle kept the white card with the
+teal border, the eyebrow (`You're all set, Alex`), the green `Complete` chip and
+all four ticks (2026-09-17), preferring the completed journey visible to a green
+restyle. A green ground with a check circle was built and rejected the same day,
+so do not "finish" this again without asking. The one addition is zone 3, which
+stops being a task and becomes the handoff: a real button reading
+`View your requests` that opens the same notifications panel this slot hands over
+to. The card therefore keeps a tap target in both states instead of going inert,
+and the only differences between the states are the eyebrow, the chip, the row's
+job and the button's label.
 
 **Resetting the checklist for a demo.** The state is derived, so "reset progress"
 means making the two counts read zero again, and there is no stored flag to clear.

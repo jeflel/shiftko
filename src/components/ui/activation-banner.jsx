@@ -6,19 +6,20 @@ import { cn } from '@/lib/utils'
 // Home's "Get started" banner: the activation checklist that takes the Request
 // Activity slot until it is finished or dismissed.
 //
-// While there is a step left, the card is three zones, no sentences doing a
-// component's job:
+// The card is three zones in both states, no sentences doing a component's job:
 //   1. card header, the same label-left / chip-right shape as Home's Today card
 //   2. the milestone track, the only thing on Home shaped like this
-//   3. the next step as a real row, sharing the quick tiles' 32px icon-tile,
-//      13px title and 11px subline geometry
+//   3. a real row sharing the quick tiles' 32px icon-tile, 13px title and 11px
+//      subline geometry. While a step is left it points at that step; once
+//      everything is done it points at the notifications this slot hands over to.
+// The card keeps a tap target in both states rather than going inert, so the
+// affordance never lies about being tappable.
 //
-// Once every step is done the card turns green and says so, per the mockup's
-// done-banner treatment: the journey is over, so the track gives way to a green
-// check and the message, and zone 3 stays as a real button pointing at the thing
-// that comes next (the request notifications this slot hands over to). The card
-// keeps a tap target in both states rather than going inert, so the affordance
-// never lies about being tappable.
+// The finished card deliberately does NOT change colour or drop the track: Jefle
+// kept the white card with the eyebrow, the green Complete chip and all four
+// ticks (2026-09-17), preferring the completed journey to a green restyle. The
+// only difference between the two states is the eyebrow, the chip, what the row
+// does, and the button's label.
 //
 // The connectors are real flex boxes between the nodes rather than one
 // absolutely positioned line with a hardcoded inset, so they line up by
@@ -106,6 +107,10 @@ export function ActivationBanner({ mode, done, currentIndex, nextStep, firstName
   const row = isComplete ? COMPLETE_ROW : nextStep
   const RowIcon = isComplete ? Bell : row?.action === 'claim' ? Search : Plus
 
+  const eyebrow = isComplete
+    ? `You're all set${firstName ? `, ${firstName}` : ''}`
+    : 'Welcome aboard'
+
   // deriveActivation guarantees a next step outside 'complete' mode (node 1 is
   // always done, so the current node is never the terminal one). Guarded anyway:
   // a future edit to the step model should degrade to a read-only card rather
@@ -113,50 +118,32 @@ export function ActivationBanner({ mode, done, currentIndex, nextStep, firstName
   const canTap = Boolean(row)
 
   const shell = cn(
-    'flex w-full flex-col gap-[13px] rounded-card border px-4 py-[15px] text-left shadow-card-lift',
-    isComplete ? 'border-[#b7e4c6] bg-status-approved-bg' : 'border-[#5dc7e6] bg-white',
-    canTap && (isComplete ? 'transition-colors active:bg-status-approved-bg/70' : 'transition-colors active:bg-press-state'),
+    'flex w-full flex-col gap-[13px] rounded-card border border-[#5dc7e6] bg-white px-4 py-[15px] text-left shadow-card-lift',
+    canTap && 'transition-colors active:bg-press-state',
   )
 
   const body = (
     <>
-      {isComplete ? (
-        <div className="flex items-center gap-2.5">
-          <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-status-approved-fg text-white">
-            <Check size={17} strokeWidth={3} />
-          </span>
-          <span className="text-[15px] font-semibold tracking-[-0.02em] text-ink">
-            {`You're all set${firstName ? `, ${firstName}` : ''}!`}
-          </span>
-        </div>
-      ) : (
-        <>
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-xs font-semibold tracking-[0.05em] text-ink-secondary uppercase">
-              Welcome aboard
-            </span>
-            <span className="inline-flex shrink-0 items-center gap-1 rounded-control-sm bg-teal-tint px-2 py-[3px] text-[11px] font-semibold text-teal-foreground">
-              {`Step ${currentIndex + 1} of ${ACTIVATION_NODES.length}`}
-            </span>
-          </div>
-
-          <ActivationTrack done={done} currentIndex={currentIndex} />
-        </>
-      )}
-
-      {canTap && (
-        <div
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-xs font-semibold tracking-[0.05em] text-ink-secondary uppercase">
+          {eyebrow}
+        </span>
+        <span
           className={cn(
-            'flex items-center gap-2.5 border-t pt-[13px]',
-            isComplete ? 'border-[#b7e4c6]' : 'border-hairline',
+            'inline-flex shrink-0 items-center gap-1 rounded-control-sm px-2 py-[3px] text-[11px] font-semibold',
+            isComplete ? 'bg-status-approved-bg text-status-approved-fg' : 'bg-teal-tint text-teal-foreground',
           )}
         >
-          <span
-            className={cn(
-              'flex size-8 flex-none items-center justify-center rounded-control',
-              isComplete ? 'bg-white text-status-approved-fg' : 'bg-teal-tint text-teal-foreground',
-            )}
-          >
+          {isComplete && <Check size={10} strokeWidth={3.4} />}
+          {isComplete ? 'Complete' : `Step ${currentIndex + 1} of ${ACTIVATION_NODES.length}`}
+        </span>
+      </div>
+
+      <ActivationTrack done={done} currentIndex={currentIndex} />
+
+      {canTap && (
+        <div className="flex items-center gap-2.5 border-t border-hairline pt-[13px]">
+          <span className="flex size-8 flex-none items-center justify-center rounded-control bg-teal-tint text-teal-foreground">
             <RowIcon size={16} strokeWidth={2.2} />
           </span>
           <span className="min-w-0 flex-1">
