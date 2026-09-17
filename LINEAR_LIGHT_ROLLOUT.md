@@ -1513,6 +1513,40 @@ milestone chart, progress ring); the track won and the other two stay in that fi
 for reference. The header is an eyebrow (`Welcome aboard`), not a headline, and
 the wording is one span in `components/ui/activation-banner.jsx`.
 
+**Verified on live production, signed in (2026-09-17).** Signed in as
+`alex.ramirez@shiftko.test` against the deployed build (`index-DYOIXElj.js`,
+hash-matched to the local rebuild). The finished card renders from his real data
+(3 personal events, 4 claims) with the eyebrow `YOU'RE ALL SET, ALEX`, the green
+`Complete` chip and all four nodes checked, in two zones with no third. Geometry
+read with `getBoundingClientRect`, not eyeballed: card `padding 15px 16px`, `gap
+13px`, `radius 16px`, border `#5dc7e6`; dots 28px, all on the same centre line,
+evenly spaced 104px; connectors on the dot centre line and flush with the dot
+edges (`gapLeft 0`, `tuckRight 0`).
+
+One real bug came out of that measurement: the connectors were 21px stubs sitting
+25px clear of every dot, because a flex connector between fixed-width node boxes
+stops at the box edge rather than the dot edge. Fixed with a negative margin of
+half the node box's slack around the dot (`8bcdefe`).
+
+The checklist states were exercised through the same signed-in app with the two
+counts controlled at the network layer (a `window.fetch` hook returning
+`Content-Range: 0-0/0` for the `personal_events` and `shift_claims` HEAD counts),
+because the only nurse login in the vault is already past the checklist. Step 2
+rendered `WELCOME ABOARD` / `Step 2 of 4` with node 1 checked, node 2 haloed and
+the segments teal + neutral + neutral, as a `<button>` carrying
+`aria-label="Get started, step 2 of 4: Add a shift"`, and tapping it opened the
+personal event panel. Step 3 rendered `Step 3 of 4`, two nodes checked, segments
+teal + teal + neutral, the row as `Claim a shift / Pick up an open shift`, and
+tapping it landed on the Pool page. `Got it` wrote
+`profiles.activation_dismissed_at` (confirmed in the database) and the section
+disappeared; setting the column back to null brought the finished card straight
+back, which is the proof that the column drives the mode.
+
+Still unverified: the checklist driven by real counts, since no nurse account with
+zero personal events and zero claims has a saved login, and the coordinator Home,
+which was reasoned about rather than driven (the section sits inside the
+`!isCoordinator` branch, so it cannot render there at all).
+
 Files: `src/lib/activation.js` (new), `src/components/ui/activation-banner.jsx`
 (new), `src/pages/Home.jsx` (the mode switch, plus one effect and two handlers),
 `supabase/migrations/20260917023202_profiles_activation_dismissed.sql`.
