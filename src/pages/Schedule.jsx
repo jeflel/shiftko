@@ -1011,7 +1011,12 @@ function MyShiftsTab({ user, contentView }) {
                   {/* The opaque -mx-5/px-5 strip spans the full width the rows
                       occupy (it cancels the page container's px-5, same as the
                       sticky header above does) so nothing scrolling under the
-                      pinned label shows through at the edges. */}
+                      pinned label shows through at the edges. The 20px gradient
+                      below it carries the page ground down to transparent, so
+                      the top of the card list dissolves into the page as it
+                      slides up instead of being cut off at the label's edge.
+                      It is absolutely placed so it adds no height to the list
+                      and never intercepts a tap. */}
                   <div className="sticky z-[5] -mx-5 bg-page-ground px-5" style={{ top: weekLabelTop }}>
                     <div className="flex items-center gap-2.5">
                       <p className="text-[12px] font-medium tracking-wide text-ink-secondary uppercase">
@@ -1019,6 +1024,10 @@ function MyShiftsTab({ user, contentView }) {
                       </p>
                       <div className="h-px flex-1 bg-hairline" aria-hidden="true" />
                     </div>
+                    <div
+                      className="pointer-events-none absolute inset-x-0 top-full h-5 bg-gradient-to-b from-page-ground to-transparent"
+                      aria-hidden="true"
+                    />
                   </div>
                   <ul className={`${SHIFT_LIST_CLASSNAME} py-1.5`}>
                     {rows.map((row, index) => (
