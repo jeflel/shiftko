@@ -17,10 +17,25 @@ import { cn } from '@/lib/utils'
 // section header above.
 //
 // The connectors are real flex boxes between the nodes rather than one
-// absolutely positioned line with a hardcoded inset: the nodes are 78px boxes
-// with a 28px dot inside them, so a line placed by pixel offset only lines up at
-// the exact card width it was measured at, while flex connectors line up by
-// construction at any width.
+// absolutely positioned line with a hardcoded inset, so they line up by
+// construction at any card width instead of only at the width they were
+// measured at.
+// The connector must reach each dot's EDGE, not stop at the node box's edge, or
+// the track reads as three floating stubs instead of one line. Measured live at
+// 408px card width: the dots ended at 506 and the connector started at 531, so
+// it sat 25px clear of every dot. It needs a negative margin of exactly half the
+// node box's slack around the dot.
+//
+// With the node width fixed, the connector's own flex-1 width works out to the
+// dot-edge-to-dot-edge distance at ANY container width (node - dot + free/3),
+// so the two constants below keep the line flush with the dots on a 320px phone
+// and on desktop alike, without a media query. The dot is opaque and painted
+// after the connector, so any tuck past an edge is covered rather than drawn
+// across the dot.
+const NODE_WIDTH = 62
+const DOT_SIZE = 28
+const DOT_INSET = (NODE_WIDTH - DOT_SIZE) / 2
+
 function ActivationTrack({ done, currentIndex }) {
   return (
     <div className="flex items-start pt-[3px]" aria-hidden="true">
@@ -36,18 +51,23 @@ function ActivationTrack({ done, currentIndex }) {
                   'mt-[13px] h-0.5 flex-1 rounded-[2px]',
                   done[index - 1] ? 'bg-teal' : 'bg-track-neutral',
                 )}
+                style={{ marginLeft: -DOT_INSET, marginRight: -DOT_INSET }}
               />
             )}
-            <div className="flex w-[78px] flex-none flex-col items-center gap-[7px]">
+            <div
+              className="flex flex-none flex-col items-center gap-[7px]"
+              style={{ width: NODE_WIDTH }}
+            >
               <span
                 className={cn(
-                  'flex size-7 items-center justify-center rounded-full border-2 text-[11px] font-semibold',
+                  'flex items-center justify-center rounded-full border-2 text-[11px] font-semibold',
                   isDone
                     ? 'border-teal-foreground bg-teal-foreground text-white'
                     : isCurrent
                       ? 'border-teal-foreground bg-card-surface text-teal-foreground shadow-[0_0_0_4px_var(--color-teal-tint)]'
                       : 'border-hairline bg-card-surface text-ink-secondary',
                 )}
+                style={{ width: DOT_SIZE, height: DOT_SIZE }}
               >
                 {isDone ? <Check size={12} strokeWidth={3} /> : index + 1}
               </span>
