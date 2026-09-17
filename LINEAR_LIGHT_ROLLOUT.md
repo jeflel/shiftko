@@ -1479,6 +1479,15 @@ Two traps worth keeping if this is ever re-derived:
   coordinator-assigned shifts land in that same array, so a nurse handed a shift
   on day one would complete a step she never did.
 
+**The finished card turns green and keeps a way forward.** Once every step is
+done the card becomes the mockup's done-banner treatment: a green ground
+(`status-approved-bg`) with a green check, and one line, `You're all set, Alex!`.
+The track gives way there, because the journey is over and four ticks say less
+than the message does. Zone 3 stays, repurposed from a task to the handoff: a
+real button reading `View your requests` that opens the same notifications panel
+this slot hands over to. The card therefore keeps a tap target in BOTH states
+instead of going inert, and the affordance never lies about being tappable.
+
 **The chip counts positions, not completions** (`Step 2 of 4`, not `1 of 3
 done`): with four nodes on the track, a count of three leaves the reader working
 out which of the four it refers to. Positions map 1:1 onto the nodes and the last
