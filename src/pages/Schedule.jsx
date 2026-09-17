@@ -208,6 +208,7 @@ function MyShiftRow({ shift, credential, isPast, onClick }) {
       />
 
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <PeriodTag period={period} variant="bare" />
         <p className="truncate text-[14px] font-semibold text-ink">
           {formatShiftTimeRange(shift.starts_at, shift.ends_at)}
         </p>
@@ -221,9 +222,7 @@ function MyShiftRow({ shift, credential, isPast, onClick }) {
         )}
       </div>
 
-      <div className="shrink-0">
-        <PeriodTag period={period} />
-      </div>
+      <ChevronRight size={15} strokeWidth={2} className="shrink-0 text-chevron-muted" />
     </button>
   )
 }
@@ -262,15 +261,14 @@ function MyPersonalEventRow({ event, isPast, onClick }) {
       />
 
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <PeriodTag period={getShiftPeriod(event.starts_at)} variant="bare" />
         <p className="truncate text-[14px] font-semibold text-ink">
           {formatShiftTimeRange(event.starts_at, event.ends_at)}
         </p>
         {meta && <p className="truncate text-[12px] text-ink-secondary">{meta}</p>}
       </div>
 
-      <div className="shrink-0">
-        <PeriodTag period={getShiftPeriod(event.starts_at)} />
-      </div>
+      <ChevronRight size={15} strokeWidth={2} className="shrink-0 text-chevron-muted" />
     </button>
   )
 }
@@ -307,6 +305,7 @@ function CalendarDayShiftRow({ shift, credential, onClick }) {
       className="flex w-full items-center gap-3 px-4 py-4.5 text-left transition-colors duration-150 ease-out active:bg-press-state"
     >
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <PeriodTag period={period} variant="bare" />
         <p className="truncate text-[14px] font-semibold text-ink">
           {formatShiftTimeRange(shift.starts_at, shift.ends_at)}
         </p>
@@ -319,9 +318,7 @@ function CalendarDayShiftRow({ shift, credential, onClick }) {
           </div>
         )}
       </div>
-      <div className="shrink-0">
-        <PeriodTag period={period} />
-      </div>
+      <ChevronRight size={15} strokeWidth={2} className="shrink-0 text-chevron-muted" />
     </button>
   )
 }
@@ -338,14 +335,13 @@ function CalendarDayPersonalEventRow({ event, onClick }) {
       className="flex w-full items-center gap-3 px-4 py-4.5 text-left transition-colors duration-150 ease-out active:bg-press-state"
     >
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <PeriodTag period={getShiftPeriod(event.starts_at)} variant="bare" />
         <p className="truncate text-[14px] font-semibold text-ink">
           {formatShiftTimeRange(event.starts_at, event.ends_at)}
         </p>
         {meta && <p className="truncate text-[12px] text-ink-secondary">{meta}</p>}
       </div>
-      <div className="shrink-0">
-        <PeriodTag period={getShiftPeriod(event.starts_at)} />
-      </div>
+      <ChevronRight size={15} strokeWidth={2} className="shrink-0 text-chevron-muted" />
     </button>
   )
 }

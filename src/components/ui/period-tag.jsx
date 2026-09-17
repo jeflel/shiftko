@@ -14,10 +14,23 @@ const PERIOD_TAG_CONFIG = {
   Personal: { icon: Pencil, bg: 'bg-period-personal-bg', fg: 'text-period-personal-fg' },
 }
 
-export function PeriodTag({ period }) {
+// `variant="bare"`: same colour and icon, no pill background, and the icon
+// trails the label instead of leading it. Schedule's own shift rows use it for
+// an experiment (label above the time, chevron where the pill used to be);
+// everything else keeps the pill.
+export function PeriodTag({ period, variant = 'pill' }) {
   const config = PERIOD_TAG_CONFIG[period]
   if (!config) return null
   const Icon = config.icon
+
+  if (variant === 'bare') {
+    return (
+      <span className={cn('inline-flex shrink-0 items-center gap-1 text-[11px] font-semibold', config.fg)}>
+        {period}
+        <Icon size={12} strokeWidth={2} />
+      </span>
+    )
+  }
 
   return (
     <span
