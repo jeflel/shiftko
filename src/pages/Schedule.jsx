@@ -202,10 +202,7 @@ function MyShiftRow({ shift, credential, isPast, onClick }) {
         <span className="text-[20px] leading-tight font-semibold text-ink">{date.getDate()}</span>
       </div>
 
-      <div
-        className={cn('h-full min-h-9 w-px shrink-0 self-stretch', isPast ? 'bg-hairline' : 'bg-teal')}
-        aria-hidden="true"
-      />
+<div className="min-h-9 w-px shrink-0 self-stretch bg-hairline" aria-hidden="true" />
 
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <PeriodTag period={period} variant="bare" />
@@ -255,10 +252,7 @@ function MyPersonalEventRow({ event, isPast, onClick }) {
         <span className="text-[20px] leading-tight font-semibold text-ink">{date.getDate()}</span>
       </div>
 
-      <div
-        className={cn('h-full min-h-9 w-px shrink-0 self-stretch', isPast ? 'bg-hairline' : 'bg-teal')}
-        aria-hidden="true"
-      />
+<div className="min-h-9 w-px shrink-0 self-stretch bg-hairline" aria-hidden="true" />
 
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <PeriodTag period={getShiftPeriod(event.starts_at)} variant="bare" />
