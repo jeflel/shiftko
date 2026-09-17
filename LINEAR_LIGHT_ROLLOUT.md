@@ -1683,17 +1683,17 @@ Files: `src/components/BottomNav.jsx`.
 
 ## Decisions made / deviations worth knowing about
 
-- **Home's section headers are 20px, not the mockup's 16px** (2026-09-17, by
+- **Home's section headers are 18px, not the mockup's 16px** (2026-09-17, by
   Jefle). `SectionHeader` is a single shared component in `Home.jsx`, so this
   moves every section heading on Home at once: `Request Activity` / `Get
-  started`, `Upcoming`, `Weekly Progress` and the coordinator's `Coverage Gaps`.
-  The mockup specifies 16px (`MainHorizontalTiles.dc.html`'s `.section-header`),
-  so this is a deliberate departure rather than a fidelity fix. It now matches
-  the greeting's own 20px exactly, which is worth knowing because the two are no
-  longer distinguishable by size. Reverting is one value in `Home.jsx`. The same
-  pass renamed the second heading from `Upcoming` to `My Upcoming` (the mockup
-  calls it `Upcoming Shifts`), which matches the nurse-facing `My Shifts` voice
-  on Schedule.
+  started`, `My Upcoming`, `Weekly Progress` and the coordinator's `Coverage
+  Gaps`. The mockup specifies 16px (`MainHorizontalTiles.dc.html`'s
+  `.section-header`), so this is a deliberate departure rather than a fidelity
+  fix. 20px was tried first and read too big, because the greeting is 20px too
+  and the two then looked like competing titles; do not raise it back without
+  asking. The same pass renamed the second heading from `Upcoming` to `My
+  Upcoming` (the mockup calls it `Upcoming Shifts`), which matches the
+  nurse-facing `My Shifts` voice on Schedule.
 
 - **Nurse Home built on `MainHorizontalTiles.dc.html`** (icon-left quick
   tiles), not `Main.dc.html` (icon-top). Matches what was already shipped
