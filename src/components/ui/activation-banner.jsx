@@ -15,11 +15,21 @@ import { cn } from '@/lib/utils'
 // The card keeps a tap target in both states rather than going inert, so the
 // affordance never lies about being tappable.
 //
+// The surface is a 10% teal wash with the same 1px #5dc7e6 outline the card had
+// on white, and the row inside it sits on a white plate (2026-09-17, picked from
+// a shortlist of five). Two things follow from the ground no longer being white
+// and both are load bearing:
+//   - the track's unfilled connectors and the pending dots cannot keep the
+//     neutral values. #ededf2 on the wash measures 1.03:1 and #e5e5ea 1.07:1,
+//     so both are effectively invisible; they use teal-foreground at 30% and 35%.
+//   - the row's 11px grey subline measures 5.07:1 on a white plate and 4.48:1 on
+//     the raw wash, so the plate is what keeps the small text above the floor.
+//
 // The finished card deliberately does NOT change colour or drop the track: Jefle
-// kept the white card with the eyebrow, the green Complete chip and all four
-// ticks (2026-09-17), preferring the completed journey to a green restyle. The
-// only difference between the two states is the eyebrow, the chip, what the row
-// does, and the button's label.
+// kept the eyebrow, the green Complete chip and all four ticks (2026-09-17),
+// preferring the completed journey to a restyle. The ground stays the wash in
+// both states, so the only difference between them is the eyebrow, the chip,
+// what the row does, and the button's label.
 //
 // The connectors are real flex boxes between the nodes rather than one
 // absolutely positioned line with a hardcoded inset, so they line up by
@@ -62,7 +72,7 @@ function ActivationTrack({ done, currentIndex }) {
               <div
                 className={cn(
                   'mt-[13px] h-0.5 flex-1 rounded-[2px]',
-                  done[index - 1] ? 'bg-teal' : 'bg-track-neutral',
+                  done[index - 1] ? 'bg-teal' : 'bg-teal-foreground/30',
                 )}
                 style={{ marginLeft: -DOT_INSET, marginRight: -DOT_INSET }}
               />
@@ -78,7 +88,7 @@ function ActivationTrack({ done, currentIndex }) {
                     ? 'border-teal-foreground bg-teal-foreground text-white'
                     : isCurrent
                       ? 'border-teal-foreground bg-card-surface text-teal-foreground shadow-[0_0_0_4px_var(--color-teal-tint)]'
-                      : 'border-hairline bg-card-surface text-ink-secondary',
+                      : 'border-teal-foreground/35 bg-card-surface text-ink-secondary',
                 )}
                 style={{ width: DOT_SIZE, height: DOT_SIZE }}
               >
@@ -118,8 +128,10 @@ export function ActivationBanner({ mode, done, currentIndex, nextStep, firstName
   const canTap = Boolean(row)
 
   const shell = cn(
-    'flex w-full flex-col gap-[13px] rounded-card border border-[#5dc7e6] bg-white px-4 py-[15px] text-left shadow-card-lift',
-    canTap && 'transition-colors active:bg-press-state',
+    'flex w-full flex-col gap-[13px] rounded-card border border-[#5dc7e6] bg-teal-wash px-4 py-[15px] text-left shadow-card-lift',
+    // Press darkens the wash rather than washing grey over it, which would lift
+    // a tinted ground towards white instead of responding to the tap.
+    canTap && 'transition-colors active:bg-teal-tint',
   )
 
   const body = (
@@ -131,7 +143,9 @@ export function ActivationBanner({ mode, done, currentIndex, nextStep, firstName
         <span
           className={cn(
             'inline-flex shrink-0 items-center gap-1 rounded-control-sm px-2 py-[3px] text-[11px] font-semibold',
-            isComplete ? 'bg-status-approved-bg text-status-approved-fg' : 'bg-teal-tint text-teal-foreground',
+            // The state chip is white on the tinted ground rather than the teal
+            // tint it used on white, which would barely read against it.
+            isComplete ? 'bg-status-approved-bg text-status-approved-fg' : 'bg-card-surface text-teal-foreground',
           )}
         >
           {isComplete && <Check size={10} strokeWidth={3.4} />}
@@ -142,7 +156,7 @@ export function ActivationBanner({ mode, done, currentIndex, nextStep, firstName
       <ActivationTrack done={done} currentIndex={currentIndex} />
 
       {canTap && (
-        <div className="flex items-center gap-2.5 border-t border-hairline pt-[13px]">
+        <div className="flex items-center gap-2.5 rounded-button bg-card-surface px-3 py-2.5">
           <span className="flex size-8 flex-none items-center justify-center rounded-control bg-teal-tint text-teal-foreground">
             <RowIcon size={16} strokeWidth={2.2} />
           </span>

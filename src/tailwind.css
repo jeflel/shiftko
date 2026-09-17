@@ -32,6 +32,13 @@
      named for the surface so a field colour never reads as a state. */
   --color-teal-field: #0a5e73;
   --color-teal-tint: rgba(56, 189, 229, 0.15);
+  /* Home's Get started card ground (2026-09-17): the 10% teal wash Jefle picked
+     over a white card with a teal outline. Over the page ground #f9f9fb it
+     composites to #e6f3f9, which is what he approved; one stop stronger is
+     --color-teal-tint at 15%. The card's outline stays #5dc7e6 at 1px, and the
+     row inside it sits on bg-card-surface, which is what puts the 11px grey
+     sublines back at 5.07:1 instead of the 4.48:1 they get on the raw wash. */
+  --color-teal-wash: rgba(56, 189, 229, 0.1);
   --color-urgency-red: #d9291c;
   --color-chevron-muted: #c7c7cc;
   --color-selection-ink: #10222a;

@@ -6,18 +6,29 @@ import { supabase } from './supabase'
 // the chip reads "Step n of 4" and maps 1:1 onto the track. Counting the three
 // actionable steps instead ("1 of 3 done") leaves the reader working out which
 // of the four dots the count refers to.
+//
+// The labels are one line each inside a 62px node, which is a hard constraint,
+// not a style choice (2026-09-17). Measured in Geist at the card's 11px and
+// -0.01em tracking: "Claim a shift" is 62.9px and wrapped to two lines, "Add a
+// shift" is 54.2px and just fit. Both articles were dropped so all four labels
+// sit level (Signed up 51.8, Add shift 46.8, Claim shift 55.7, All set 32.7 in
+// the semibold weight the current and done nodes use). Widening the nodes to
+// 70px would also have fit, at the cost of 12px connectors instead of 23px.
 export const ACTIVATION_NODES = [
   { key: 'signedUp', label: 'Signed up' },
-  { key: 'addedShift', label: 'Add a shift' },
-  { key: 'claimedShift', label: 'Claim a shift' },
+  { key: 'addedShift', label: 'Add shift' },
+  { key: 'claimedShift', label: 'Claim shift' },
   { key: 'complete', label: 'All set' },
 ]
 
 // Only the two real steps have a call to action. `action` is what the card's
 // tap does: 'add' opens the personal event panel, 'claim' goes to the Pool.
+// The titles track the node labels word for word on purpose: the row is the
+// step the track above it points at, so a row saying "Add a shift" under a node
+// saying "Add shift" reads as a bug rather than as two different things.
 const NEXT_STEPS = {
-  addedShift: { action: 'add', title: 'Add a shift', subline: "Log a shift you're working" },
-  claimedShift: { action: 'claim', title: 'Claim a shift', subline: 'Pick up an open shift' },
+  addedShift: { action: 'add', title: 'Add shift', subline: "Log a shift you're working" },
+  claimedShift: { action: 'claim', title: 'Claim shift', subline: 'Pick up an open shift' },
 }
 
 // Step state is DERIVED from data that already exists, never stored, so the
