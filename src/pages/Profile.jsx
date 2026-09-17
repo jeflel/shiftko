@@ -4,7 +4,6 @@ import { supabase } from '../lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { SHIFT_LIST_CLASSNAME, ShiftListDivider } from '@/components/ui/shift-list'
-import { TopBar } from '@/components/ui/top-bar'
 import JoinWorkspaceForm from '../components/JoinWorkspaceForm'
 
 function initials(name) {
@@ -35,7 +34,7 @@ function capitalize(value) {
   return value.charAt(0).toUpperCase() + value.slice(1)
 }
 
-export default function Profile({ user, onWorkspaceLeft, onOpenProfile }) {
+export default function Profile({ user, onWorkspaceLeft }) {
   const [signingOut, setSigningOut] = useState(false)
   const [profile, setProfile] = useState(null)
   const [workspace, setWorkspace] = useState(null)
@@ -224,7 +223,6 @@ export default function Profile({ user, onWorkspaceLeft, onOpenProfile }) {
 
   return (
     <main className="mx-auto w-full max-w-md px-5 pb-12">
-      <TopBar user={user} onOpenProfile={onOpenProfile} />
       <div className="mt-4 flex items-center justify-between">
         <h1 className="font-display-title text-[26px] font-semibold tracking-[-0.02em] text-ink">Profile</h1>
       </div>

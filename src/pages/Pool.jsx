@@ -6,7 +6,6 @@ import { PeriodTag } from '@/components/ui/period-tag'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
 import { SHIFT_LIST_CLASSNAME, ShiftListDivider } from '@/components/ui/shift-list'
-import { TopBar } from '@/components/ui/top-bar'
 import ClaimStatusList from './ClaimStatusList'
 import ShiftDetail from './ShiftDetail'
 import { formatShiftTimeRange, getShiftPeriod } from '../lib/shiftFormat'
@@ -52,7 +51,7 @@ function ShiftCard({ date, title, subtitle, pill, trailing, onOpen }) {
   )
 }
 
-export default function Pool({ user, onGoToSchedule, onOpenProfile }) {
+export default function Pool({ user, onGoToSchedule }) {
   const [shifts, setShifts] = useState([])
   const [claims, setClaims] = useState([])
   const [homeUnit, setHomeUnit] = useState(undefined)
@@ -227,7 +226,6 @@ export default function Pool({ user, onGoToSchedule, onOpenProfile }) {
 
   return (
     <main className="mx-auto w-full max-w-md px-5 pb-12">
-      <TopBar user={user} onOpenProfile={onOpenProfile} />
       <div className="mt-4 mb-1 flex items-center justify-between">
         <h1 className="font-display-title text-[26px] font-semibold tracking-[-0.02em] text-ink">Pool</h1>
         <button

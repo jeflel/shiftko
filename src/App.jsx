@@ -140,7 +140,7 @@ function App() {
     setActiveTab('schedule')
   }
 
-  // The TopBar avatar on all four tabs opens the Profile tab.
+  // The TopBar avatar opens the Profile tab. The bar renders on Home only.
   function handleOpenProfile() {
     setActiveTab('more')
   }
@@ -192,7 +192,6 @@ function App() {
             user={session.user}
             role={role}
             initialTab={scheduleInitialTab}
-            onOpenProfile={handleOpenProfile}
           />
         )}
         {activeTab === 'postshift' && <PostShift onBack={handlePostShiftBack} />}
@@ -220,14 +219,12 @@ function App() {
           <Pool
             user={session.user}
             onGoToSchedule={handleGoToSchedule}
-            onOpenProfile={handleOpenProfile}
           />
         )}
         {activeTab === 'more' && (
           <Profile
             user={session.user}
             onWorkspaceLeft={() => setWorkspaceId(null)}
-            onOpenProfile={handleOpenProfile}
           />
         )}
       </div>

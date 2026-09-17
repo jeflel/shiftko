@@ -4,13 +4,15 @@ import { supabase } from '@/lib/supabase'
 import { Wordmark } from '@/components/ui/wordmark'
 import Notifications from '@/pages/Notifications'
 
-// Sticky app bar for the four tab pages: wordmark, bell, avatar.
+// Sticky app bar, Home only: wordmark, bell, avatar.
 //
-// The mockups only put this topbar on the Home screens (`.topbar`, a
-// 1fr/auto/1fr grid, transparent over the hero gradient). Jefle asked for the
-// same bar pinned on Schedule, Pool and Profile too, on a solid
-// `#0AA2CF` band, which is the gradient's own start colour, so on Home it is
-// seamless against the hero and elsewhere it reads as the "blue bar".
+// The mockups only ever put this topbar on the Home screens (`.topbar`, a
+// 1fr/auto/1fr grid, transparent over the hero gradient). Jefle had it pinned on
+// Schedule, Pool and Profile too for a while, on a solid `#0AA2CF` band (the
+// gradient's own start colour, so on Home it is seamless against the hero);
+// 2026-09-16 he asked to drop it from those three, which puts the app back in
+// line with the artifact. Nothing else renders it, so the notifications panel
+// and the Profile shortcut now live on Home alone.
 //
 // The wordmark + Beta pill sit on the left, then the bell, then the avatar at
 // the far right edge (the avatar opens the Profile tab).

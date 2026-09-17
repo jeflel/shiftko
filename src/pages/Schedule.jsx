@@ -10,7 +10,6 @@ import { Button } from '@/components/ui/button'
 import { CalendarStrip } from '@/components/ui/calendar-strip'
 import { SegmentedControl } from '@/components/ui/segmented-control'
 import { SHIFT_LIST_CLASSNAME, ShiftListDivider } from '@/components/ui/shift-list'
-import { TopBar } from '@/components/ui/top-bar'
 import { inputClassName, labelClassName } from '@/components/ui/field'
 import { SHIFT_PRESETS, buildShiftTimes } from '@/lib/shiftPresets'
 import { cn } from '@/lib/utils'
@@ -91,13 +90,14 @@ function ScheduleTab({ user }) {
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Sticky header stack. The shared TopBar pins at top-0 z-30 and is 56px
-          tall, so this pins at top-14 z-10 directly under it, leaving the list
-          body as the only thing that scrolls. Its own opaque bg-page-ground is
-          load-bearing: without it, rows scrolling underneath show through. */}
+      {/* Sticky header stack. The shared TopBar lives on Home only, so nothing
+          pins above this page any more and the header pins at top-0 z-10,
+          leaving the list body as the only thing that scrolls. Its own opaque
+          bg-page-ground is load-bearing: without it, rows scrolling underneath
+          show through. */}
       <div
         data-testid="schedule-sticky-header"
-        className="sticky top-14 z-10 -mx-5 flex flex-col gap-4 border-b border-hairline bg-page-ground px-5 pt-4 pb-4"
+        className="sticky top-0 z-10 -mx-5 flex flex-col gap-4 border-b border-hairline bg-page-ground px-5 pt-4 pb-4"
       >
         <div className="flex items-center justify-between">
           <h1 className="font-display-title text-[26px] font-semibold tracking-[-0.02em] text-ink">Schedule</h1>
@@ -752,10 +752,10 @@ function MyShiftsTab({ user, contentView }) {
   // stack, so the user always sees the week the visible rows belong to. Sticky
   // only travels inside the week's own block, so when the next week arrives its
   // label takes the pinned spot and pushes this one up and out. The offset is
-  // the stack's measured height (the shared TopBar plus this page's sticky
-  // header), never a hardcoded number, so it follows either one if its contents
-  // change. The label sits at z-[5], below the header's z-10, so the header is
-  // never covered.
+  // the stack's measured height (this page's sticky header, plus the shared
+  // TopBar where it exists, which is Home only), never a hardcoded number, so
+  // it follows either one if its contents change. The label sits at z-[5],
+  // below the header's z-10, so the header is never covered.
   const [weekLabelTop, setWeekLabelTop] = useState(null)
 
   useEffect(() => {
@@ -860,11 +860,11 @@ function MyShiftsTab({ user, contentView }) {
 
   // Land on today's week on first load, so the user opens Schedule already
   // looking at the current week instead of scrolled 8 weeks back. The header
-  // stack is pinned (56px TopBar plus the Schedule header beneath it), so the
-  // scroll target is pulled down by that stack's measured height:
-  // scrollIntoView({ block: 'start' }) on its own parks the "SEP 7 - 13" label
-  // behind the pinned header. Measured, never hardcoded, so the offset follows
-  // the header if its contents change.
+  // stack is pinned (the shared TopBar on Home, plus the Schedule header
+  // beneath it), so the scroll target is pulled down by that stack's measured
+  // height: scrollIntoView({ block: 'start' }) on its own parks the "SEP 7 - 13"
+  // label behind the pinned header. Measured, never hardcoded, so the offset
+  // follows the header if its contents change.
   useEffect(() => {
     if (loading || hasScrolledInitiallyRef.current) return
     const target = weekMarkerRefs.current[0]
@@ -877,9 +877,9 @@ function MyShiftsTab({ user, contentView }) {
       return
     }
 
-    // BOTH pinned things sit above the target: the shared TopBar and this
-    // page's sticky header. Measuring only the header left the week label
-    // tucked behind it.
+    // Both pinned things sit above the target where they exist: the shared
+    // TopBar (Home only, so 0 here) and this page's sticky header. Measuring
+    // only the header left the week label tucked behind it.
     const pinnedHeight = [
       document.querySelector('[data-testid="app-top-bar"]'),
       document.querySelector('[data-testid="schedule-sticky-header"]'),
@@ -1270,13 +1270,13 @@ function TeamScheduleTab({ user, onChangeView, contentView: contentViewProp }) {
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Coordinator's own copy of the sticky header, same top-14 z-10 pin under
-          the 56px TopBar. No swap button and no segmented control here: a
-          coordinator has a single schedule scope, so there is nothing to switch
-          between and nothing to offer a swap against. */}
+      {/* Coordinator's own copy of the sticky header, same top-0 z-10 pin. No
+          swap button and no segmented control here: a coordinator has a single
+          schedule scope, so there is nothing to switch between and nothing to
+          offer a swap against. */}
       <div
         data-testid="schedule-sticky-header"
-        className="sticky top-14 z-10 -mx-5 flex flex-col gap-4 border-b border-hairline bg-page-ground px-5 pt-4 pb-4"
+        className="sticky top-0 z-10 -mx-5 flex flex-col gap-4 border-b border-hairline bg-page-ground px-5 pt-4 pb-4"
       >
         <div className="flex items-center justify-between">
           <h1 className="font-display-title text-[26px] font-semibold tracking-[-0.02em] text-ink">Schedule</h1>
@@ -1562,7 +1562,7 @@ function AddMyShiftPanel({ userId, homeUnit, onClose, onSaved }) {
   )
 }
 
-export default function Schedule({ user, role, initialTab = 'schedule', onOpenProfile }) {
+export default function Schedule({ user, role, initialTab = 'schedule' }) {
   const isCoordinator = role === 'coordinator'
 
   const tabs = isCoordinator
@@ -1586,7 +1586,6 @@ export default function Schedule({ user, role, initialTab = 'schedule', onOpenPr
 
   return (
     <main className="mx-auto w-full max-w-md px-5 pb-12">
-      <TopBar user={user} onOpenProfile={onOpenProfile} />
       {tabs.length > 1 && (
         <div className="mb-6 flex border-b border-[#E5E5EA]" role="tablist" aria-label="Schedule views">
           {tabs.map((tab) => (
