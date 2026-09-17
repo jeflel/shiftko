@@ -163,7 +163,7 @@ function ScheduleTab({ user }) {
 function MyDayOffRow({ date }) {
   return (
     <div className="flex w-full items-center gap-3 px-4 py-4.5">
-      <div className="mx-1 flex w-[34px] shrink-0 flex-col items-center">
+      <div className="ml-0.5 mr-1 flex w-[34px] shrink-0 flex-col items-center">
         <span className="text-[11px] font-semibold tracking-wide text-ink-secondary uppercase">
           {weekdayFormatter.format(date)}
         </span>
@@ -196,7 +196,7 @@ function MyShiftRow({ shift, credential, isPast, onClick }) {
         isPast && 'opacity-35',
       )}
     >
-      <div className="mx-1 flex w-[34px] shrink-0 flex-col items-center">
+      <div className="ml-0.5 mr-1 flex w-[34px] shrink-0 flex-col items-center">
         <span className="text-[11px] font-semibold tracking-wide text-ink-secondary uppercase">
           {weekdayFormatter.format(date)}
         </span>
@@ -254,7 +254,7 @@ function MyPersonalEventRow({ event, isPast, onClick }) {
         isPast && 'opacity-35',
       )}
     >
-      <div className="mx-1 flex w-[34px] shrink-0 flex-col items-center">
+      <div className="ml-0.5 mr-1 flex w-[34px] shrink-0 flex-col items-center">
         <span className="text-[11px] font-semibold tracking-wide text-ink-secondary uppercase">
           {weekdayFormatter.format(date)}
         </span>

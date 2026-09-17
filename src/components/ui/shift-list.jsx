@@ -17,12 +17,13 @@ export const SHIFT_LIST_BORDERLESS_CLASSNAME = SHIFT_LIST_BASE
 
 // `.shift-row-divider`: inset so its start lines up with the info column's text.
 // 73px matches the artifact's date column (Pool, Claim Status, Manage, Swap
-// Status); `wide` is 81px, for Schedule's date column, which carries 4px of
-// horizontal margin on each side by request. 16px (`inset={false}`) is for
+// Status); `wide` is 79px, for Schedule's date column, which sits 18px from the
+// card's left edge (16px row padding plus a 2px margin) with 4px before the
+// rule. 16px (`inset={false}`) is for
 // lists whose rows carry no date column at all.
 const DIVIDER_INSET = {
   default: 'ml-[73px]',
-  wide: 'ml-[81px]',
+  wide: 'ml-[79px]',
 }
 
 export function ShiftListDivider({ inset = true, variant = 'default' }) {
