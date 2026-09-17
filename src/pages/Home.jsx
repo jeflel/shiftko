@@ -759,7 +759,7 @@ export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoTo
         <div className="flex flex-1 flex-col px-5 pt-2 bg-gradient-to-b from-hero-gradient-start via-hero-gradient-mid via-70% to-hero-gradient-end bg-[length:100%_193px] bg-top bg-no-repeat">
           <div className="flex flex-col gap-4 pt-4 pb-11">
             <div className="flex items-center justify-between gap-3">
-              <p className="font-display-title ml-1 text-[20px] font-medium tracking-[-0.04em] text-white">
+              <p className="font-display-title ml-1 text-[20px] font-semibold tracking-[-0.04em] text-white">
                 {getGreeting()}{nurseFirstName ? `, ${nurseFirstName}` : ''}
               </p>
               <HomeHeaderActions user={user} initials={initials} onOpenProfile={onOpenProfile} />
