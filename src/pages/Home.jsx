@@ -479,6 +479,24 @@ function getGreeting() {
   return 'Good evening'
 }
 
+// The header's second line (2026-09-17). One short sentence about today, because
+// the greeting row is what the page gets read for first and the card below it is
+// where the detail lives. Sized to the controls beside it: 12px on one line.
+//
+// getShiftPeriod returns 'Day' / 'Evening' / 'Night' for the period tags, so it
+// is lowercased here and given its article, which is why an evening shift reads
+// "an evening shift" and the other two read "a day/night shift".
+//
+// A personal event gets the word event rather than shift: the app dropped the
+// Personal tag from its rows, but the panel behind it is still Add Personal
+// Event, so calling an event a shift here would be the only place that lies.
+function getHeaderLine(item, isShift) {
+  if (!item) return 'No shift today, enjoy the day off'
+  const period = getShiftPeriod(item.starts_at).toLowerCase()
+  const article = period === 'evening' ? 'an' : 'a'
+  return `You have ${article} ${period} ${isShift ? 'shift' : 'event'} today`
+}
+
 function getSummaryRange() {
   const start = new Date()
   start.setHours(0, 0, 0, 0)
@@ -807,6 +825,11 @@ export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoTo
     ...upcomingPersonalEvents.map((event) => ({ kind: 'personal', item: event })),
   ].sort((a, b) => new Date(a.item.starts_at) - new Date(b.item.starts_at))
   const latestNotification = notifications.find((n) => !n.read) ?? notifications[0] ?? null
+  // Nurses only: the sentence is about the reader's own day, and the coordinator's
+  // body is a different screen where the greeting stands alone.
+  const headerLine = isCoordinator
+    ? null
+    : getHeaderLine(todaysShift ?? todaysEvent, Boolean(todaysShift))
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-page-ground">
@@ -815,13 +838,32 @@ export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoTo
             that used to sit above it is gone (2026-09-16), so the bell and the
             avatar ride on the greeting's own line and nothing is pinned over the
             hero. The 193px gradient is untouched, and the hero still carries the
-            horizontal padding (a background paints the padding box). */}
+            horizontal padding (a background paints the padding box).
+            Since 2026-09-17 that line is a two-line stack (greeting + today's
+            sentence) centred against the two 36px controls, and the block's
+            pb-15 is what leaves 24px between the row and the Today card: the
+            card's -mt-9 measured from a 60px bottom pad puts its top edge 24px
+            under the row. */}
         <div className="flex flex-1 flex-col px-5 pt-2 bg-gradient-to-b from-hero-gradient-start via-hero-gradient-mid via-70% to-hero-gradient-end bg-[length:100%_193px] bg-top bg-no-repeat">
-          <div className="flex flex-col gap-4 pt-4 pb-11">
+          <div className="flex flex-col gap-4 pt-4 pb-15">
             <div className="flex items-center justify-between gap-3">
-              <p className="font-display-title ml-1 text-[20px] font-semibold tracking-[-0.04em] text-white">
-                {getGreeting()}{nurseFirstName ? `, ${nurseFirstName}` : ''}
-              </p>
+              {/* Two stacked lines on the left, the two controls on the right, all
+                  on one row centred against their 36px. The stack measures 34.6px
+                  at 16px/1.1 plus 12px/1.25, so the row is exactly the height of
+                  the controls and nothing recomputes when the name is long. The
+                  greeting drops from the 20px it shipped at because 18px and up
+                  grows the row past the icons. pb-15 above is what puts this row
+                  24px above the Today card: the gap measures pb - 36. */}
+              <div className="flex min-w-0 flex-col gap-0.5 pl-1">
+                <p className="font-display-title truncate text-[16px] leading-[1.1] font-semibold tracking-[-0.03em] text-white">
+                  {getGreeting()}{nurseFirstName ? `, ${nurseFirstName}` : ''}
+                </p>
+                {headerLine && (
+                  <p className="truncate text-xs leading-[1.25] tracking-[-0.01em] text-white/90">
+                    {headerLine}
+                  </p>
+                )}
+              </div>
               <HomeHeaderActions user={user} initials={initials} onOpenProfile={onOpenProfile} />
             </div>
           </div>
