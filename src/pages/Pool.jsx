@@ -12,7 +12,7 @@ import { formatShiftTimeRange, getShiftPeriod } from '../lib/shiftFormat'
 
 const weekdayFormatter = new Intl.DateTimeFormat(undefined, { weekday: 'short' })
 
-function ShiftCard({ date, title, subtitle, pill, trailing, onOpen }) {
+function ShiftCard({ date, title, subtitle, period, trailing, onOpen }) {
   const leftGroup = (
     <>
       <div className="flex w-8 shrink-0 flex-col items-center">
@@ -25,6 +25,7 @@ function ShiftCard({ date, title, subtitle, pill, trailing, onOpen }) {
       <div className="h-full min-h-9 w-px shrink-0 self-stretch bg-hairline" aria-hidden="true" />
 
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <PeriodTag period={period} variant="bare" />
         <p className="truncate text-[13px] font-medium text-ink">{title}</p>
         {subtitle}
       </div>
@@ -45,7 +46,6 @@ function ShiftCard({ date, title, subtitle, pill, trailing, onOpen }) {
         <div className="flex min-w-0 flex-1 items-center gap-3">{leftGroup}</div>
       )}
 
-      {pill && <div className="shrink-0">{pill}</div>}
       {trailing && <div className="ml-1 shrink-0">{trailing}</div>}
     </div>
   )
@@ -279,7 +279,7 @@ export default function Pool({ user, onGoToSchedule }) {
                     <ShiftCard
                       date={new Date(shift.starts_at)}
                       title={formatShiftTimeRange(shift.starts_at, shift.ends_at)}
-                      pill={<PeriodTag period={getShiftPeriod(shift.starts_at)} />}
+                      period={getShiftPeriod(shift.starts_at)}
                       onOpen={() => setSelectedShift(shift)}
                       subtitle={
                         unavailableId === shift.id ? (

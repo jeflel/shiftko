@@ -114,6 +114,7 @@ export default function CoordinatorManage({ onBack, onGoToPostShift, onGoToStaff
                         <div className="h-full min-h-9 w-px shrink-0 self-stretch bg-hairline" aria-hidden="true" />
 
                         <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                          <PeriodTag period={period} variant="bare" />
                           <p className="truncate text-[14px] font-semibold text-ink">
                             {formatShiftTimeRange(shift.starts_at, shift.ends_at)}
                           </p>
@@ -121,8 +122,6 @@ export default function CoordinatorManage({ onBack, onGoToPostShift, onGoToStaff
                             {shift.profiles?.full_name ?? 'Open'} &middot; {shift.unit}
                           </p>
                         </div>
-
-                        <PeriodTag period={period} />
 
                         <div className="flex shrink-0 items-center gap-1">
                           <button

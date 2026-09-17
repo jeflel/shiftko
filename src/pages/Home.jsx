@@ -333,13 +333,14 @@ function UpcomingShiftRow({ shift, isFirst, isLast, onSelectShift }) {
       <div className="h-full min-h-9 w-px shrink-0 self-stretch bg-hairline" aria-hidden="true" />
 
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <PeriodTag period={period} variant="bare" />
         <p className="truncate text-[13px] font-semibold text-ink">
           {formatShiftTimeRange(shift.starts_at, shift.ends_at)}
         </p>
         <p className="truncate text-xs text-ink-secondary">{shift.unit}</p>
       </div>
 
-      <PeriodTag period={period} />
+      <ChevronRight size={18} strokeWidth={2.25} className="shrink-0 text-chevron-muted" aria-hidden="true" />
     </button>
   )
 }
@@ -370,13 +371,14 @@ function UpcomingPersonalEventRow({ event, isFirst, isLast, onSelectEvent }) {
       <div className="h-full min-h-9 w-px shrink-0 self-stretch bg-hairline" aria-hidden="true" />
 
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <PeriodTag period={getShiftPeriod(event.starts_at)} variant="bare" />
         <p className="truncate text-[13px] font-semibold text-ink">
           {formatShiftTimeRange(event.starts_at, event.ends_at)}
         </p>
         <p className="truncate text-xs text-ink-secondary">{event.unit || event.name}</p>
       </div>
 
-      <PeriodTag period={getShiftPeriod(event.starts_at)} />
+      <ChevronRight size={18} strokeWidth={2.25} className="shrink-0 text-chevron-muted" aria-hidden="true" />
     </button>
   )
 }

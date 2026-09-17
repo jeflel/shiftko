@@ -376,13 +376,11 @@ function TeamCalendarDayShiftRow({ shift, onOpenShift }) {
   const content = (
     <>
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <PeriodTag period={period} variant="bare" />
         <p className="truncate text-[14px] font-semibold text-ink">
           {formatShiftTimeRange(shift.starts_at, shift.ends_at)}
         </p>
         {metaParts.length > 0 && <p className="truncate text-[12px] text-ink-secondary">{metaParts.join(' · ')}</p>}
-      </div>
-      <div className="shrink-0">
-        <PeriodTag period={period} />
       </div>
       {isOpen && <ChevronRight size={15} strokeWidth={2} className="shrink-0 text-chevron-muted" aria-hidden="true" />}
     </>
@@ -413,13 +411,11 @@ function TeamCalendarDayPersonalEventRow({ event }) {
   return (
     <div className="flex w-full items-center gap-3 px-4 py-4.5">
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <PeriodTag period={getShiftPeriod(event.starts_at)} variant="bare" />
         <p className="truncate text-[14px] font-semibold text-ink">
           {formatShiftTimeRange(event.starts_at, event.ends_at)}
         </p>
         {meta && <p className="truncate text-[12px] text-ink-secondary">{meta}</p>}
-      </div>
-      <div className="shrink-0">
-        <PeriodTag period={getShiftPeriod(event.starts_at)} />
       </div>
     </div>
   )
@@ -443,13 +439,11 @@ function TeamShiftRow({ shift, isMatch, onOpenShift }) {
   const content = (
     <>
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <PeriodTag period={period} variant="bare" />
         <p className="truncate text-[14px] font-semibold text-ink">
           {formatShiftTimeRange(shift.starts_at, shift.ends_at)}
         </p>
         {metaParts.length > 0 && <p className="truncate text-[12px] text-ink-secondary">{metaParts.join(' · ')}</p>}
-      </div>
-      <div className="shrink-0">
-        <PeriodTag period={period} />
       </div>
       {isOpen && <ChevronRight size={15} strokeWidth={2} className="shrink-0 text-chevron-muted" aria-hidden="true" />}
     </>
@@ -483,13 +477,11 @@ function TeamPersonalEventRow({ event }) {
   return (
     <div className="flex w-full items-center gap-3 px-4 py-4.5">
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <PeriodTag period={getShiftPeriod(event.starts_at)} variant="bare" />
         <p className="truncate text-[14px] font-semibold text-ink">
           {formatShiftTimeRange(event.starts_at, event.ends_at)}
         </p>
         {meta && <p className="truncate text-[12px] text-ink-secondary">{meta}</p>}
-      </div>
-      <div className="shrink-0">
-        <PeriodTag period={getShiftPeriod(event.starts_at)} />
       </div>
     </div>
   )

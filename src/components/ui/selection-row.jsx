@@ -73,13 +73,12 @@ export function ShiftPickerRow({ shift, meta, selected, onClick }) {
       <div className="h-full min-h-9 w-px shrink-0 self-stretch bg-hairline" aria-hidden="true" />
 
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <PeriodTag period={getShiftPeriod(shift.starts_at)} variant="bare" />
         <p className="truncate text-[13px] font-medium text-ink">
           {formatShiftTimeRange(shift.starts_at, shift.ends_at)}
         </p>
         {meta && <p className="truncate text-xs text-ink-secondary">{meta}</p>}
       </div>
-
-      <PeriodTag period={getShiftPeriod(shift.starts_at)} />
       <CheckCircle checked={selected} />
     </button>
   )
