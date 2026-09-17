@@ -225,10 +225,10 @@ function QuickActionTiles({ openCount, onGoToPool, onAddPersonalEvent }) {
               type="button"
               onClick={onAddPersonalEvent}
               data-testid="home-quick-add-shift"
-              className="flex flex-1 items-center gap-2 rounded-card bg-white py-4 pr-3 pl-4 text-left shadow-card-lift transition-colors active:bg-press-state"
+              className="relative flex min-h-[72px] flex-1 items-center overflow-hidden rounded-card bg-status-deep py-4 pr-3 pl-4 text-left shadow-[0_6px_16px_rgba(0,68,88,0.34)] transition-colors active:bg-[#00323f]"
       >
-        <span className="flex size-8 shrink-0 items-center justify-center rounded-control bg-[linear-gradient(135deg,#5DC7E6_0%,#0AA2CF_100%)] text-white">
-          <svg viewBox="0 0 20 20" width="18" height="18" fill="currentColor" aria-hidden="true">
+        <span className="pointer-events-none absolute -right-2 -bottom-3.5 opacity-[0.09]" aria-hidden="true">
+          <svg viewBox="0 0 20 20" width="76" height="76" fill="#fff">
             <path
               fillRule="evenodd"
               clipRule="evenodd"
@@ -237,8 +237,8 @@ function QuickActionTiles({ openCount, onGoToPool, onAddPersonalEvent }) {
           </svg>
         </span>
         <span className="min-w-0 flex-1">
-          <p className="truncate text-[13px] font-semibold text-ink">Add a Shift</p>
-          <p className="truncate text-[11px] text-ink-secondary">Log a shift</p>
+          <p className="truncate text-[15px] font-semibold tracking-[-0.01em] text-white">Add a Shift</p>
+          <p className="truncate text-[12px] text-white/75">Log a shift</p>
         </span>
       </button>
 
@@ -246,15 +246,15 @@ function QuickActionTiles({ openCount, onGoToPool, onAddPersonalEvent }) {
         type="button"
         onClick={onGoToPool}
         data-testid="home-claim-shifts-row"
-        className="relative flex flex-1 items-center gap-2 rounded-card bg-white py-4 pr-3 pl-4 text-left shadow-card-lift transition-colors active:bg-press-state"
+        className="relative flex min-h-[72px] flex-1 items-center overflow-hidden rounded-card bg-status-deep py-4 pr-3 pl-4 text-left shadow-[0_6px_16px_rgba(0,68,88,0.34)] transition-colors active:bg-[#00323f]"
       >
         {openCount > 0 && (
-          <span className="absolute top-2.5 right-2.5 flex h-4 min-w-4 shrink-0 items-center justify-center rounded-control-sm bg-urgency-red px-1 text-[10px] font-semibold text-white">
+          <span className="absolute top-[9px] right-[9px] flex h-[18px] min-w-[18px] shrink-0 items-center justify-center rounded-[7px] bg-white px-1.5 text-[11px] font-semibold text-status-deep">
             {openCount}
           </span>
         )}
-        <span className="flex size-8 shrink-0 items-center justify-center rounded-control bg-[linear-gradient(135deg,#5DC7E6_0%,#0AA2CF_100%)] text-white">
-          <svg viewBox="0 0 20 20" width="18" height="18" fill="currentColor" aria-hidden="true">
+        <span className="pointer-events-none absolute -right-2 -bottom-3.5 opacity-[0.09]" aria-hidden="true">
+          <svg viewBox="0 0 20 20" width="76" height="76" fill="#fff">
             <path
               fillRule="evenodd"
               clipRule="evenodd"
@@ -263,8 +263,8 @@ function QuickActionTiles({ openCount, onGoToPool, onAddPersonalEvent }) {
           </svg>
         </span>
         <span className="min-w-0 flex-1">
-          <p className="truncate text-[13px] font-semibold text-ink">Claim Shifts</p>
-          <p className="truncate text-[11px] text-ink-secondary">{openCount} open</p>
+          <p className="truncate text-[15px] font-semibold tracking-[-0.01em] text-white">Claim Shifts</p>
+          <p className="truncate text-[12px] text-white/75">{openCount} open</p>
         </span>
       </button>
     </div>
