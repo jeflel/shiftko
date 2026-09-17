@@ -28,6 +28,9 @@
   --color-teal: #38bde5;
   --color-teal-foreground: #0e7490;
   --color-teal-foreground-hover: #0a5e73;
+  /* The Home quick-action tile surface. Same value as the hover token above, but
+     named for the surface so a field colour never reads as a state. */
+  --color-teal-field: #0a5e73;
   --color-teal-tint: rgba(56, 189, 229, 0.15);
   --color-urgency-red: #d9291c;
   --color-chevron-muted: #c7c7cc;
