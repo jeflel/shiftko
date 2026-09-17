@@ -1128,6 +1128,9 @@ function TeamScheduleTab({ user, onChangeView, contentView: contentViewProp }) {
           id, unit, starts_at, ends_at, status, nurse_id,
           profiles!nurse_id ( full_name, credential )
         `)
+        // A shift a nurse added herself is not on the team schedule until she
+        // confirms it, so the team's own view leaves unconfirmed shifts out.
+        .eq('team_confirmed', true)
         .gte('starts_at', start.toISOString())
         .lt('starts_at', end.toISOString())
         .order('starts_at', { ascending: true })

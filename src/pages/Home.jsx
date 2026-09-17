@@ -529,6 +529,9 @@ export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoTo
             return supabase
               .from('shifts')
               .select('id, unit, nurse_id, starts_at, ends_at, status')
+              // Coverage is a picture of the team schedule, so a shift still
+              // waiting on its nurse's confirmation does not count yet.
+              .eq('team_confirmed', true)
               .gte('starts_at', start.toISOString())
               .lt('starts_at', end.toISOString())
               .order('starts_at', { ascending: true })
