@@ -210,7 +210,7 @@ function MyShiftRow({ shift, credential, isPast, onClick }) {
           {formatShiftTimeRange(shift.starts_at, shift.ends_at)}
         </p>
         {metaParts.length > 0 && (
-          <p className="truncate text-[12px] text-ink-secondary">{metaParts.join(' · ')}</p>
+          <p className="-mt-0.5 truncate text-[12px] text-ink-secondary">{metaParts.join(' · ')}</p>
         )}
         {(isPending || isOffered) && (
           <div className="mt-1">
@@ -219,7 +219,7 @@ function MyShiftRow({ shift, credential, isPast, onClick }) {
         )}
       </div>
 
-      <ChevronRight size={15} strokeWidth={2} className="shrink-0 text-chevron-muted" />
+      <ChevronRight size={18} strokeWidth={2.25} className="shrink-0 text-chevron-muted" />
     </button>
   )
 }
@@ -259,10 +259,10 @@ function MyPersonalEventRow({ event, isPast, onClick }) {
         <p className="truncate text-[14px] font-semibold text-ink">
           {formatShiftTimeRange(event.starts_at, event.ends_at)}
         </p>
-        {meta && <p className="truncate text-[12px] text-ink-secondary">{meta}</p>}
+        {meta && <p className="-mt-0.5 truncate text-[12px] text-ink-secondary">{meta}</p>}
       </div>
 
-      <ChevronRight size={15} strokeWidth={2} className="shrink-0 text-chevron-muted" />
+      <ChevronRight size={18} strokeWidth={2.25} className="shrink-0 text-chevron-muted" />
     </button>
   )
 }
@@ -304,7 +304,7 @@ function CalendarDayShiftRow({ shift, credential, onClick }) {
           {formatShiftTimeRange(shift.starts_at, shift.ends_at)}
         </p>
         {metaParts.length > 0 && (
-          <p className="truncate text-[12px] text-ink-secondary">{metaParts.join(' · ')}</p>
+          <p className="-mt-0.5 truncate text-[12px] text-ink-secondary">{metaParts.join(' · ')}</p>
         )}
         {(isPending || isOffered) && (
           <div className="mt-1">
@@ -312,7 +312,7 @@ function CalendarDayShiftRow({ shift, credential, onClick }) {
           </div>
         )}
       </div>
-      <ChevronRight size={15} strokeWidth={2} className="shrink-0 text-chevron-muted" />
+      <ChevronRight size={18} strokeWidth={2.25} className="shrink-0 text-chevron-muted" />
     </button>
   )
 }
@@ -333,9 +333,9 @@ function CalendarDayPersonalEventRow({ event, onClick }) {
         <p className="truncate text-[14px] font-semibold text-ink">
           {formatShiftTimeRange(event.starts_at, event.ends_at)}
         </p>
-        {meta && <p className="truncate text-[12px] text-ink-secondary">{meta}</p>}
+        {meta && <p className="-mt-0.5 truncate text-[12px] text-ink-secondary">{meta}</p>}
       </div>
-      <ChevronRight size={15} strokeWidth={2} className="shrink-0 text-chevron-muted" />
+      <ChevronRight size={18} strokeWidth={2.25} className="shrink-0 text-chevron-muted" />
     </button>
   )
 }
