@@ -695,8 +695,13 @@ export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoTo
     }
   }
 
-  // The card's next step: step 2 logs a shift, step 3 claims one.
+  // The card's own action: the next step while the checklist is running, then
+  // the notifications this slot hands over to once it is finished.
   function handleActivationNext(action) {
+    if (action === 'requests') {
+      setShowNotifications(true)
+      return
+    }
     if (action === 'claim') {
       onGoToPool()
       return
@@ -877,6 +882,7 @@ export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoTo
                       done={activation.done}
                       currentIndex={activation.currentIndex}
                       firstName={nurseFirstName}
+                      onNext={handleActivationNext}
                     />
                   </section>
                 )}
