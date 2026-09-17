@@ -18,6 +18,11 @@
 
   /* v2 design tokens, see DESIGN.md in shiftko-design-v2-visual-pass-dup */
   --color-page-ground: #f9f9fb;
+  /* Schedule only: the shift list sits on a slightly deeper ground so the white
+     rows read as lifted off the page. Every surface that has to match the page
+     on that screen (both sticky headers, the week label, its fade, the past-row
+     band) uses this, and Schedule sets body to it while it is mounted. */
+  --color-page-ground-shaded: #ededf2;
   --color-card-surface: #ffffff;
   --color-ink: #1d1d1f;
   --color-ink-secondary: #6e6e73;

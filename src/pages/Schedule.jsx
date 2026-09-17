@@ -94,11 +94,11 @@ function ScheduleTab({ user }) {
           was removed on 2026-09-16 and its two controls now live on Home's
           greeting row. The header pins at top-0 z-10,
           leaving the list body as the only thing that scrolls. Its own opaque
-          bg-page-ground is load-bearing: without it, rows scrolling underneath
+          bg-page-ground-shaded is load-bearing: without it, rows scrolling underneath
           show through. */}
       <div
         data-testid="schedule-sticky-header"
-        className="sticky top-0 z-10 -mx-5 flex flex-col gap-4 bg-page-ground px-5 pt-4 pb-4"
+        className="sticky top-0 z-10 -mx-5 flex flex-col gap-4 bg-page-ground-shaded px-5 pt-4 pb-4"
       >
         <div className="flex items-center justify-between">
           <h1 className="font-display-title text-[26px] font-semibold tracking-[-0.02em] text-ink">Schedule</h1>
@@ -192,7 +192,7 @@ function MyShiftRow({ shift, credential, isPast, onClick }) {
       data-testid="schedule-my-shift-row"
       className={cn(
         'flex w-full items-center gap-3 px-4 py-4.5 text-left transition-colors duration-150 ease-out active:bg-press-state',
-        isPast && 'bg-page-ground [&>*]:opacity-60',
+        isPast && 'bg-page-ground-shaded [&>*]:opacity-60',
       )}
     >
       <div className="flex w-[34px] shrink-0 flex-col items-center">
@@ -243,7 +243,7 @@ function MyPersonalEventRow({ event, isPast, onClick }) {
       data-testid="schedule-my-personal-event-row"
       className={cn(
         'flex w-full items-center gap-3 px-4 py-4.5 text-left transition-colors duration-150 ease-out active:bg-press-state',
-        isPast && 'bg-page-ground [&>*]:opacity-60',
+        isPast && 'bg-page-ground-shaded [&>*]:opacity-60',
       )}
     >
       <div className="flex w-[34px] shrink-0 flex-col items-center">
@@ -1011,7 +1011,7 @@ function MyShiftsTab({ user, contentView }) {
                       slides up instead of being cut off at the label's edge.
                       It is absolutely placed so it adds no height to the list
                       and never intercepts a tap. */}
-                  <div className="sticky z-[5] -mx-5 bg-page-ground px-5" style={{ top: weekLabelTop }}>
+                  <div className="sticky z-[5] -mx-5 bg-page-ground-shaded px-5" style={{ top: weekLabelTop }}>
                     <div className="flex items-center gap-2.5">
                       <p className="text-[12px] font-medium tracking-wide text-ink-secondary uppercase">
                         {getWeekGroupLabel(days[0])}
@@ -1019,7 +1019,7 @@ function MyShiftsTab({ user, contentView }) {
                       <div className="h-px flex-1 bg-hairline" aria-hidden="true" />
                     </div>
                     <div
-                      className="pointer-events-none absolute inset-x-0 top-full h-5 bg-gradient-to-b from-page-ground to-transparent"
+                      className="pointer-events-none absolute inset-x-0 top-full h-5 bg-gradient-to-b from-page-ground-shaded to-transparent"
                       aria-hidden="true"
                     />
                   </div>
@@ -1279,7 +1279,7 @@ function TeamScheduleTab({ user, onChangeView, contentView: contentViewProp }) {
           offer a swap against. */}
       <div
         data-testid="schedule-sticky-header"
-        className="sticky top-0 z-10 -mx-5 flex flex-col gap-4 bg-page-ground px-5 pt-4 pb-4"
+        className="sticky top-0 z-10 -mx-5 flex flex-col gap-4 bg-page-ground-shaded px-5 pt-4 pb-4"
       >
         <div className="flex items-center justify-between">
           <h1 className="font-display-title text-[26px] font-semibold tracking-[-0.02em] text-ink">Schedule</h1>
@@ -1579,6 +1579,30 @@ export default function Schedule({ user, role, initialTab = 'schedule' }) {
   const [activeTab, setActiveTab] = useState(
     tabs.some((tab) => tab.id === initialTab) ? initialTab : tabs[0].id,
   )
+
+  // This page sits on a deeper ground than the rest of the app so the white
+  // shift cards read as lifted off it. body paints the ground, including the
+  // strip above the safe area and the overscroll band, so the ground has to be
+  // set here rather than on a child element. The value is read from the theme
+  // token so there is a single source of truth, and theme-color keeps the iOS
+  // toolbar matching instead of leaving it on the shared lighter ground.
+  useEffect(() => {
+    const shaded = getComputedStyle(document.documentElement)
+      .getPropertyValue('--color-page-ground-shaded')
+      .trim()
+    if (!shaded) return undefined
+    const previousBody = document.body.style.backgroundColor
+    const themeColor = document.querySelector('meta[name="theme-color"]')
+    const previousThemeColor = themeColor ? themeColor.getAttribute('content') : null
+    document.body.style.backgroundColor = shaded
+    themeColor?.setAttribute('content', shaded)
+    return () => {
+      document.body.style.backgroundColor = previousBody
+      if (themeColor && previousThemeColor !== null) {
+        themeColor.setAttribute('content', previousThemeColor)
+      }
+    }
+  }, [])
 
   // Only re-check when role changes (e.g. resolves after Schedule mounts), not on every tab switch.
   useEffect(() => {
