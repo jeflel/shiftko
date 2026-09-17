@@ -1278,6 +1278,20 @@ deployed build while signed in as the nurse test account (geometry read with
    resolves to `185.5px`, sits at `z-index 5` under the header's `10`, and is
    opaque, so rows pass behind it cleanly.
 
+6. The shared teal top bar now renders on Home only (`8d7f42c`), as Jefle asked:
+   Schedule, Pool and Profile start on the page ground with their title. This
+   matches the artifact, which only ever put a `.topbar` on Home. Consequence:
+   the notifications bell and the avatar shortcut are Home-only now. Both
+   Schedule headers dropped `top-14` for `top-0`, since nothing pins above them
+   any more, and the pinned week label's measured offset fell from 185.5px to
+   129.5px with no change to that logic, which is the measurement behaving as
+   intended.
+7. The hairline rule under the My Shifts / Team Schedule segmented control is
+   gone (`f5e2445`), on both copies of the header. The header already paints the
+   page ground, so rows scrolling under it still read as separate. Header height
+   went 130px to 129px and the week label's measured `top` followed on its own to
+   128.5px.
+
 Per-fix specs, file lists and measured evidence: the vault's
 `03 Projects/Shiftko/00 Plan/(C) Shiftko Agent Queue.md`.
 
