@@ -1560,7 +1560,7 @@ Files: `src/lib/activation.js` (new), `src/components/ui/activation-banner.jsx`
 (new), `src/pages/Home.jsx` (the mode switch, plus one effect and two handlers),
 `supabase/migrations/20260917023202_profiles_activation_dismissed.sql`.
 
-## Bottom nav: 72px tabs and a selected-tab pill (2026-09-17)
+## Bottom nav: wider tabs, a chip that clears its label, and a rail that reads on white (2026-09-17)
 
 Jefle's request: the bar felt narrow, and it floats on white page content without
 being distinguishable. Applied the touch-target rule he brought from a UI tutorial
@@ -1578,13 +1578,18 @@ it on a near-white page to blur, which is why the effect works in the tutorial
 the hairline, not the fill, is what actually draws the outline: `#E5E5EA` is
 1.19:1 against the page and 1.26:1 against a white card behind it.
 
-**The four changes, all in `src/components/BottomNav.jsx`.**
+**The final shape, all in `src/components/BottomNav.jsx`.** A first pass shipped
+fixed 72px tabs on a full-width rail, and Jefle rejected the width: he wanted the
+gutters left alone, only a little wider than the original, and the selected chip
+wider because the label was gripping it.
 
-1. Every tab is `w-[72px]` now. Widths used to come from the label, so Schedule was
-   86px and Pool 56px and the bar read lopsided.
-2. The nav's own padding went `px-6` to `px-4`, and the rail became `w-full` with
-   `justify-between`, so it spans 358px at a 390px viewport instead of 303.7px.
-   Gutters go from 43px to 16px. This is the "wider" part of the ask.
+1. Every tab is a fixed 76px wide. Widths used to come from the label, so Schedule
+   was 86px and Pool 56px and the bar read lopsided.
+2. The rail stays content-sized, as it always was; `min-w-0` only lets it shrink on
+   a very narrow phone instead of overflowing. At a 390px viewport it spans 334px
+   against the original 303.7px, so the gutters are 28px against 43px, and they
+   fall out of centring rather than being pinned. The first pass pinned them with
+   `w-full` plus `justify-between`, which Jefle rejected on sight.
 3. The active tab carries `bg-teal-tint`, the same soft tint used by
    `.status-tag`/`.period-tag` pending, with the existing `text-teal-foreground`.
    That is the biggest single legibility win: it puts a shape inside the bar, so
@@ -1592,13 +1597,28 @@ the hairline, not the fill, is what actually draws the outline: `#E5E5EA` is
 4. The rail is no longer glass. `bg-card-surface` plus `border-hairline` plus
    `0 4px 18px rgba(29,29,31,.10), 0 1px 3px rgba(29,29,31,.06)` replaced the
    white/70 fill, the white border, the halo and the now-useless `backdrop-blur-md`.
+5. The chip is `rounded-card` (16px), not `rounded-full`. This is the fix for the
+   real bug, see below. `--radius-card` is the app's existing 16px token, so no new
+   value entered the vocabulary.
 
-**Measured, not eyeballed.** Chrome against the app's own built stylesheet at a
-390px viewport: rail 358x72, four tabs at 72x54, 17.3px between tabs, no horizontal
-overflow from 320px up (at 320 the tabs shrink to 67.5px, still above the 44px
-floor). Active pill `rgba(56,189,229,.15)`, active label `#0e7490` at 600 weight,
-4.76:1 on the pill, inactive `#6e6e73` at 5.07:1. Tab height stays 54px rather than
-the tutorial's 48px, Jefle's call, which keeps the bar at its existing 72px height.
+**The chip was gripping the label, and width was not the cause.** Measured on the
+first pass: the "Schedule" label is 54.88px of glyphs sitting from y=32 to y=48
+inside a 54px tab, so it occupies the bottom band of the box. A fully round 72px
+chip has 27px semicircular ends, and at that band its clear width is only 54.3px
+against the 54.88px label, so the word overran the corners by 0.5px a side. That is
+the "text is clipping the rounded background" Jefle saw. Widening alone cannot fix
+it: an 80px round chip still leaves only 2.5px a side, and clearing it fully needs
+88px tabs, which would put the bar back at 382px, the width he had just rejected.
+Flattening the ends is the lever: at 76px wide with a 16px radius the clear width
+at the label band is 70.5px, so the label now has 7.8px of slack at each end.
+
+**Measured, not eyeballed.** Chrome against the app's own built stylesheet, viewport
+widths 430/390/375/360/320: rail 334x72 with 76x54 tabs and 28px gutters at 390,
+still 334 with 76px tabs at 375, 328 with 74.5px tabs at 360, 288 with 64.5px tabs
+at 320, and no horizontal overflow at any of them. Active chip
+`rgba(56,189,229,.15)` at 16px radius, active label `#0e7490` at 600 weight, 4.76:1
+on the chip, inactive `#6e6e73` at 5.07:1. Tab height stays 54px rather than the
+tutorial's 48px, Jefle's call, which keeps the bar at its existing 72px height.
 
 **The pill swaps at Fast, and the tabs still do not slide.** `transition-colors
 duration-150 ease-out` on the tab, matching `segmented-control.jsx` and MOTION.md's
@@ -1606,6 +1626,11 @@ background-swap rule. MOTION.md's "[app call] Bottom-nav tab switches do not sli
 still holds: there is no sliding indicator, and the tab switch motion itself is
 untouched. `MOTION.md` and `DESIGN.md` both say nothing about the rail's fill, so
 item 4 is the app's own treatment rather than a fidelity fix.
+
+Note for anyone grepping the bundle: Tailwind v4 scans markdown, so a class-looking
+string written in a root-level doc gets compiled into the stylesheet as a dead rule.
+The first draft of this section emitted an unused width rule for exactly that
+reason.
 
 The standing exception that the tabbar is never ported from the mockups still
 holds, in the sense that nothing here came from an artboard. What changed is that
