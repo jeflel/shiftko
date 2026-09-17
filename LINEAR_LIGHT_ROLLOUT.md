@@ -1586,6 +1586,53 @@ Files: `src/lib/activation.js` (new), `src/components/ui/activation-banner.jsx`
 (new), `src/pages/Home.jsx` (the mode switch, plus one effect and two handlers),
 `supabase/migrations/20260917023202_profiles_activation_dismissed.sql`.
 
+## Get started card: teal wash ground, a white row plate, shorter labels (2026-09-17)
+
+Jefle's ask: the card read as "another white card" beside Home's other white
+surfaces, and the third step's label wrapped to two lines. Picked from five
+surfaces in `shiftko-design-v2-visual-pass-dup/get-started-surface-mock.html`
+(white, teal wash, deep teal, deep header band, hero gradient wash), then six
+colourways and four label fixes in `get-started-deep-card-options.html` and
+`get-started-light-card-options.html`.
+
+Landed: a 10% teal wash ground (`--color-teal-wash`, `rgba(56,189,229,.10)`,
+which composites to `#e5f3f9` over the page ground) with the same 1px `#5dc7e6`
+outline the white card carried, and the next-step row moved onto a white plate
+(`bg-card-surface`, `rounded-button` 12px, `px-3 py-2.5`) instead of sitting
+under a hairline. Press darkens the wash to `--color-teal-tint` rather than
+washing grey over it.
+
+Three measurements drove the details rather than taste:
+
+- **The row plate is load bearing.** 11px grey sublines measure 5.07:1 on white
+  and 4.48:1 on the raw wash, so the plate is what keeps them above 4.5.
+- **The neutral track cannot survive the tint.** `#ededf2` measures 1.03:1 on
+  the wash and `#e5e5ea` 1.07:1, both effectively invisible. Unfilled connectors
+  are `teal-foreground/30` (1.50:1) and pending dot rings `teal-foreground/35`
+  (1.61:1).
+- **The label fix is a width problem, not wording taste.** `Claim a shift`
+  measured 62.9px inside the 62px node in Geist at 11px with -0.01em tracking and
+  wrapped; `Add a shift` fit at 54.2px. Both labels dropped their article
+  (`Add shift` 46.8, `Claim shift` 55.7) rather than widening the nodes to 70px,
+  which would have halved the connectors to 12px. The `NEXT_STEPS` row titles
+  follow their node labels word for word.
+
+**Verified on live production, signed in (2026-09-17).** `alex.ramirez@shiftko.test`
+against a hash-matched deploy (`index-CL1G_Lc4.js`). Read from the live DOM rather
+than from a screenshot: card ground `rgba(56,189,229,0.1)`, border `1px #5dc7e6`,
+radius 16px, padding `15px 16px`, width 350px; row white, radius 12px, padding
+`10px 12px`, height 56px; chip white with `#0e7490` text; connectors `#38bde5`
+then 30% teal; all four labels on one line (52/47/54/32px) with the line flush to
+every dot edge (`gap 0` on both sides); the current dot keeps its 4px teal halo.
+Tapping the card opened the Add Personal Event panel, which is step 2's action,
+and the panel was closed without saving anything.
+
+One wording split noticed and deliberately left alone: the panel that a step 2 tap
+opens is titled `Add Personal Event` while the card's row now says `Add shift`.
+
+Files: `src/tailwind.css` (the token), `src/lib/activation.js` (labels and row
+titles), `src/components/ui/activation-banner.jsx` (the surface). Commit `5df9264`.
+
 ## Bottom nav: wider tabs, a chip that clears its label, and a rail that reads on white (2026-09-17)
 
 Jefle's request: the bar felt narrow, and it floats on white page content without
