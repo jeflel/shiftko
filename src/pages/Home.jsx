@@ -754,9 +754,9 @@ export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoTo
         {/* The greeting row is the top row of the page now: the shared top bar
             that used to sit above it is gone (2026-09-16), so the bell and the
             avatar ride on the greeting's own line and nothing is pinned over the
-            hero. The 223px gradient is untouched, and the hero still carries the
+            hero. The 193px gradient is untouched, and the hero still carries the
             horizontal padding (a background paints the padding box). */}
-        <div className="flex flex-1 flex-col px-5 pt-2 bg-gradient-to-b from-hero-gradient-start via-hero-gradient-mid via-70% to-hero-gradient-end bg-[length:100%_223px] bg-top bg-no-repeat">
+        <div className="flex flex-1 flex-col px-5 pt-2 bg-gradient-to-b from-hero-gradient-start via-hero-gradient-mid via-70% to-hero-gradient-end bg-[length:100%_193px] bg-top bg-no-repeat">
           <div className="flex flex-col gap-4 pt-4 pb-11">
             <div className="flex items-center justify-between gap-3">
               <p className="font-display-title ml-1 text-[20px] font-medium tracking-[-0.04em] text-white">
