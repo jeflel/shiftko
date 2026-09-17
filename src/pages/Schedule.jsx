@@ -169,7 +169,7 @@ function MyDayOffRow({ date }) {
         </span>
         <span className="text-[19px] leading-[1.15] font-semibold text-ink">{date.getDate()}</span>
       </div>
-      <div className="h-full min-h-9 w-px shrink-0 self-stretch bg-hairline" aria-hidden="true" />
+      <div className="min-h-9 w-px shrink-0 self-stretch bg-hairline" aria-hidden="true" />
       <p className="text-[14px] font-medium text-ink-secondary">Day off</p>
     </div>
   )

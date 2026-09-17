@@ -1246,7 +1246,7 @@ function CoverageGapRow({ date }) {
         <span className="text-[19px] leading-[1.15] font-semibold text-ink">{date.getDate()}</span>
       </div>
 
-      <div className="h-full min-h-9 w-px shrink-0 self-stretch bg-hairline" aria-hidden="true" />
+      <div className="min-h-9 w-px shrink-0 self-stretch bg-hairline" aria-hidden="true" />
 
       <div className="min-w-0 flex-1">
         <p className="truncate text-[12px] text-period-warn-fg">No nurse assigned</p>

@@ -39,7 +39,7 @@ function SwapRow({ swap, viewerId, onClick }) {
         <span className="text-[19px] leading-[1.15] font-semibold text-ink">{date.getDate()}</span>
       </div>
 
-      <div className="h-full min-h-9 w-px shrink-0 self-stretch bg-hairline" aria-hidden="true" />
+      <div className="min-h-9 w-px shrink-0 self-stretch bg-hairline" aria-hidden="true" />
 
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <p className="truncate text-[13px] font-medium text-ink">
