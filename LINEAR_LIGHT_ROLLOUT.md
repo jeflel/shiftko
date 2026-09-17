@@ -1633,6 +1633,53 @@ opens is titled `Add Personal Event` while the card's row now says `Add shift`.
 Files: `src/tailwind.css` (the token), `src/lib/activation.js` (labels and row
 titles), `src/components/ui/activation-banner.jsx` (the surface). Commit `5df9264`.
 
+## Home header: one two-line row sized to the controls (2026-09-17)
+
+Jefle's call: the bell and avatar were the tallest things on the greeting row
+while a one-line greeting sat beside them, and the page's first line said nothing
+about the day. Picked from `get-started-surface-mock.html`'s successors,
+`home-header-options.html` (five structures, five surfaces, three bottom edges,
+six copies) and `home-header-row.html` (the compact row, measured).
+
+Landed, with the gradient untouched: the greeting drops 20px to 16px/1.1, gains a
+12px second line under it, and both stack in a `min-w-0` column centred against
+the two 36px controls.
+
+Measured on live production, signed in (2026-09-17), `alex.ramirez@shiftko.test`,
+deploy hash-matched (`index-CTakC1rH.js`): row 36.0px against the controls' 36px,
+stack 34.6px, the gap from the row to the Today card 24.0px, greeting computed at
+16px/17.6px. The sentence rendered from his real data as `You have an evening
+shift today`.
+
+Three things worth knowing before anyone tunes it:
+
+- **The size is a constraint, not a taste call.** The row is the height of the
+  icons, so the stack has to fit 36px: 34.6px at 16px, 35.7px at 17px, 36.8px at
+  18px, 39px at the 20px it shipped at. 17px is the largest greeting that still
+  fits, and the greeting is no longer the largest text on Home, which is now the
+  Today card's 25px time.
+- **The gap to the card is the header block's `pb`, and it measures `pb - 36`.**
+  `pb-11` (44px) was leaving 8px behind the card's `-mt-9`; `pb-15` (60px) gives
+  the 24px asked for. Everything below the header moved down 16px with it.
+- **White on this gradient is weak and always has been, and the second line
+  makes it visible.** Measured where the text actually sits: the greeting's
+  pixels are on `#1eabd5` (2.68:1 for white) and the 12px line's on `#2ab0d8`
+  (2.31:1 at white/90). The old 20px greeting was 2.97:1, which passed as large
+  text; at 16px it is normal text and does not. `#004458` ink would be 3.98:1 and
+  4.22:1, still under 4.5. The fix that keeps the gradient is a translucent
+  status-deep plate behind the two lines: at `rgba(0,68,88,.55)` the greeting
+  reaches 5.49:1 and the line 4.59:1.
+
+Behaviour kept as it was: the sentence is derived, never stored (the period comes
+from `getShiftPeriod`, lowercased with its article, so `a day shift`,
+`an evening shift`, `a night shift`), with nothing on today it reads
+`No shift today, enjoy the day off`, a personal event says `event` rather than
+`shift`, and coordinators get the greeting alone since the sentence is about the
+reader's own day.
+
+Files: `src/pages/Home.jsx` (the row, the `getHeaderLine` helper, `pb-15`).
+Commit `12e5f55`.
+
 ## Bottom nav: wider tabs, a chip that clears its label, and a rail that reads on white (2026-09-17)
 
 Jefle's request: the bar felt narrow, and it floats on white page content without
