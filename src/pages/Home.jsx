@@ -21,7 +21,9 @@ import PersonalEventDetail from './PersonalEventDetail'
 import OfferShiftUpdate from './OfferShiftUpdate'
 import Notifications from './Notifications'
 import PersonalEventPanel from '@/components/PersonalEventPanel'
+import { ActivationBanner } from '@/components/ui/activation-banner'
 import { EmptyState } from '@/components/ui/empty-state'
+import { dismissActivation, fetchActivation } from '@/lib/activation'
 import { HomeHeaderActions } from '@/components/ui/home-header-actions'
 import { fetchMyPersonalEvents } from '@/lib/personalEvents'
 import { Wordmark } from '@/components/ui/wordmark'
@@ -510,6 +512,7 @@ export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoTo
   const [offerUpdateShiftId, setOfferUpdateShiftId] = useState(null)
   const [showNotifications, setShowNotifications] = useState(false)
   const [showAddPersonalEvent, setShowAddPersonalEvent] = useState(false)
+  const [activation, setActivation] = useState(null)
 
   const isCoordinator = role === 'coordinator'
 
@@ -654,6 +657,53 @@ export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoTo
     }
   }, [isCoordinator, homeUnit])
 
+  // Home's activation checklist ("Get started"). Nurses only: the coordinator
+  // body is a different screen with no Request Activity section to take over.
+  useEffect(() => {
+    if (isCoordinator) {
+      setActivation(null)
+      return
+    }
+
+    let cancelled = false
+
+    async function loadActivation() {
+      const next = await fetchActivation(user.id)
+      if (!cancelled) setActivation(next)
+    }
+
+    loadActivation()
+
+    return () => {
+      cancelled = true
+    }
+  }, [user.id, isCoordinator, refreshKey])
+
+  // Retires the checklist for good. Both exits write this: "Skip for now" while
+  // it is unfinished, and "Got it" on the finished card. Optimistic so the tap
+  // always feels like it landed, and rolled back on failure rather than leaving
+  // a hidden checklist that quietly returns on the next load.
+  async function handleDismissActivation() {
+    const previous = activation
+    setActivation((current) => (current ? { ...current, mode: 'notification' } : current))
+
+    try {
+      await dismissActivation(user.id)
+    } catch (err) {
+      console.error('activation dismissal failed', err)
+      setActivation(previous)
+    }
+  }
+
+  // The card's next step: step 2 logs a shift, step 3 claims one.
+  function handleActivationNext(action) {
+    if (action === 'claim') {
+      onGoToPool()
+      return
+    }
+    setShowAddPersonalEvent(true)
+  }
+
   async function handleMarkAllRead() {
     const unreadIds = notifications.filter((n) => !n.read).map((n) => n.id)
     if (unreadIds.length === 0) return
@@ -788,12 +838,63 @@ export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoTo
                   onAddPersonalEvent={() => setShowAddPersonalEvent(true)}
                 />
 
-                {latestNotification && (
-                  <section className="flex flex-col gap-2.5">
-                    <SectionHeader title="Request Activity" onViewAll={() => setShowNotifications(true)} />
-                    <RequestActivity notification={latestNotification} onOpen={handleOpenNotification} />
+                {activation?.mode === 'checklist' && (
+                  <section className="flex flex-col gap-2.5" data-testid="home-get-started">
+                    <SectionHeader title="Get started">
+                      <button
+                        type="button"
+                        onClick={handleDismissActivation}
+                        data-testid="home-skip-activation"
+                        className="text-xs font-semibold text-ink-secondary"
+                      >
+                        Skip for now
+                      </button>
+                    </SectionHeader>
+                    <ActivationBanner
+                      mode="checklist"
+                      done={activation.done}
+                      currentIndex={activation.currentIndex}
+                      nextStep={activation.nextStep}
+                      onNext={handleActivationNext}
+                    />
                   </section>
                 )}
+
+                {activation?.mode === 'complete' && (
+                  <section className="flex flex-col gap-2.5" data-testid="home-get-started">
+                    <SectionHeader title="Get started">
+                      <button
+                        type="button"
+                        onClick={handleDismissActivation}
+                        data-testid="home-acknowledge-activation"
+                        className="text-xs font-semibold text-ink-secondary"
+                      >
+                        Got it
+                      </button>
+                    </SectionHeader>
+                    <ActivationBanner
+                      mode="complete"
+                      done={activation.done}
+                      currentIndex={activation.currentIndex}
+                      firstName={nurseFirstName}
+                    />
+                  </section>
+                )}
+
+                {/* The checklist owns this slot while it is unfinished, so a
+                    request notification landing mid-setup does not push Upcoming
+                    down the page. The bell keeps its dot, so nothing is hidden.
+                    While activation is still loading this falls through to the
+                    tile, which is exactly today's behavior, so an established
+                    nurse never sees the section flicker. */}
+                {latestNotification &&
+                  activation?.mode !== 'checklist' &&
+                  activation?.mode !== 'complete' && (
+                    <section className="flex flex-col gap-2.5">
+                      <SectionHeader title="Request Activity" onViewAll={() => setShowNotifications(true)} />
+                      <RequestActivity notification={latestNotification} onOpen={handleOpenNotification} />
+                    </section>
+                  )}
 
                 <section className="flex flex-col gap-2.5">
                   <SectionHeader title="Upcoming" onViewAll={onGoToSchedule} />

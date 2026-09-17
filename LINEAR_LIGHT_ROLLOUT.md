@@ -1437,6 +1437,86 @@ Two things deliberately left alone:
   is a tabbar tab in the live app and the rule is page-title for tabbar
   screens, so 26px stands.
 
+## Get started banner on Home (2026-09-17)
+
+Home's Request Activity section is now two modes in one slot. While a nurse is
+still getting set up it shows a "Get started" activation checklist; once that is
+finished, or dismissed, the same slot runs today's Request Activity tile
+unchanged. `RequestActivity` itself was not touched, so nothing about the
+existing behavior moved.
+
+**The checklist** is four nodes on a milestone track: Signed up, Add a shift,
+Claim a shift, All set. The card is three zones, no sentences doing a
+component's job:
+
+1. Card header: headline left, state chip right (`Step 2 of 4`), the same
+   label-left/chip-right shape as Home's Today card.
+2. The milestone track: 2px track, 28px nodes, a check for done, a teal halo on
+   the current node.
+3. The next step as a real row, sharing the quick tiles' 32px icon tile, 13px
+   title and 11px subline geometry. The whole card is the tap target, so the
+   chevron is the affordance rather than a second button competing with the
+   section header's `Skip for now`.
+
+The connectors are real flex boxes between the nodes rather than one absolutely
+positioned line with a hardcoded inset. The nodes are 78px boxes with a 28px dot
+inside, so a line placed by pixel offset only lines up at the card width it was
+measured at, while flex connectors line up by construction at any width.
+
+**Step state is derived, never stored.** Step 1 is always done by the time a
+nurse is on Home (`App.jsx` only routes to onboarding when
+`onboarding_completed === false`). Step 2 is a `personal_events` count for the
+nurse, step 3 is a `shift_claims` count for the nurse, step 4 is derived from
+those two. Nothing to backfill, and the banner cannot drift from reality.
+
+Two traps worth keeping if this is ever re-derived:
+
+- The `personal_events` count must be UNFILTERED. Home's own
+  `fetchMyPersonalEvents` call is windowed to today -> +56 days, so a shift
+  logged yesterday falls out of that window and a finished step would appear to
+  un-finish.
+- Step 3 cannot be read off `shifts`. Home already has the nurse's shifts, but
+  coordinator-assigned shifts land in that same array, so a nurse handed a shift
+  on day one would complete a step she never did.
+
+**The chip counts positions, not completions** (`Step 2 of 4`, not `1 of 3
+done`): with four nodes on the track, a count of three leaves the reader working
+out which of the four it refers to. Positions map 1:1 onto the nodes and the last
+chip reads `Complete`.
+
+**One column, for the exit.** `profiles.activation_dismissed_at`
+(`20260917023202_profiles_activation_dismissed.sql`) is the only schema change:
+nullable, no default, no backfill, and no RLS change, since the live "users
+update own profile" policy already allows `(id = auth.uid())`. Both exits write
+it: `Skip for now` while the checklist is unfinished, and `Got it` on the
+finished card, after which the slot runs as Request Activity for good. It is read
+through `lib/activation.js`'s own query rather than folded into Home's profile
+select, so a missing column degrades to "not dismissed" instead of taking Home
+down with it.
+
+**No backfill, everyone sees it.** 43 nurse profiles existed and 41 of them have
+no logged personal event, so the checklist shows for essentially the whole seeded
+roster on first load. Left that way deliberately (Jefle's call, 2026-09-17): the
+roster sits on seeded `@shiftko.test` addresses with no real person behind them,
+so there is nothing to protect and nothing to backfill. It also means the
+checklist is visible on every test account, with Derek and Linda at step 2, James
+at step 3 and Maria on the finished card. To retire it in one statement later:
+`update profiles set activation_dismissed_at = now() where email like
+'%@shiftko.test';`
+
+**Deviations worth knowing about.** No artboard in the artifact has an activation
+banner, so this is app-invented vocabulary the same way `empty-state.jsx` is, and
+it is the first section whose identity changes with state rather than only its
+contents. The visual was picked from three in
+`shiftko-design-v2-visual-pass-dup/activation-banner-mock.html` (milestone track,
+milestone chart, progress ring); the track won and the other two stay in that file
+for reference. The header is an eyebrow (`Welcome aboard`), not a headline, and
+the wording is one span in `components/ui/activation-banner.jsx`.
+
+Files: `src/lib/activation.js` (new), `src/components/ui/activation-banner.jsx`
+(new), `src/pages/Home.jsx` (the mode switch, plus one effect and two handlers),
+`supabase/migrations/20260917023202_profiles_activation_dismissed.sql`.
+
 ## Decisions made / deviations worth knowing about
 
 - **Nurse Home built on `MainHorizontalTiles.dc.html`** (icon-left quick
