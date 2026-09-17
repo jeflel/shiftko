@@ -192,7 +192,7 @@ function MyShiftRow({ shift, credential, isPast, onClick }) {
       data-testid="schedule-my-shift-row"
       className={cn(
         'flex w-full items-center gap-3 px-4 py-4.5 text-left transition-colors duration-150 ease-out active:bg-press-state',
-        isPast && 'bg-page-ground-shaded [&>*]:opacity-60',
+        isPast && 'opacity-35',
       )}
     >
       <div className="flex w-[34px] shrink-0 flex-col items-center">
@@ -243,7 +243,7 @@ function MyPersonalEventRow({ event, isPast, onClick }) {
       data-testid="schedule-my-personal-event-row"
       className={cn(
         'flex w-full items-center gap-3 px-4 py-4.5 text-left transition-colors duration-150 ease-out active:bg-press-state',
-        isPast && 'bg-page-ground-shaded [&>*]:opacity-60',
+        isPast && 'opacity-35',
       )}
     >
       <div className="flex w-[34px] shrink-0 flex-col items-center">
