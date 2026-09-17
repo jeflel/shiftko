@@ -198,7 +198,7 @@ function ShiftProgress({ item }) {
 function SectionHeader({ title, onViewAll, children }) {
   return (
     <div className="flex items-center justify-between px-1">
-      <span className="text-[16px] font-semibold tracking-[-0.04em] text-[#3A4A4F]">{title}</span>
+      <span className="text-[20px] font-semibold tracking-[-0.04em] text-[#3A4A4F]">{title}</span>
       {children ??
         (onViewAll && (
           <button

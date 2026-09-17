@@ -1683,6 +1683,15 @@ Files: `src/components/BottomNav.jsx`.
 
 ## Decisions made / deviations worth knowing about
 
+- **Home's section headers are 20px, not the mockup's 16px** (2026-09-17, by
+  Jefle). `SectionHeader` is a single shared component in `Home.jsx`, so this
+  moves every section heading on Home at once: `Request Activity` / `Get
+  started`, `Upcoming`, `Weekly Progress` and the coordinator's `Coverage Gaps`.
+  The mockup specifies 16px (`MainHorizontalTiles.dc.html`'s `.section-header`),
+  so this is a deliberate departure rather than a fidelity fix. It now matches
+  the greeting's own 20px exactly, which is worth knowing because the two are no
+  longer distinguishable by size. Reverting is one value in `Home.jsx`.
+
 - **Nurse Home built on `MainHorizontalTiles.dc.html`** (icon-left quick
   tiles), not `Main.dc.html` (icon-top). Matches what was already shipped
   live before this pass (confirmed against `2b8d563`'s commit message).
