@@ -27,7 +27,7 @@ export default function BottomNav({ activeTab, onTabChange }) {
               aria-current={isActive ? 'page' : undefined}
               onClick={() => onTabChange(tab.id)}
               className={cn(
-                'flex w-[76px] flex-col items-center gap-1 rounded-card py-1.5 text-xs text-ink-secondary transition-colors duration-150 ease-out',
+                'flex w-[76px] flex-col items-center gap-1 rounded-full py-1.5 text-xs text-ink-secondary transition-colors duration-150 ease-out',
                 isActive && 'bg-teal-tint font-semibold text-teal-foreground',
               )}
             >

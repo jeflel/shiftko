@@ -1623,28 +1623,37 @@ wider because the label was gripping it.
 4. The rail is no longer glass. `bg-card-surface` plus `border-hairline` plus
    `0 4px 18px rgba(29,29,31,.10), 0 1px 3px rgba(29,29,31,.06)` replaced the
    white/70 fill, the white border, the halo and the now-useless `backdrop-blur-md`.
-5. The chip is `rounded-card` (16px), not `rounded-full`. This is the fix for the
-   real bug, see below. `--radius-card` is the app's existing 16px token, so no new
-   value entered the vocabulary.
+5. The chip stays `rounded-full`. A 16px radius was tried as a heavier fix for the
+   label grip and reverted at Jefle's call: he wants the fully round shape, and the
+   extra tab width already clears the label on its own (see below).
 
-**The chip was gripping the label, and width was not the cause.** Measured on the
-first pass: the "Schedule" label is 54.88px of glyphs sitting from y=32 to y=48
-inside a 54px tab, so it occupies the bottom band of the box. A fully round 72px
-chip has 27px semicircular ends, and at that band its clear width is only 54.3px
-against the 54.88px label, so the word overran the corners by 0.5px a side. That is
-the "text is clipping the rounded background" Jefle saw. Widening alone cannot fix
-it: an 80px round chip still leaves only 2.5px a side, and clearing it fully needs
-88px tabs, which would put the bar back at 382px, the width he had just rejected.
-Flattening the ends is the lever: at 76px wide with a 16px radius the clear width
-at the label band is 70.5px, so the label now has 7.8px of slack at each end.
+**The chip was gripping the label, and extra tab width is what fixes it.** The
+"Schedule" label is 54.88px of glyphs sitting from y=32 to y=48 inside a 54px tab,
+so it occupies the bottom band of the box, which is exactly where a fully round
+chip's ends pinch hardest. At 72px wide the chip cleared only 54.3px at that band,
+so the word ran into the corners. At 76px it clears 58.3px, and the pixels say what
+that is worth: rendered at 3x and walked row by row, the tightest gap between the
+letters' ink and the chip's edge is 6.0px, at the baseline. A first pass at 76px also
+softened the ends to a 16px radius, which cleared by about 9px; Jefle reverted that
+in favour of the fully round shape, since 6px is enough.
+
+**Judge this at the pixels, not at the CSS box.** The earlier read of this same chip
+used the label's line box, whose bottom sits at y=48, three pixels of descender
+space below the ink, and it reported 1.7px of slack where the real gap is 6.0px.
+That measurement sent this pass down a radius change it did not need. When a user
+reports text touching a shape, screenshot the rendered pixels at 3x and compare the
+ink to the shape's edge row by row.
 
 **Measured, not eyeballed.** Chrome against the app's own built stylesheet, viewport
 widths 430/390/375/360/320: rail 334x72 with 76x54 tabs and 28px gutters at 390,
 still 334 with 76px tabs at 375, 328 with 74.5px tabs at 360, 288 with 64.5px tabs
 at 320, and no horizontal overflow at any of them. Active chip
-`rgba(56,189,229,.15)` at 16px radius, active label `#0e7490` at 600 weight, 4.76:1
-on the chip, inactive `#6e6e73` at 5.07:1. Tab height stays 54px rather than the
-tutorial's 48px, Jefle's call, which keeps the bar at its existing 72px height.
+`rgba(56,189,229,.15)`, fully round, active label `#0e7490` at 600 weight, 4.76:1 on
+the chip, inactive `#6e6e73` at 5.07:1. Tab height stays 54px rather than the
+tutorial's 48px, Jefle's call, which keeps the bar at its existing 72px height. The
+one width where the chip does tighten onto the label is 320px, where the rail has to
+shrink and the chip comes out at 64.5px; nothing in the target range (375 and up)
+does that.
 
 **The pill swaps at Fast, and the tabs still do not slide.** `transition-colors
 duration-150 ease-out` on the tab, matching `segmented-control.jsx` and MOTION.md's
