@@ -366,7 +366,7 @@ export default function Profile({ user, onWorkspaceLeft }) {
             <ChevronDown
               size={16}
               strokeWidth={2}
-              className={`text-ink-secondary transition-transform ${openAction === 'password' ? 'rotate-180' : ''}`}
+              className={`text-ink-secondary transition-transform duration-[var(--motion-base)] ease-in-out ${openAction === 'password' ? 'rotate-180' : ''}`}
             />
           </button>
 
@@ -446,7 +446,7 @@ export default function Profile({ user, onWorkspaceLeft }) {
             <ChevronDown
               size={16}
               strokeWidth={2}
-              className={`text-red-600 transition-transform ${openAction === 'delete' ? 'rotate-180' : ''}`}
+              className={`text-red-600 transition-transform duration-[var(--motion-base)] ease-in-out ${openAction === 'delete' ? 'rotate-180' : ''}`}
             />
           </button>
 

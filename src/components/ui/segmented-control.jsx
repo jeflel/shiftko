@@ -22,7 +22,7 @@ export function SegmentedControl({ options, value, onChange, ariaLabel, testidPr
             aria-selected={isActive}
             onClick={() => onChange(option.id)}
             className={cn(
-              'flex-1 rounded-[9px] px-3 py-2 text-[13px] font-semibold whitespace-nowrap transition-colors duration-150 ease-out',
+              'flex-1 rounded-[9px] px-3 py-2 text-[13px] font-semibold whitespace-nowrap transition-colors duration-[var(--motion-base)] ease-in-out',
               isActive
                 ? 'bg-card-surface text-ink shadow-[0_1px_2px_rgba(20,20,19,0.08)]'
                 : 'bg-transparent text-ink-secondary',

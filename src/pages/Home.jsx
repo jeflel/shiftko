@@ -173,7 +173,7 @@ function ShiftProgress({ item }) {
     <div className="mt-1 flex flex-col gap-1.5">
       <div className="h-1.5 w-full overflow-hidden rounded-full bg-track-neutral">
         <div
-          className="h-full rounded-full bg-teal transition-[width] duration-500"
+          className="h-full rounded-full bg-teal transition-[width] duration-[350ms] ease-out"
           style={{ width: `${percent}%` }}
         />
       </div>
@@ -978,7 +978,7 @@ function CoverageHero({ totalToday, staffedToday, gapsToday, nursesScheduled, un
           <div className="mt-1 flex flex-col gap-1.5">
             <div className="h-1.5 w-full overflow-hidden rounded-full bg-track-neutral">
               <div
-                className="h-full rounded-full bg-teal transition-[width] duration-500"
+                className="h-full rounded-full bg-teal transition-[width] duration-[350ms] ease-out"
                 style={{ width: `${percent}%` }}
               />
             </div>

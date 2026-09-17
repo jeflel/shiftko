@@ -359,7 +359,7 @@ export default function StaffRoster({ onBack }) {
                             {savedId === nurse.id && (
                               <span
                                 className={cn(
-                                  'text-xs text-[#16A34A] transition-opacity duration-500',
+                                  'text-xs text-[#16A34A] transition-opacity duration-[var(--motion-fast)] ease-out',
                                   savedFading ? 'opacity-0' : 'opacity-100',
                                 )}
                               >

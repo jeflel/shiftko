@@ -6,6 +6,16 @@
   --font-display-title: 'Fraunces', 'Geist', -apple-system, BlinkMacSystemFont, 'SF Pro Text',
     'Segoe UI', system-ui, sans-serif;
 
+  /* Motion scale, see MOTION.md. DESIGN.md calls these starting points to tune
+     against the real app, not locked tokens the way the colours are, so this is
+     the one place a duration should ever be written down. Fast 150ms for state
+     changes with no movement, Base 225ms for anything that moves or resizes,
+     Slow 350ms for push/pop and progress fills. No spring or overshoot curve
+     anywhere, per The No-Spring Rule. */
+  --motion-fast: 150ms;
+  --motion-base: 225ms;
+  --motion-slow: 350ms;
+
   /* v2 design tokens, see DESIGN.md in shiftko-design-v2-visual-pass-dup */
   --color-page-ground: #f9f9fb;
   --color-card-surface: #ffffff;
@@ -220,4 +230,20 @@ body {
    every screen shares. */
 .app-content {
   padding-top: env(safe-area-inset-top);
+}
+
+/* MOTION.md: reduced motion is mandatory, not a nicety. Everything that
+   animates collapses to an instant state change when the user asks for it, and
+   the scroll container stops smooth-scrolling too. Some people set this for
+   vestibular disorders, and this app gets used at 6am by people who did not
+   choose to be awake. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
