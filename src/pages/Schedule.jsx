@@ -163,11 +163,11 @@ function ScheduleTab({ user }) {
 function MyDayOffRow({ date }) {
   return (
     <div className="flex w-full items-center gap-3 px-4 py-4.5">
-      <div className="ml-0.5 mr-0.5 flex w-[34px] shrink-0 flex-col items-center">
-        <span className="text-[11px] font-semibold tracking-wide text-ink-secondary uppercase">
+      <div className="ml-0.5 mr-0.5 flex w-8 shrink-0 flex-col items-center">
+        <span className="text-[11px] font-semibold tracking-[0.03em] text-ink-secondary uppercase">
           {weekdayFormatter.format(date)}
         </span>
-        <span className="text-[20px] leading-tight font-semibold text-ink">{date.getDate()}</span>
+        <span className="text-[19px] leading-[1.15] font-semibold text-ink">{date.getDate()}</span>
       </div>
       <div className="h-full min-h-9 w-px shrink-0 self-stretch bg-hairline" aria-hidden="true" />
       <p className="text-[14px] font-medium text-ink-secondary">Day off</p>
@@ -196,11 +196,11 @@ function MyShiftRow({ shift, credential, isPast, onClick }) {
         isPast && 'opacity-35',
       )}
     >
-      <div className="ml-0.5 mr-0.5 flex w-[34px] shrink-0 flex-col items-center">
-        <span className="text-[11px] font-semibold tracking-wide text-ink-secondary uppercase">
+      <div className="ml-0.5 mr-0.5 flex w-8 shrink-0 flex-col items-center">
+        <span className="text-[11px] font-semibold tracking-[0.03em] text-ink-secondary uppercase">
           {weekdayFormatter.format(date)}
         </span>
-        <span className="text-[20px] leading-tight font-semibold text-ink">{date.getDate()}</span>
+        <span className="text-[19px] leading-[1.15] font-semibold text-ink">{date.getDate()}</span>
       </div>
 
 <div className="min-h-9 w-px shrink-0 self-stretch bg-hairline" aria-hidden="true" />
@@ -254,11 +254,11 @@ function MyPersonalEventRow({ event, isPast, onClick }) {
         isPast && 'opacity-35',
       )}
     >
-      <div className="ml-0.5 mr-0.5 flex w-[34px] shrink-0 flex-col items-center">
-        <span className="text-[11px] font-semibold tracking-wide text-ink-secondary uppercase">
+      <div className="ml-0.5 mr-0.5 flex w-8 shrink-0 flex-col items-center">
+        <span className="text-[11px] font-semibold tracking-[0.03em] text-ink-secondary uppercase">
           {weekdayFormatter.format(date)}
         </span>
-        <span className="text-[20px] leading-tight font-semibold text-ink">{date.getDate()}</span>
+        <span className="text-[19px] leading-[1.15] font-semibold text-ink">{date.getDate()}</span>
       </div>
 
 <div className="min-h-9 w-px shrink-0 self-stretch bg-hairline" aria-hidden="true" />
@@ -1033,7 +1033,7 @@ function MyShiftsTab({ user, contentView }) {
                     {rows.map((row, index) => (
                       <li key={row.key}>
                         {row.node}
-                        {index < rows.length - 1 && <ShiftListDivider variant="schedule" />}
+                        {index < rows.length - 1 && <ShiftListDivider />}
                       </li>
                     ))}
                   </ul>

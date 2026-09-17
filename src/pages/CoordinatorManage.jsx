@@ -104,11 +104,11 @@ export default function CoordinatorManage({ onBack, onGoToPostShift, onGoToStaff
                   return (
                     <li key={shift.id}>
                       <div className="flex w-full items-center gap-3 px-4 py-3.5">
-                        <div className="flex w-[34px] shrink-0 flex-col items-center">
-                          <span className="text-[11px] font-semibold tracking-wide text-ink-secondary uppercase">
+                        <div className="ml-0.5 mr-0.5 flex w-8 shrink-0 flex-col items-center">
+                          <span className="text-[11px] font-semibold tracking-[0.03em] text-ink-secondary uppercase">
                             {weekdayFormatter.format(date)}
                           </span>
-                          <span className="text-[20px] leading-tight font-semibold text-ink">{date.getDate()}</span>
+                          <span className="text-[19px] leading-[1.15] font-semibold text-ink">{date.getDate()}</span>
                         </div>
 
                         <div className="h-full min-h-9 w-px shrink-0 self-stretch bg-hairline" aria-hidden="true" />

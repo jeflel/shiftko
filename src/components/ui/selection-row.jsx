@@ -65,9 +65,9 @@ export function ShiftPickerRow({ shift, meta, selected, onClick }) {
         selected ? 'border-teal-foreground bg-teal-tint' : 'border-hairline bg-card-surface',
       )}
     >
-      <div className="flex w-8 shrink-0 flex-col items-center">
-        <span className="text-[11px] font-medium tracking-[0.03em] text-[#85969B] uppercase">{weekday}</span>
-        <span className="text-[19px] leading-[1.15] font-medium text-ink">{date.getDate()}</span>
+      <div className="ml-0.5 mr-0.5 flex w-8 shrink-0 flex-col items-center">
+        <span className="text-[11px] font-semibold tracking-[0.03em] text-ink-secondary uppercase">{weekday}</span>
+        <span className="text-[19px] leading-[1.15] font-semibold text-ink">{date.getDate()}</span>
       </div>
 
       <div className="h-full min-h-9 w-px shrink-0 self-stretch bg-hairline" aria-hidden="true" />

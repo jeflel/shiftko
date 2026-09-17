@@ -16,10 +16,10 @@ function ShiftCard({ date, title, subtitle, period, trailing, onOpen }) {
   const leftGroup = (
     <>
       <div className="ml-0.5 mr-0.5 flex w-8 shrink-0 flex-col items-center">
-        <span className="text-[11px] font-medium tracking-[0.03em] text-[#85969B] uppercase">
+        <span className="text-[11px] font-semibold tracking-[0.03em] text-ink-secondary uppercase">
           {weekdayFormatter.format(date)}
         </span>
-        <span className="text-[19px] leading-[1.15] font-medium text-ink">{date.getDate()}</span>
+        <span className="text-[19px] leading-[1.15] font-semibold text-ink">{date.getDate()}</span>
       </div>
 
       <div className="h-full min-h-9 w-px shrink-0 self-stretch bg-hairline" aria-hidden="true" />
@@ -329,7 +329,7 @@ export default function Pool({ user, onGoToSchedule }) {
                       }
                     />
 
-                    {index < shifts.length - 1 && <ShiftListDivider variant="pool" />}
+                    {index < shifts.length - 1 && <ShiftListDivider />}
                   </li>
                 )
               })}
