@@ -1517,6 +1517,59 @@ Files: `src/lib/activation.js` (new), `src/components/ui/activation-banner.jsx`
 (new), `src/pages/Home.jsx` (the mode switch, plus one effect and two handlers),
 `supabase/migrations/20260917023202_profiles_activation_dismissed.sql`.
 
+## Bottom nav: 72px tabs and a selected-tab pill (2026-09-17)
+
+Jefle's request: the bar felt narrow, and it floats on white page content without
+being distinguishable. Applied the touch-target rule he brought from a UI tutorial
+(72px wide by 48px tall per tab, with the selected tab carrying the rounded
+background), then fixed the legibility separately.
+
+**Why it was invisible.** The rail's fill was `bg-white/70`. Composited over the
+page ground `#F9F9FB` that lands on `#FDFDFE`, 1.03:1 against the page, and over a
+white card it lands on exactly `#FFFFFF`, 1.00:1. So the only thing making the bar
+visible was its shadow, and that shadow was a 10px-spread halo
+(`0 6px 20px 10px rgba(0,0,0,.07)`) which reads as a smudge rather than an edge.
+The `backdrop-blur` was also doing nothing: there is no colour or darkness behind
+it on a near-white page to blur, which is why the effect works in the tutorial
+(dark background) and not here. White against `#F9F9FB` is still only 1.05:1, so
+the hairline, not the fill, is what actually draws the outline: `#E5E5EA` is
+1.19:1 against the page and 1.26:1 against a white card behind it.
+
+**The four changes, all in `src/components/BottomNav.jsx`.**
+
+1. Every tab is `w-[72px]` now. Widths used to come from the label, so Schedule was
+   86px and Pool 56px and the bar read lopsided.
+2. The nav's own padding went `px-6` to `px-4`, and the rail became `w-full` with
+   `justify-between`, so it spans 358px at a 390px viewport instead of 303.7px.
+   Gutters go from 43px to 16px. This is the "wider" part of the ask.
+3. The active tab carries `bg-teal-tint`, the same soft tint used by
+   `.status-tag`/`.period-tag` pending, with the existing `text-teal-foreground`.
+   That is the biggest single legibility win: it puts a shape inside the bar, so
+   the bar reads as a container even where its fill matches the page.
+4. The rail is no longer glass. `bg-card-surface` plus `border-hairline` plus
+   `0 4px 18px rgba(29,29,31,.10), 0 1px 3px rgba(29,29,31,.06)` replaced the
+   white/70 fill, the white border, the halo and the now-useless `backdrop-blur-md`.
+
+**Measured, not eyeballed.** Chrome against the app's own built stylesheet at a
+390px viewport: rail 358x72, four tabs at 72x54, 17.3px between tabs, no horizontal
+overflow from 320px up (at 320 the tabs shrink to 67.5px, still above the 44px
+floor). Active pill `rgba(56,189,229,.15)`, active label `#0e7490` at 600 weight,
+4.76:1 on the pill, inactive `#6e6e73` at 5.07:1. Tab height stays 54px rather than
+the tutorial's 48px, Jefle's call, which keeps the bar at its existing 72px height.
+
+**The pill swaps at Fast, and the tabs still do not slide.** `transition-colors
+duration-150 ease-out` on the tab, matching `segmented-control.jsx` and MOTION.md's
+background-swap rule. MOTION.md's "[app call] Bottom-nav tab switches do not slide"
+still holds: there is no sliding indicator, and the tab switch motion itself is
+untouched. `MOTION.md` and `DESIGN.md` both say nothing about the rail's fill, so
+item 4 is the app's own treatment rather than a fidelity fix.
+
+The standing exception that the tabbar is never ported from the mockups still
+holds, in the sense that nothing here came from an artboard. What changed is that
+the nav is no longer frozen: requests against it are now ordinary work.
+
+Files: `src/components/BottomNav.jsx`.
+
 ## Decisions made / deviations worth knowing about
 
 - **Nurse Home built on `MainHorizontalTiles.dc.html`** (icon-left quick
@@ -1579,6 +1632,11 @@ Files: `src/lib/activation.js` (new), `src/components/ui/activation-banner.jsx`
   Linear Light artifact, but the bottom tabbar always stays the live
   app's existing implementation, never the mockup's tabbar markup. User's
   explicit standing rule, applies to every flow, not just Profile.
+  **Amended 2026-09-17**: the nav is no longer frozen. Jefle asked for it
+  to be widened and to carry a selected-tab pill, so requests against it
+  are ordinary user-requested work now. What still holds is the "never
+  ported FROM an artboard" half of the rule; see the bottom nav section
+  above for the change and its measurements.
 - **Profile's settings features (Change Password, Connected Accounts,
   Delete Account) were built as real Supabase-backed features, not
   skipped or stubbed**, even though no backend existed for any of them
