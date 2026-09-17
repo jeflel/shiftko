@@ -106,6 +106,47 @@ Measured 2026-09-16, before any of this was written.
   is only acceptable on a contained progress fill, which is the one case
   DESIGN.md asks for.
 
+## Attempted and reverted: screen transitions (2026-09-16)
+
+The first attempt at push/pop plus tab cross-fades shipped and had to be
+reverted the same hour, because it broke navigation on the live app: tapping a
+bottom-nav tab moved the highlight, but the previous screen stayed mounted, so
+you could not leave Home.
+
+What was built: one `navigate(nextTab, direction)` helper setting a direction of
+`tab` / `push` / `pop`, the screens wrapped in a keyed `motion.div` inside
+`AnimatePresence mode="wait"`, tabs cross-fading at Fast and pushed screens
+sliding 18px at Slow, plus a scroll reset on every navigation.
+
+The symptom on production: `activeTab` changed (the nav highlight moved) but the
+new screen never mounted. The wrapper sat at its resting style, `opacity: 1` and
+`transform: none`, which means the exit animation never started at all, and
+nothing was logged to the console. `mode="wait"` holds the new child back until
+the old one finishes exiting, so a stuck exit looks exactly like this.
+
+The trap worth remembering: the same code passed a local check against a stubbed
+session, where every tab switched cleanly and the fade could be sampled frame by
+frame. A stubbed session renders a Home screen with almost no content and no
+effects, which is not the state production is in. **This change is only
+verifiable with a real signed-in session**, and the local pass was not evidence.
+
+What to do differently next time, in order:
+
+1. Do not rely on `AnimatePresence mode="wait"` for this. An enter-only
+   animation (the incoming screen fades in, the outgoing one unmounts) cannot
+   hang navigation, because nothing waits on an exit completing.
+2. Verify against production data on the first attempt, not a stubbed session.
+   If it cannot be verified that way, it is not ready to ship.
+3. Ship it the moment it can be reverted cleanly, as this one was. Losing a few
+   minutes of an obviously broken nav is far better than leaving it for a nurse
+   mid-shift.
+
+The feature is still worth having. The measurement harness, the direction
+tracking and the scroll reset from this attempt are sound and are in
+`a4d571b^`, which can be cherry-picked back once the animation approach is one
+that cannot block a mount.
+
+
 ## How to verify motion (do not eyeball it)
 
 1. Read the values back: `getComputedStyle(el).transitionDuration` /
