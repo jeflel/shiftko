@@ -162,7 +162,7 @@ function ScheduleTab({ user }) {
 // into the same .shift-list container as the week's other rows.
 function MyDayOffRow({ date }) {
   return (
-    <div className="flex w-full items-center gap-3 px-4 py-3.5">
+    <div className="flex w-full items-center gap-3 px-4 py-4.5">
       <div className="flex w-[34px] shrink-0 flex-col items-center">
         <span className="text-[11px] font-semibold tracking-wide text-ink-secondary uppercase">
           {weekdayFormatter.format(date)}
@@ -191,7 +191,7 @@ function MyShiftRow({ shift, credential, isPast, onClick }) {
       onClick={onClick}
       data-testid="schedule-my-shift-row"
       className={cn(
-        'flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors duration-150 ease-out active:bg-press-state',
+        'flex w-full items-center gap-3 px-4 py-4.5 text-left transition-colors duration-150 ease-out active:bg-press-state',
         isPast && 'opacity-45',
       )}
     >
@@ -242,7 +242,7 @@ function MyPersonalEventRow({ event, isPast, onClick }) {
       onClick={onClick}
       data-testid="schedule-my-personal-event-row"
       className={cn(
-        'flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors duration-150 ease-out active:bg-press-state',
+        'flex w-full items-center gap-3 px-4 py-4.5 text-left transition-colors duration-150 ease-out active:bg-press-state',
         isPast && 'opacity-45',
       )}
     >
@@ -298,7 +298,7 @@ function CalendarDayShiftRow({ shift, credential, onClick }) {
     <button
       type="button"
       onClick={onClick}
-      className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors duration-150 ease-out active:bg-press-state"
+      className="flex w-full items-center gap-3 px-4 py-4.5 text-left transition-colors duration-150 ease-out active:bg-press-state"
     >
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <p className="truncate text-[14px] font-semibold text-ink">
@@ -329,7 +329,7 @@ function CalendarDayPersonalEventRow({ event, onClick }) {
     <button
       type="button"
       onClick={onClick}
-      className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors duration-150 ease-out active:bg-press-state"
+      className="flex w-full items-center gap-3 px-4 py-4.5 text-left transition-colors duration-150 ease-out active:bg-press-state"
     >
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <p className="truncate text-[14px] font-semibold text-ink">
@@ -379,14 +379,14 @@ function TeamCalendarDayShiftRow({ shift, onOpenShift }) {
       <button
         type="button"
         onClick={() => onOpenShift(shift)}
-        className="flex w-full items-center gap-3 px-4 py-3.5 text-left"
+        className="flex w-full items-center gap-3 px-4 py-4.5 text-left"
       >
         {content}
       </button>
     )
   }
 
-  return <div className="flex w-full items-center gap-3 px-4 py-3.5">{content}</div>
+  return <div className="flex w-full items-center gap-3 px-4 py-4.5">{content}</div>
 }
 
 // Team-scope counterpart to TeamCalendarDayShiftRow for personal events —
@@ -397,7 +397,7 @@ function TeamCalendarDayPersonalEventRow({ event }) {
   const meta = [ownerName, event.unit].filter(Boolean).join(' · ')
 
   return (
-    <div className="flex w-full items-center gap-3 px-4 py-3.5">
+    <div className="flex w-full items-center gap-3 px-4 py-4.5">
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <p className="truncate text-[14px] font-semibold text-ink">
           {formatShiftTimeRange(event.starts_at, event.ends_at)}
@@ -446,7 +446,7 @@ function TeamShiftRow({ shift, isMatch, onOpenShift }) {
       <button
         type="button"
         onClick={() => onOpenShift(shift)}
-        className={cn('flex w-full items-center gap-3 px-4 py-3.5 text-left', isMatch && 'bg-[rgba(56,189,229,0.08)]')}
+        className={cn('flex w-full items-center gap-3 px-4 py-4.5 text-left', isMatch && 'bg-[rgba(56,189,229,0.08)]')}
       >
         {content}
       </button>
@@ -454,7 +454,7 @@ function TeamShiftRow({ shift, isMatch, onOpenShift }) {
   }
 
   return (
-    <div className={cn('flex w-full items-center gap-3 px-4 py-3.5', isMatch && 'bg-[rgba(56,189,229,0.08)]')}>
+    <div className={cn('flex w-full items-center gap-3 px-4 py-4.5', isMatch && 'bg-[rgba(56,189,229,0.08)]')}>
       {content}
     </div>
   )
@@ -467,7 +467,7 @@ function TeamPersonalEventRow({ event }) {
   const meta = [ownerName, event.unit].filter(Boolean).join(' · ')
 
   return (
-    <div className="flex w-full items-center gap-3 px-4 py-3.5">
+    <div className="flex w-full items-center gap-3 px-4 py-4.5">
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <p className="truncate text-[14px] font-semibold text-ink">
           {formatShiftTimeRange(event.starts_at, event.ends_at)}
