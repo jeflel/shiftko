@@ -9,7 +9,7 @@ import { PeriodTag, ShiftStatusTag } from '@/components/ui/period-tag'
 import { Button } from '@/components/ui/button'
 import { CalendarStrip } from '@/components/ui/calendar-strip'
 import { SegmentedControl } from '@/components/ui/segmented-control'
-import { SHIFT_LIST_CLASSNAME, ShiftListDivider } from '@/components/ui/shift-list'
+import { SHIFT_LIST_BORDERLESS_CLASSNAME, ShiftListDivider } from '@/components/ui/shift-list'
 import { inputClassName, labelClassName } from '@/components/ui/field'
 import { SHIFT_PRESETS, buildShiftTimes } from '@/lib/shiftPresets'
 import { cn } from '@/lib/utils'
@@ -659,7 +659,7 @@ function MonthCalendarView({
             Day off
           </div>
         ) : (
-          <ul className={`${SHIFT_LIST_CLASSNAME} py-1.5`}>
+          <ul className={`${SHIFT_LIST_BORDERLESS_CLASSNAME} py-1.5`}>
             {selectedDayShifts.map((item, index) => (
               <li key={item._kind === 'personal' ? `personal-${item.id}` : item.id}>
                 {item._kind === 'personal' ? (
@@ -703,7 +703,7 @@ function TeamMonthCalendarView({ calendarMonth, onChangeMonth, shiftsByDay, sele
             No shifts
           </div>
         ) : (
-          <ul className={`${SHIFT_LIST_CLASSNAME} py-1.5`}>
+          <ul className={`${SHIFT_LIST_BORDERLESS_CLASSNAME} py-1.5`}>
             {selectedDayItems.map((item, index) => (
               <li key={item._kind === 'personal' ? `personal-${item.id}` : item.id}>
                 {item._kind === 'personal' ? (
@@ -1029,7 +1029,7 @@ function MyShiftsTab({ user, contentView }) {
                       aria-hidden="true"
                     />
                   </div>
-                  <ul className={`${SHIFT_LIST_CLASSNAME} py-1.5`}>
+                  <ul className={`${SHIFT_LIST_BORDERLESS_CLASSNAME} py-1.5`}>
                     {rows.map((row, index) => (
                       <li key={row.key}>
                         {row.node}
@@ -1246,7 +1246,7 @@ function TeamScheduleTab({ user, onChangeView, contentView: contentViewProp }) {
               {dayHeaderLabel}
             </p>
 
-            <ul className={`${SHIFT_LIST_CLASSNAME} py-1.5`}>
+            <ul className={`${SHIFT_LIST_BORDERLESS_CLASSNAME} py-1.5`}>
               {dayItems.map((item, index) => {
                 const isLast = index === dayItems.length - 1
                 const match = item._kind === 'shift' && isMatch(item)
