@@ -28,7 +28,8 @@ export default function BottomNav({ activeTab, onTabChange }) {
               onClick={() => onTabChange(tab.id)}
               className={cn(
                 'flex w-[76px] flex-col items-center gap-1 rounded-full py-1.5 text-xs text-ink-secondary transition-colors duration-150 ease-out',
-                isActive && 'bg-teal-tint font-semibold text-teal-foreground',
+                isActive &&
+                  'bg-teal-tint font-semibold text-teal-foreground -mx-0.5 -my-0.5 w-[80px] py-2',
               )}
             >
               <Icon size={22} strokeWidth={isActive ? 2.25 : 2} />

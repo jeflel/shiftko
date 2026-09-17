@@ -1626,6 +1626,13 @@ wider because the label was gripping it.
 5. The chip stays `rounded-full`. A 16px radius was tried as a heavier fix for the
    label grip and reverted at Jefle's call: he wants the fully round shape, and the
    extra tab width already clears the label on its own (see below).
+6. The active tab is 2px bigger on every side than the others: `w-[80px] py-2` with
+   `-mx-0.5 -my-0.5`, so its border box is 80x58 while its layout box stays 76x54 and
+   the rail does not move. The negative margins are the whole trick: a plain
+   `w-[80px] py-2` would have grown the rail to 350x76 and narrowed the gutters to
+   20px, and Jefle had just rejected a wider bar. Because the padding grows by 2px
+   while the box starts 2px higher, the icon and label do not shift at all; measured
+   at 390px, the label sits at the same offset from the rail in both states.
 
 **The chip was gripping the label, and extra tab width is what fixes it.** The
 "Schedule" label is 54.88px of glyphs sitting from y=32 to y=48 inside a 54px tab,
@@ -1645,15 +1652,16 @@ reports text touching a shape, screenshot the rendered pixels at 3x and compare 
 ink to the shape's edge row by row.
 
 **Measured, not eyeballed.** Chrome against the app's own built stylesheet, viewport
-widths 430/390/375/360/320: rail 334x72 with 76x54 tabs and 28px gutters at 390,
-still 334 with 76px tabs at 375, 328 with 74.5px tabs at 360, 288 with 64.5px tabs
-at 320, and no horizontal overflow at any of them. Active chip
-`rgba(56,189,229,.15)`, fully round, active label `#0e7490` at 600 weight, 4.76:1 on
-the chip, inactive `#6e6e73` at 5.07:1. Tab height stays 54px rather than the
-tutorial's 48px, Jefle's call, which keeps the bar at its existing 72px height. The
-one width where the chip does tighten onto the label is 320px, where the rail has to
-shrink and the chip comes out at 64.5px; nothing in the target range (375 and up)
-does that.
+widths 430/390/375/360/320: rail 334x72 with a 28px gutter at 390, made of three
+76x54 tabs and one 80x58 active chip, still 334 at 375, 328 at 360, 288 at 320, and
+no horizontal overflow at any of them. Active chip `rgba(56,189,229,.15)`, fully
+round, active label `#0e7490` at 600 weight, 4.76:1 on the chip, inactive `#6e6e73`
+at 5.07:1. On the rendered pixels at 3x the gap between the letters' ink and the
+chip's edge is 8.67px, up from 6.0px before the 2px, and it holds across four ink
+thresholds. Tab height stays 54px rather than the tutorial's 48px, Jefle's call,
+which keeps the bar at its existing 72px height. The one width where the chip does
+tighten onto the label is 320px, where the rail has to shrink and the chip comes out
+at 68x58; nothing in the target range (375 and up) does that.
 
 **The pill swaps at Fast, and the tabs still do not slide.** `transition-colors
 duration-150 ease-out` on the tab, matching `segmented-control.jsx` and MOTION.md's
