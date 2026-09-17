@@ -321,7 +321,7 @@ function UpcomingShiftRow({ shift, isFirst, isLast, onSelectShift }) {
         isLast && 'rounded-b-card',
       )}
     >
-      <div className="flex w-8 shrink-0 flex-col items-center text-center">
+      <div className="ml-0.5 mr-0.5 flex w-8 shrink-0 flex-col items-center text-center">
         <span className="text-[11px] font-semibold tracking-[0.03em] text-ink-secondary uppercase">
           {weekdayFormatter.format(shiftDate)}
         </span>
@@ -359,7 +359,7 @@ function UpcomingPersonalEventRow({ event, isFirst, isLast, onSelectEvent }) {
         isLast && 'rounded-b-card',
       )}
     >
-      <div className="flex w-8 shrink-0 flex-col items-center text-center">
+      <div className="ml-0.5 mr-0.5 flex w-8 shrink-0 flex-col items-center text-center">
         <span className="text-[11px] font-semibold tracking-[0.03em] text-ink-secondary uppercase">
           {weekdayFormatter.format(eventDate)}
         </span>
