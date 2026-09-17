@@ -15,15 +15,17 @@ export const SHIFT_LIST_CLASSNAME = `${SHIFT_LIST_BASE} border border-hairline`
 // as a box drawn around the list on that page.
 export const SHIFT_LIST_BORDERLESS_CLASSNAME = SHIFT_LIST_BASE
 
-// `.shift-row-divider`: inset so its start lines up with the info column's text.
-// 73px matches the artifact's date column (Pool, Claim Status, Manage, Swap
-// Status); `wide` is 79px, for Schedule's date column, which sits 18px from the
-// card's left edge (16px row padding plus a 2px margin) with 4px before the
-// rule. 16px (`inset={false}`) is for
-// lists whose rows carry no date column at all.
+// `.shift-row-divider`: inset so its start lands on the info column's text, which
+// the artifact tucks the line 2px short of. The number follows the row's own
+// geometry, so it is named per set of rows that share one:
+//   default  32px date column, no side margins: 16 + 32 + 12 + 1 + 12 = 73
+//   pool     32px date column, 2px each side:   16 + 2 + 32 + 2 + 12 + 1 + 12 = 77, inset 75
+//   schedule 34px date column, 2px each side:   16 + 2 + 34 + 2 + 12 + 1 + 12 = 79, inset 77
+// 16px (`inset={false}`) is for lists whose rows carry no date column at all.
 const DIVIDER_INSET = {
   default: 'ml-[73px]',
-  wide: 'ml-[79px]',
+  pool: 'ml-[75px]',
+  schedule: 'ml-[77px]',
 }
 
 export function ShiftListDivider({ inset = true, variant = 'default' }) {

@@ -15,7 +15,7 @@ const weekdayFormatter = new Intl.DateTimeFormat(undefined, { weekday: 'short' }
 function ShiftCard({ date, title, subtitle, period, trailing, onOpen }) {
   const leftGroup = (
     <>
-      <div className="flex w-8 shrink-0 flex-col items-center">
+      <div className="ml-0.5 mr-0.5 flex w-8 shrink-0 flex-col items-center">
         <span className="text-[11px] font-medium tracking-[0.03em] text-[#85969B] uppercase">
           {weekdayFormatter.format(date)}
         </span>
@@ -329,7 +329,7 @@ export default function Pool({ user, onGoToSchedule }) {
                       }
                     />
 
-                    {index < shifts.length - 1 && <ShiftListDivider />}
+                    {index < shifts.length - 1 && <ShiftListDivider variant="pool" />}
                   </li>
                 )
               })}
