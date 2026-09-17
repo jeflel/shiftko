@@ -225,7 +225,7 @@ function QuickActionTiles({ openCount, onGoToPool, onAddPersonalEvent }) {
               type="button"
               onClick={onAddPersonalEvent}
               data-testid="home-quick-add-shift"
-              className="relative flex min-h-[64px] flex-1 items-center overflow-hidden rounded-card bg-teal-field py-4 pr-3 pl-4 text-left shadow-[0_6px_16px_rgba(10,94,115,0.30)] transition-colors active:bg-[#084b5c]"
+              className="relative flex h-16 flex-1 items-center overflow-hidden rounded-card bg-teal-field pr-3 pl-4 text-left shadow-[0_6px_16px_rgba(10,94,115,0.30)] transition-colors active:bg-[#084b5c]"
       >
         <span className="pointer-events-none absolute -right-2 -bottom-3.5 opacity-[0.12]" aria-hidden="true">
           <svg viewBox="0 0 20 20" width="76" height="76" fill="#fff">
@@ -246,7 +246,7 @@ function QuickActionTiles({ openCount, onGoToPool, onAddPersonalEvent }) {
         type="button"
         onClick={onGoToPool}
         data-testid="home-claim-shifts-row"
-        className="relative flex min-h-[64px] flex-1 items-center overflow-hidden rounded-card bg-teal-field py-4 pr-3 pl-4 text-left shadow-[0_6px_16px_rgba(10,94,115,0.30)] transition-colors active:bg-[#084b5c]"
+        className="relative flex h-16 flex-1 items-center overflow-hidden rounded-card bg-teal-field pr-3 pl-4 text-left shadow-[0_6px_16px_rgba(10,94,115,0.30)] transition-colors active:bg-[#084b5c]"
       >
         {openCount > 0 && (
           <span className="absolute top-[9px] right-[9px] flex h-[18px] min-w-[18px] shrink-0 items-center justify-center rounded-[7px] bg-white px-1.5 text-[11px] font-semibold text-status-deep">
