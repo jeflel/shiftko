@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { supabase } from './lib/supabase'
 import Auth from './components/Auth'
 import BottomNav from './components/BottomNav'
@@ -14,6 +15,27 @@ import StaffRoster from './pages/StaffRoster'
 import DuplicateWeek from './pages/DuplicateWeek'
 import Screen0 from './pages/onboarding/Screen0'
 
+// Screen change motion, see MOTION.md. The four tab screens are peers, so they
+// cross-fade at Fast. A pushed screen (Manage, Post a Shift, Edit Shift,
+// Approvals, Staff, Duplicate Week) carries a short directional slide at Slow,
+// which is what makes the app read as a stack you go into and come back out of.
+//
+// Two deliberate calls here, both recorded in MOTION.md:
+// - The exit is much shorter than the enter. mode="wait" means the old screen
+//   has to finish before the new one starts, so a full Slow exit on both sides
+//   would make every navigation feel like it stalled.
+// - The slide is a short offset rather than a full-width push. A real platform
+//   push animates the outgoing screen off-screen, which needs each screen to own
+//   its own scroll container. This app has one shared scroller and no router, so
+//   a full push would either show both screens at once or dump the scroll
+//   position. The directional offset gets most of the feel for none of that.
+const NAV_MOTION = {
+  tab: { enterMs: 150, exitMs: 80, offset: 0 },
+  push: { enterMs: 300, exitMs: 80, offset: 18 },
+  pop: { enterMs: 300, exitMs: 80, offset: -18 },
+}
+const NAV_EASE = [0, 0, 0.2, 1]
+
 function App() {
   const [session, setSession] = useState(null)
   const [authView, setAuthView] = useState(null)
@@ -25,10 +47,12 @@ function App() {
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('home')
   const [scheduleInitialTab, setScheduleInitialTab] = useState('schedule')
+  const [navDirection, setNavDirection] = useState('tab')
   // Post a Shift has two entry points (Home's tile, and the Manage hub's own
   // CTA) that need different back targets - tracks which one was used.
   const [postShiftReturnTo, setPostShiftReturnTo] = useState('home')
   const [editingShift, setEditingShift] = useState(null)
+  const prefersReducedMotion = useReducedMotion()
 
   useEffect(() => {
     let active = true
@@ -78,71 +102,81 @@ function App() {
     setLoading(false)
   }
 
+  // Every screen change goes through here, for two reasons: the transition has
+  // to know which way it is going, and the shared scroll container has to start
+  // the new screen at the top rather than wherever the last one was scrolled to.
+  function navigate(nextTab, direction) {
+    const scroller = document.querySelector('.app-content')
+    if (scroller) scroller.scrollTop = 0
+    setNavDirection(direction)
+    setActiveTab(nextTab)
+  }
+
   function handleBottomNavChange(tab) {
     setScheduleInitialTab('schedule')
-    setActiveTab(tab)
+    navigate(tab, 'tab')
   }
 
   function handleGoToManage() {
-    setActiveTab('manage')
+    navigate('manage', 'push')
   }
 
   function handleGoToPostShift() {
     setPostShiftReturnTo('home')
-    setActiveTab('postshift')
+    navigate('postshift', 'push')
   }
 
   function handleGoToPostShiftFromManage() {
     setPostShiftReturnTo('manage')
-    setActiveTab('postshift')
+    navigate('postshift', 'push')
   }
 
   function handlePostShiftBack() {
-    setActiveTab(postShiftReturnTo)
+    navigate(postShiftReturnTo, 'pop')
   }
 
   function handleGoToEditShift(shift) {
     setEditingShift(shift)
-    setActiveTab('shiftsedit')
+    navigate('shiftsedit', 'push')
   }
 
   function handleShiftEditBack() {
     setEditingShift(null)
-    setActiveTab('manage')
+    navigate('manage', 'pop')
   }
 
   function handleGoToApprovals() {
-    setActiveTab('approvals')
+    navigate('approvals', 'push')
   }
 
   function handleGoToStaffRoster() {
-    setActiveTab('staffroster')
+    navigate('staffroster', 'push')
   }
 
   function handleGoToDuplicateWeek() {
-    setActiveTab('duplicateweek')
+    navigate('duplicateweek', 'push')
   }
 
   function handleBackToHome() {
-    setActiveTab('home')
+    navigate('home', 'pop')
   }
 
   function handleBackToManage() {
-    setActiveTab('manage')
+    navigate('manage', 'pop')
   }
 
   function handleGoToPool() {
-    setActiveTab('pool')
+    navigate('pool', 'tab')
   }
 
   function handleGoToSchedule() {
     setScheduleInitialTab('schedule')
-    setActiveTab('schedule')
+    navigate('schedule', 'tab')
   }
 
   // Home's greeting-row avatar opens the Profile tab.
   function handleOpenProfile() {
-    setActiveTab('more')
+    navigate('more', 'tab')
   }
 
   if (loading) {
@@ -172,61 +206,79 @@ function App() {
     )
   }
 
+  const timing = NAV_MOTION[navDirection] ?? NAV_MOTION.tab
+  const enterState = prefersReducedMotion
+    ? { opacity: 1, x: 0 }
+    : { opacity: 0, x: timing.offset }
+  const exitState = prefersReducedMotion
+    ? { opacity: 0, transition: { duration: 0 } }
+    : { opacity: 0, transition: { duration: timing.exitMs / 1000, ease: NAV_EASE } }
+
   return (
     <div className="app-shell">
       <div className="app-content">
-        {activeTab === 'home' && (
-          <Home
-            user={session.user}
-            role={role}
-            onGoToManage={handleGoToManage}
-            onGoToPostShift={handleGoToPostShift}
-            onGoToApprovals={handleGoToApprovals}
-            onGoToPool={handleGoToPool}
-            onGoToSchedule={handleGoToSchedule}
-            onOpenProfile={handleOpenProfile}
-          />
-        )}
-        {activeTab === 'schedule' && (
-          <Schedule
-            user={session.user}
-            role={role}
-            initialTab={scheduleInitialTab}
-          />
-        )}
-        {activeTab === 'postshift' && <PostShift onBack={handlePostShiftBack} />}
-        {activeTab === 'shiftsedit' && editingShift && (
-          <ShiftEdit
-            shift={editingShift}
-            onBack={handleShiftEditBack}
-            onSaved={handleShiftEditBack}
-            onRemoved={handleShiftEditBack}
-          />
-        )}
-        {activeTab === 'approvals' && <CoordinatorApprovals onBack={handleBackToHome} />}
-        {activeTab === 'manage' && (
-          <CoordinatorManage
-            onBack={handleBackToHome}
-            onGoToPostShift={handleGoToPostShiftFromManage}
-            onGoToStaff={handleGoToStaffRoster}
-            onGoToDuplicateWeek={handleGoToDuplicateWeek}
-            onEditShift={handleGoToEditShift}
-          />
-        )}
-        {activeTab === 'staffroster' && <StaffRoster onBack={handleBackToManage} />}
-        {activeTab === 'duplicateweek' && <DuplicateWeek onBack={handleBackToManage} />}
-        {activeTab === 'pool' && (
-          <Pool
-            user={session.user}
-            onGoToSchedule={handleGoToSchedule}
-          />
-        )}
-        {activeTab === 'more' && (
-          <Profile
-            user={session.user}
-            onWorkspaceLeft={() => setWorkspaceId(null)}
-          />
-        )}
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={activeTab}
+            initial={enterState}
+            animate={{ opacity: 1, x: 0 }}
+            exit={exitState}
+            transition={{ duration: prefersReducedMotion ? 0 : timing.enterMs / 1000, ease: NAV_EASE }}
+          >
+            {activeTab === 'home' && (
+              <Home
+                user={session.user}
+                role={role}
+                onGoToManage={handleGoToManage}
+                onGoToPostShift={handleGoToPostShift}
+                onGoToApprovals={handleGoToApprovals}
+                onGoToPool={handleGoToPool}
+                onGoToSchedule={handleGoToSchedule}
+                onOpenProfile={handleOpenProfile}
+              />
+            )}
+            {activeTab === 'schedule' && (
+              <Schedule
+                user={session.user}
+                role={role}
+                initialTab={scheduleInitialTab}
+              />
+            )}
+            {activeTab === 'postshift' && <PostShift onBack={handlePostShiftBack} />}
+            {activeTab === 'shiftsedit' && editingShift && (
+              <ShiftEdit
+                shift={editingShift}
+                onBack={handleShiftEditBack}
+                onSaved={handleShiftEditBack}
+                onRemoved={handleShiftEditBack}
+              />
+            )}
+            {activeTab === 'approvals' && <CoordinatorApprovals onBack={handleBackToHome} />}
+            {activeTab === 'manage' && (
+              <CoordinatorManage
+                onBack={handleBackToHome}
+                onGoToPostShift={handleGoToPostShiftFromManage}
+                onGoToStaff={handleGoToStaffRoster}
+                onGoToDuplicateWeek={handleGoToDuplicateWeek}
+                onEditShift={handleGoToEditShift}
+              />
+            )}
+            {activeTab === 'staffroster' && <StaffRoster onBack={handleBackToManage} />}
+            {activeTab === 'duplicateweek' && <DuplicateWeek onBack={handleBackToManage} />}
+            {activeTab === 'pool' && (
+              <Pool
+                user={session.user}
+                onGoToSchedule={handleGoToSchedule}
+              />
+            )}
+            {activeTab === 'more' && (
+              <Profile
+                user={session.user}
+                onWorkspaceLeft={() => setWorkspaceId(null)}
+              />
+            )}
+          </motion.div>
+        </AnimatePresence>
       </div>
       <BottomNav activeTab={activeTab} onTabChange={handleBottomNavChange} />
     </div>
