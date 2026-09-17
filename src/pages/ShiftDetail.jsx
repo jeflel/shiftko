@@ -29,6 +29,8 @@ export default function ShiftDetail({ shift, user, onBack }) {
   const [myClaim, setMyClaim] = useState(null)
   const [claiming, setClaiming] = useState(false)
   const [claimError, setClaimError] = useState(null)
+  const [confirmingForTeam, setConfirmingForTeam] = useState(false)
+  const [confirmForTeamError, setConfirmForTeamError] = useState(null)
   const [claimed, setClaimed] = useState(null)
   const [showSwapFlow, setShowSwapFlow] = useState(false)
   const [showOfferConfirm, setShowOfferConfirm] = useState(false)
@@ -60,7 +62,7 @@ export default function ShiftDetail({ shift, user, onBack }) {
     async function fetchShiftState() {
       const { data: shiftData } = await supabase
         .from('shifts')
-        .select('id, nurse_id, status, is_offered')
+        .select('id, nurse_id, status, is_offered, team_confirmed')
         .eq('id', shift.id)
         .maybeSingle()
 
@@ -111,6 +113,11 @@ export default function ShiftDetail({ shift, user, onBack }) {
   // person's shift are two different self-scheduling paths that shouldn't
   // run at once on the same shift.
   const canRequestSwap = isMine && !hasPendingClaim && !shiftState?.is_offered
+
+  // A shift the nurse added herself stays off the team schedule until she
+  // confirms it from here: team_confirmed defaults true, the add-shift panel
+  // writes false.
+  const canConfirmForTeam = isMine && shiftState?.team_confirmed === false
 
   const isOpen = shiftState?.status === 'open'
   const isOffered = shiftState?.status === 'scheduled' && shiftState?.is_offered
@@ -219,6 +226,24 @@ export default function ShiftDetail({ shift, user, onBack }) {
     setMyClaim(null)
   }
 
+  async function handleConfirmForTeam() {
+    setConfirmingForTeam(true)
+    setConfirmForTeamError(null)
+
+    const { error: confirmError } = await supabase.rpc('confirm_shift_for_team', {
+      p_shift_id: shift.id,
+    })
+
+    setConfirmingForTeam(false)
+
+    if (confirmError) {
+      setConfirmForTeamError(confirmError.message)
+      return
+    }
+
+    setShiftState((current) => (current ? { ...current, team_confirmed: true } : current))
+  }
+
   if (showSwapFlow) {
     return (
       <SwapFlow
@@ -270,7 +295,7 @@ export default function ShiftDetail({ shift, user, onBack }) {
         <HeroCard
           shift={shift}
           credential={credential}
-          subline={isOpen ? `${shift.unit} · No nurse assigned yet` : isOffered ? `${shift.unit} · Offered by ${shift.profiles?.full_name ?? 'a nurse'}` : undefined}
+          subline={isOpen ? `${shift.unit} · No nurse assigned yet` : isOffered ? `${shift.unit} · Offered by ${shift.profiles?.full_name ?? 'a nurse'}` : canConfirmForTeam ? `${shift.unit} · Not on the team schedule yet` : undefined}
         />
 
         <section className="flex flex-col gap-2.5">
@@ -321,6 +346,22 @@ export default function ShiftDetail({ shift, user, onBack }) {
       <div className="flex shrink-0 flex-col gap-2.5 px-5 pt-2 pb-1">
         {claimError && <p className="text-sm text-red-700">{claimError}</p>}
 
+        {confirmForTeamError && <p className="text-sm text-red-700">{confirmForTeamError}</p>}
+
+        {canConfirmForTeam && (
+          <Button
+            type="button"
+            variant="primary"
+            onClick={handleConfirmForTeam}
+            disabled={confirmingForTeam}
+            data-testid="shift-detail-add-to-team"
+            className="h-[50px] w-full rounded-[16px]"
+          >
+            <Users size={17} strokeWidth={1.9} />
+            {confirmingForTeam ? 'Adding…' : 'Add to team schedule'}
+          </Button>
+        )}
+
         {canClaim && (
           <Button
             type="button"
@@ -356,7 +397,7 @@ export default function ShiftDetail({ shift, user, onBack }) {
         {canRequestSwap && (
           <Button
             type="button"
-            variant="primary"
+            variant={canConfirmForTeam ? 'secondary' : 'primary'}
             onClick={() => setShowSwapFlow(true)}
             data-testid="shift-detail-swap-request"
             className="h-[50px] w-full rounded-[16px]"

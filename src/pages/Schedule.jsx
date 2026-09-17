@@ -183,7 +183,8 @@ function MyShiftRow({ shift, credential, isPast, onClick }) {
   const isPending = shift.status === 'pending'
   const isOffered = shift.is_offered === true
   const date = new Date(shift.starts_at)
-  const metaParts = [shift.unit, credential].filter(Boolean)
+  const showsConfirmHint = shift.team_confirmed === false
+  const metaParts = [shift.unit, showsConfirmHint ? null : credential].filter(Boolean)
 
   return (
     <button
@@ -209,8 +210,16 @@ function MyShiftRow({ shift, credential, isPast, onClick }) {
         <p className="truncate text-[14px] font-semibold text-ink">
           {formatShiftTimeRange(shift.starts_at, shift.ends_at)}
         </p>
-        {metaParts.length > 0 && (
-          <p className="-mt-0.5 truncate text-[12px] text-ink-secondary">{metaParts.join(' · ')}</p>
+        {(metaParts.length > 0 || showsConfirmHint) && (
+          <p className="-mt-0.5 truncate text-[12px] text-ink-secondary">
+            {metaParts.join(' · ')}
+            {showsConfirmHint && (
+              <span className="font-semibold text-teal-foreground">
+                {metaParts.length > 0 && ' · '}
+                Add to team schedule
+              </span>
+            )}
+          </p>
         )}
         {(isPending || isOffered) && (
           <div className="mt-1">
@@ -290,7 +299,8 @@ function CalendarDayShiftRow({ shift, credential, onClick }) {
   const period = getShiftPeriod(shift.starts_at)
   const isPending = shift.status === 'pending'
   const isOffered = shift.is_offered === true
-  const metaParts = [shift.unit, credential].filter(Boolean)
+  const showsConfirmHint = shift.team_confirmed === false
+  const metaParts = [shift.unit, showsConfirmHint ? null : credential].filter(Boolean)
 
   return (
     <button
@@ -303,8 +313,16 @@ function CalendarDayShiftRow({ shift, credential, onClick }) {
         <p className="truncate text-[14px] font-semibold text-ink">
           {formatShiftTimeRange(shift.starts_at, shift.ends_at)}
         </p>
-        {metaParts.length > 0 && (
-          <p className="-mt-0.5 truncate text-[12px] text-ink-secondary">{metaParts.join(' · ')}</p>
+        {(metaParts.length > 0 || showsConfirmHint) && (
+          <p className="-mt-0.5 truncate text-[12px] text-ink-secondary">
+            {metaParts.join(' · ')}
+            {showsConfirmHint && (
+              <span className="font-semibold text-teal-foreground">
+                {metaParts.length > 0 && ' · '}
+                Add to team schedule
+              </span>
+            )}
+          </p>
         )}
         {(isPending || isOffered) && (
           <div className="mt-1">
@@ -1414,7 +1432,14 @@ function AddMyShiftPanel({ userId, homeUnit, onClose, onSaved }) {
 
     const { error: insertError } = await supabase
       .from('shifts')
-      .insert({ nurse_id: userId, unit: homeUnit, starts_at, ends_at, status: 'scheduled' })
+      .insert({
+        nurse_id: userId,
+        unit: homeUnit,
+        starts_at,
+        ends_at,
+        status: 'scheduled',
+        team_confirmed: false,
+      })
 
     setSaving(false)
 
