@@ -1488,6 +1488,29 @@ real button reading `View your requests` that opens the same notifications panel
 this slot hands over to. The card therefore keeps a tap target in BOTH states
 instead of going inert, and the affordance never lies about being tappable.
 
+**Resetting the checklist for a demo.** The state is derived, so "reset progress"
+means making the two counts read zero again, and there is no stored flag to clear.
+For the demo account that meant deleting its rows: `alex.ramirez@shiftko.test`
+had 4 claims and 3 personal events, dumped to
+`~/.shiftko-backups/activation-reset-20260917-025924.json` together with a
+matching `-restore.sql` holding one INSERT per row, before a single statement
+removed them. Counts either side of it are the proof: `shift_claims` 7 to 3,
+`personal_events` 4 to 1, and his own 0 and 0. No table has a foreign key to
+either, so nothing orphaned, and his 53 shifts and their assignments were
+untouched, which is why his Schedule looks identical afterwards. To redo it after
+a demo, run the two deletes for that account's id, then remount Home by switching
+tabs, since a reload signs the automation browser out:
+
+```sql
+delete from shift_claims
+ where nurse_id = (select id from profiles where email = '<test email>');
+delete from personal_events
+ where nurse_id = (select id from profiles where email = '<test email>');
+```
+
+A real nurse cannot be reset this way without destroying her history, which is the
+argument for a stored reset if this ever needs to be undoable in the app itself.
+
 **The chip counts positions, not completions** (`Step 2 of 4`, not `1 of 3
 done`): with four nodes on the track, a count of three leaves the reader working
 out which of the four it refers to. Positions map 1:1 onto the nodes and the last
