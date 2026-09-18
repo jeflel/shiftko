@@ -2301,11 +2301,30 @@ show. An outline leaves the gap genuinely transparent. Both utilities in use,
 variable's `@property` initial value is `solid`, so the line draws without needing an
 explicit `outline-solid`.
 
-**Two knobs, one class string:** `outline-offset-2` is the gap,
-`outline-control-edge` (`#d8d8dd`) is the colour, deliberately the same edge the bell
-beside it uses. That is the whole change, in the one `Avatar` call in
-`src/components/ui/home-header-actions.jsx`. The shared `Avatar` is used in exactly
-one other place, Profile's identity circle, which was left alone.
+**Line darker, and it carries the page's own shadow (same session, his follow-up
+ask).** Two more changes on the same class string: the ring's colour moved off
+`--color-control-edge` (`#d8d8dd`, 1.35:1 on the page ground) to a new
+`--color-avatar-ring` (`#a1a1a6`, 2.45:1), and the control now carries
+`shadow-card-lift`, the `0 5px 15px rgba(53,87,97,.12)` every card on Home uses, so it
+reads as a piece of content rather than as a bare outline.
+
+**Why the ring is its own token rather than a reuse.** `--color-control-edge` is a
+control's own rim, drawn on the edge of a white button like the bell beside it. This
+line floats 2px clear of the face with the page ground showing in the gap, so it has
+to carry the whole shape on its own and wanted a darker rung. The ladder it sits on,
+all against `#f9f9fb`: hairline `#e5e5ea` 1.19:1, `--color-control-edge` `#d8d8dd`
+1.35:1, `--color-chevron-muted` `#c7c7cc` 1.60:1, `--color-avatar-ring` `#a1a1a6`
+2.45:1, `--color-ink-secondary` `#6e6e73` 4.82:1. No new shadow value was introduced:
+the page has exactly one shadow token and reusing it is what makes the control match
+the content.
+
+**Three knobs, one class string:** `outline-offset-2` is the gap,
+`outline-avatar-ring` the colour, `shadow-card-lift` the elevation. That is the whole
+change: the one `Avatar` call in `src/components/ui/home-header-actions.jsx` plus the
+one token in `src/tailwind.css`. The bell beside it deliberately keeps
+`--color-control-edge` on its own edge, since it is a button and not a floating disc,
+and the shared `Avatar` is used in exactly one other place, Profile's identity circle,
+which was left alone.
 
 ## Open product decisions (carried over from `HANDOFF.md`, still relevant)
 

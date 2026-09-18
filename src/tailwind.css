@@ -55,6 +55,15 @@
      the only thing that draws them. Not the hairline: #e5e5ea measures 1.19:1
      against the page ground and reads as no control at all. #d8d8dd is 1.35:1. */
   --color-control-edge: #d8d8dd;
+  /* The profile control's floating ring (2026-09-18). It is a different role from
+     --color-control-edge above: that one is a control's own rim, drawn on the edge
+     of a white button, while this one floats 2px clear of the face, so the page
+     ground shows in the gap and the line has to carry the shape on its own. Jefle
+     asked for it darker than the first pass. The ladder it sits on, all against
+     the page ground #f9f9fb: hairline #e5e5ea 1.19:1, --color-control-edge #d8d8dd
+     1.35:1, --color-chevron-muted #c7c7cc 1.60:1, this value #a1a1a6 2.45:1,
+     --color-ink-secondary #6e6e73 4.82:1. One knob: darken or lighten this. */
+  --color-avatar-ring: #a1a1a6;
   --color-selection-ink: #10222a;
 
   /* Colored period tags, from the Linear Light home-linear-light source

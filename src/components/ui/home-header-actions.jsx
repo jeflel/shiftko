@@ -18,16 +18,20 @@ import { Avatar } from '@/components/ui/avatar'
 // closes the old note that a generic lucide `User` glyph reads as an avatar that
 // failed to load.
 //
-// The control's edge FLOATS now (2026-09-18, his ask): a 1px
-// `--color-control-edge` ring sitting 2px clear of the face instead of a border
-// painted on its rim. Nothing about the layout moves: an outline is painted
-// outside the box and takes no space, so the control is still 36px, the row is
-// still 36px of content and the 10px gap to the greeting is unchanged. It is the
-// `outline-*` family rather than `ring-*` because a ring with an offset paints its
-// offset band in an opaque colour (`--tw-ring-offset-color`, white by default),
-// which would put a second disc behind the gap; an outline leaves the gap showing
-// the page ground. Both numbers are knobs on this one class string:
-// `outline-offset-2` sets the gap and `outline-control-edge` the colour.
+// The control's edge FLOATS now (2026-09-18, his ask): a 1px ring sitting 2px clear
+// of the face instead of a border painted on its rim, and it carries the page's own
+// card shadow so it reads as a piece of content rather than as an outline. Nothing
+// about the layout moves: an outline is painted outside the box and takes no space,
+// so the control is still 36px, the row is still 36px of content and the 10px gap to
+// the greeting is unchanged. It is the `outline-*` family rather than `ring-*`
+// because a ring with an offset paints its offset band in an opaque colour
+// (`--tw-ring-offset-color`, white by default), which would put a second disc behind
+// the gap; an outline leaves the gap showing the page ground, and the shadow behind
+// it. Three knobs, all in this one class string: `outline-offset-2` is the gap,
+// `outline-avatar-ring` is the line's colour (`#a1a1a6`, 2.45:1 on the page ground;
+// the first pass used `--color-control-edge` at 1.35:1 and he asked for darker), and
+// `shadow-card-lift` is the same `0 5px 15px rgba(53,87,97,.12)` every card on Home
+// uses, deliberately not a new shadow value.
 //
 // The bell no longer owns the notifications panel. It used to fetch its own
 // notifications and return the panel in place of itself, which worked while it
@@ -48,7 +52,7 @@ export function HomeProfileControl({ name, avatarUrl, onOpenProfile }) {
         name={name}
         src={avatarUrl}
         size="sm"
-        className="outline-1 outline-offset-2 outline-control-edge"
+        className="outline-1 outline-offset-2 outline-avatar-ring shadow-card-lift"
       />
     </button>
   )
