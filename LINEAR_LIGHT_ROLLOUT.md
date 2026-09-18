@@ -2026,6 +2026,76 @@ nurse on My Shifts: vertical 1.08:1 to 1.42:1, horizontal 1.26:1 to 1.42:1, with
 the live `index-Ch9WRPpf.css` carrying both the token and the `:not(...)`
 selector.
 
+## Profile photos: a shared avatar, an upload path, and Home's header shows it (2026-09-18)
+
+Jefle's ask: "add a change profile picture so it shows up on homepage, this will
+really personalize the app for beta users to keep traction." Scope approved as
+Profile plus Home only, with a Remove action; the initials circles in coworker
+rows, Team Schedule and the staff roster stay as they are until he has seen it.
+
+**Storage decisions.** `profiles.avatar_url` holds the storage PATH and never a
+URL, so a re-upload writes `<uid>/avatar-<epoch>.jpg` and the CDN cannot hand
+back the photo a nurse just replaced; no cache-busting param is needed anywhere.
+The bucket is public-read, his call: faces only, no PHI, and it is how every
+public-URL avatar render works without an async signed-URL call per image. The
+writes are the part that is locked down: insert, update, delete and select all
+require the object's first folder segment to equal `auth.uid()`, so a nurse can
+only ever reach inside her own folder. `profiles` RLS is untouched; "users
+update own profile" and "nurses see overlapping coworker profiles" already cover
+both halves.
+
+**The client downscales before it uploads.** A phone photo is 3-5MB and the
+largest place an avatar is drawn is Profile's 56px circle, 168px at 3x, so
+`src/lib/avatar.js` centre-crops to a square and re-encodes to 512px JPEG in a
+canvas, no new dependency. Measured: an 857KB 800x1200 PNG goes in and a 512x512
+15KB JPEG lands in the bucket.
+
+**The bug that only driving it would find.** Supabase Storage resolves the
+objects it is about to delete through the SELECT policy first. The first
+migration deliberately shipped no select policy, reasoning that a public bucket
+serves GETs through the public URL without consulting RLS, which is true for a
+public GET and false for a DELETE. The delete matched nothing, returned 200 with
+an empty list, and deleted nothing. Symptom in the app: Remove photo nulled
+`avatar_url`, the fallback initials came back, and the JPEG was still sitting in
+the bucket; re-uploading leaked the same way, since "delete the previous file"
+is the same call. `20260918020540_avatar_delete_needs_select.sql` adds the select
+policy scoped to the owner's folder, and both upload and remove now return a
+`cleanupError` that Profile surfaces, because a silent leak is worse than a
+noisy one.
+
+The reading that hid it: a 200 from a batch delete looked like success in the
+network tab. The empty response array was the tell, and it only shows up if you
+read the body rather than the status.
+
+**Verified on live production, signed in, both roles.** Upload through the real
+picker with a generated 800x1200 file: the profile circle renders the photo at
+56px, the control's label flips to `Change profile photo`, `Remove` appears, and
+Home's header shows the same photo at 34px inside its 36px circle, vertically
+aligned with the bell, greeting unchanged. A second upload deleted the first
+file (bucket holds exactly one object for that account afterwards, where before
+the fix it held two). Remove nulled the row, deleted the object, and Home fell
+back to initials in the same 36px circle. A policy probe with the live access
+token: writing into another nurse's folder returns 403 "new row violates
+row-level security policy", writing into her own returns 200.
+
+**One observation worth keeping.** Immediately after a delete, one fetch of the
+removed public URL still returned 200 from an edge, and it returned 400 seconds
+later and on every retry. Removal is effectively immediate, but "the CDN has
+already seen this URL" is the reason a removed photo can look alive for a
+moment.
+
+**Left behind on purpose:** a real photo that appeared on the test nurse's
+profile at 02:03, uploaded by whoever else was driving the live app (a sibling
+agent, or Jefle himself). It is not this session's and was not touched.
+Everything this session uploaded was removed, including the two orphaned files
+its pre-fix deletes had left in that folder.
+
+Files: `supabase/migrations/20260918015408_profile_avatar.sql`,
+`supabase/migrations/20260918020540_avatar_delete_needs_select.sql`,
+`src/lib/avatar.js`, `src/components/ui/avatar.jsx`,
+`src/components/ui/home-header-actions.jsx`, `src/pages/Profile.jsx`,
+`src/pages/Home.jsx`. Commits `421de39` and `8d2b229`.
+
 ## Decisions made / deviations worth knowing about
 
 - **Home's section headers are 18px, not the mockup's 16px** (2026-09-17, by
