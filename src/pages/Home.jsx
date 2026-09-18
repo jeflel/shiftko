@@ -838,12 +838,17 @@ export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoTo
         {/* No gradient and no bar on Home any more (2026-09-17, at Jefle's
             request): the page ground runs to the top edge and this row is the
             page's first line. The profile control sits on the left, the greeting
-            runs beside it in muted ink at 15px/400 (the lightest weight Geist
-            loads is 400), and the bell sits flush on the right gutter. pb-5 is
-            what leaves 20px between the row and the first section header, so the
-            top of the page keeps the same rhythm as the sections below it (the
-            sections container carries gap-5). Both controls are 36px, which is
-            what sets the row's height. */}
+            runs beside it at 15px/400, and the bell sits flush on the right
+            gutter. pb-5 is what leaves 20px between the row and the first
+            section header, so the top of the page keeps the same rhythm as the
+            sections below it (the sections container carries gap-5). Both
+            controls are 36px, which is what sets the row's height.
+
+            The greeting is set in Fraunces at ink (2026-09-18): the page titles
+            (Schedule, Pool, Profile) already carry `--font-display-title`, so the
+            greeting no longer reads as the one heading left on the body stack.
+            Same size, weight and tracking, only the family and the colour change,
+            and it is the same `--color-ink` those titles use, not a new value. */}
         <div className="flex flex-1 flex-col px-5 pt-2">
           <div className="flex items-center gap-2.5 pt-4 pb-5">
             <HomeProfileControl
@@ -851,7 +856,7 @@ export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoTo
               avatarUrl={avatarPublicUrl(avatarPath)}
               onOpenProfile={onOpenProfile}
             />
-            <p className="min-w-0 flex-1 truncate text-[15px] tracking-[-0.01em] text-ink-secondary">
+            <p className="font-display-title min-w-0 flex-1 truncate text-[15px] tracking-[-0.01em] text-ink">
               {getGreeting()}{nurseFirstName ? `, ${nurseFirstName}` : ''}
             </p>
             <HomeBellControl

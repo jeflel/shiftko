@@ -2244,6 +2244,45 @@ Files: `supabase/migrations/20260918015408_profile_avatar.sql`,
   `NavRow`**, because the mockup's header needs a trailing "Mark all read"
   action NavRow does not support, and NavRow is imported by 18 files.
 
+## Home greeting: Fraunces at ink (2026-09-18)
+
+The greeting line on Home is `font-display-title` at `text-ink` now, in
+`src/pages/Home.jsx`'s greeting row. It was the last heading on the page still set
+on the body stack, and the last one still in muted `ink-secondary`; the page titles
+(Schedule, Pool, Profile) already carried the display token. Same size (15px),
+weight (400) and tracking (`-0.01em`), only the family and the colour change, and
+the colour is the same `--color-ink` those titles use, so **no new token and no new
+CSS vocabulary**. That is visible in the build: the stylesheet hash is unchanged
+(`index-B3mGrJ_A.css`), because `.font-display-title` and `.text-ink` were both
+already in it, and only the JS asset moves.
+
+**Contrast, computed.** The greeting at ink `#1d1d1f` on the page ground `#f9f9fb`
+is **16.01:1**, against the **4.82:1** the muted `#6e6e73` gave. Ink also passes on
+the teal gradient Home no longer paints, which is worth knowing if it ever comes
+back: 5.68:1 on the start `#0aa2cf` and 8.64:1 on the mid `#5dc7e6`. That is
+exactly what the white text it replaced could not do, and the reason the header
+rework of 2026-09-17 had to move off white at all: white measured 2.97:1 on the
+gradient start and 1.95:1 on the mid stop.
+
+**What the brief asked for that this tree is not.** The request described the
+greeting as white on the teal gradient, on a row sitting 24px above the Today card,
+with two lines to re-colour. That is the state at `12e5f55`/`647f6fa`, superseded
+on 2026-09-17 by the section above it in this file. Nothing was reverted or
+restored to match the brief:
+
+- Home still paints no gradient, on Jefle's own call of 2026-09-17, so the greeting
+  has no gradient to sit on and the contrast numbers above are against the page
+  ground.
+- The greeting is ONE line, because the two-line row collapsed to a single line in
+  the same rework. There is no separate name line to set in Fraunces, and one was
+  not reintroduced: it would have changed the row's height, and the brief asked for
+  the sizes and the geometry to be left alone.
+- The row is 36px against both controls and the gap to the Today card is the
+  section rhythm, 20px to the section header plus 10px to the card, not 24px. 24px
+  belonged to the superseded two-line row.
+- No plate, chip or scrim was added, which the brief rejected and this change never
+  needed.
+
 ## Open product decisions (carried over from `HANDOFF.md`, still relevant)
 
 - ~~Section 0.3, Offer-shift: mockup's 4-screen stepper vs. the live 1-tap
