@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { supabase } from './lib/supabase'
+import { getTabScroll, saveTabScroll } from './lib/tab-scroll'
 import Auth from './components/Auth'
 import BottomNav from './components/BottomNav'
 import Home from './pages/Home'
@@ -23,7 +24,8 @@ function App() {
   const [onboardingCompleted, setOnboardingCompleted] = useState(true)
   const [justJoinedWorkspace, setJustJoinedWorkspace] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState('home')
+  const [activeTab, setActiveTabState] = useState('home')
+  const contentRef = useRef(null)
   const [scheduleInitialTab, setScheduleInitialTab] = useState('schedule')
   // Post a Shift has two entry points (Home's tile, and the Manage hub's own
   // CTA) that need different back targets - tracks which one was used.
@@ -61,6 +63,58 @@ function App() {
       subscription.unsubscribe()
     }
   }, [])
+
+  // Every navigation in this app goes through here (the wrapper keeps the
+  // original setActiveTab call sites untouched), which makes it the one place
+  // that can still read the outgoing tab's offset. .app-content is a single
+  // scroller shared by every tab, so the moment the children swap, the browser
+  // clamps its scrollTop to the incoming page's height and the old value is
+  // gone.
+  function setActiveTab(tab) {
+    if (contentRef.current) saveTabScroll(activeTab, contentRef.current.scrollTop)
+    setActiveTabState(tab)
+  }
+
+  // Put the incoming tab back where the user left it. Pages fetch their data on
+  // mount, so for the first frames the content is too short to hold the offset:
+  // setting it once is clamped to nothing and lost, which is why this re-applies
+  // it while the content is still growing and then releases. It also releases on
+  // the first real input, so the loop can never fight a user who starts
+  // scrolling immediately.
+  useLayoutEffect(() => {
+    const scroller = contentRef.current
+    if (!scroller) return undefined
+
+    const target = getTabScroll(activeTab) ?? 0
+    scroller.scrollTop = target
+    if (target === 0) return undefined
+
+    let frameId = 0
+    let frames = 0
+
+    function release() {
+      cancelAnimationFrame(frameId)
+      window.removeEventListener('touchstart', release)
+      window.removeEventListener('wheel', release)
+    }
+
+    function step() {
+      scroller.scrollTop = target
+      if (scroller.scrollHeight - scroller.clientHeight >= target) {
+        release()
+        return
+      }
+      frames += 1
+      if (frames < 120) frameId = requestAnimationFrame(step)
+      else release()
+    }
+
+    window.addEventListener('touchstart', release, { passive: true })
+    window.addEventListener('wheel', release, { passive: true })
+    frameId = requestAnimationFrame(step)
+
+    return release
+  }, [activeTab])
 
   async function fetchRole(userId) {
     const { data, error } = await supabase
@@ -174,7 +228,7 @@ function App() {
 
   return (
     <div className="app-shell">
-      <div className="app-content">
+      <div className="app-content" ref={contentRef}>
         {activeTab === 'home' && (
           <Home
             user={session.user}

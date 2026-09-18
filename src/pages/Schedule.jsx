@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { ArrowLeftRight, Calendar, Check, ChevronLeft, ChevronRight, List, X } from 'lucide-react'
 import { supabase } from '../lib/supabase'
+import { hasSavedTabScroll } from '../lib/tab-scroll'
 import ShiftDetail from './ShiftDetail'
 import PersonalEventDetail from './PersonalEventDetail'
 import SwapStatusList from './SwapStatusList'
@@ -862,14 +863,17 @@ function MyShiftsTab({ user, contentView }) {
     weekOffsets.push(offset)
   }
 
-  // Land on today's week on first load, so the user opens Schedule already
-  // looking at the current week instead of scrolled 8 weeks back. The Schedule
-  // header is pinned, so the scroll target is pulled down by that header's
-  // measured height: scrollIntoView({ block: 'start' }) on its own parks the
-  // "SEP 7 - 13" label behind the pinned header. Measured, never hardcoded, so
+  // Land on today's week the first time this tab is opened in a session, so the
+  // user does not start 8 weeks back. Returns after that are handled by the
+  // offset App remembers for this tab, so re-centering here would fight it: once
+  // 'schedule' has a saved offset, the user gets back what they were looking at.
+  // The Schedule header is pinned, so the scroll target is pulled down by that
+  // header's measured height: scrollIntoView({ block: 'start' }) on its own parks
+  // the "SEP 7 - 13" label behind the pinned header. Measured, never hardcoded, so
   // the offset follows the header if its contents change.
   useEffect(() => {
     if (loading || hasScrolledInitiallyRef.current) return
+    if (hasSavedTabScroll('schedule')) return
     const target = weekMarkerRefs.current[0]
     if (!target) return
     hasScrolledInitiallyRef.current = true

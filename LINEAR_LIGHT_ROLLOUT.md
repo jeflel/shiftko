@@ -973,7 +973,7 @@ the list body scrolls under it.
   same, and a nested scroller would break `weekMarkerRefs`, `scrollIntoView`,
   and `.app-content`'s bottom-nav padding.
 - Real bug this created, fixed in the same commit: `MyShiftsTab` lands on the
-  current week on first load with `scrollIntoView({ block: 'start' })`, which
+  current week with `scrollIntoView({ block: 'start' })`, which
   with the header pinned parked the `AUG WEEK 4` label straight behind it. The
   landing now measures BOTH pinned elements (the 56px TopBar, which gained
   `data-testid="app-top-bar"` for this, plus the sticky header), sums their
@@ -1927,6 +1927,59 @@ were deleted straight after and the table is back to its exact prior state, 0
 leftovers. `PersonalEventDetail`'s `Also on <unit>` list was exercised the same
 way on a real personal event and measures the same 408 / 16px / 1px / same
 shadow, one row, no divider (correct for a single row).
+
+## Tab scroll memory: each tab returns to where you left it (2026-09-18)
+
+**The complaint.** Switching back to Home from another page opened Home partway
+down the page, not at the top and not where Home had been left.
+
+**Cause.** The whole app scrolls inside ONE element, `.app-content`
+(`src/index.css:50`), shared by every tab, and nothing touched its `scrollTop`
+when the tab changed. Schedule made the inherited number large: `MyShiftsTab`
+lands on the current week on mount, and that target sits 8 weeks
+(`MAX_WEEKS_BACK`) down the list, so the offset standing in the container when
+Home mounted was far deeper than Home is tall, and the browser clamped Home to
+its bottom. It repeated on every switch because a tab unmounts on the way out,
+so Schedule re-ran its landing each time.
+
+**Fix (Jefle's choice: remember per tab, not reset to top).**
+`src/lib/tab-scroll.js` holds one offset per tab at module scope, so it survives
+a tab unmounting but not a page load. Every navigation in `App.jsx` already went
+through `setActiveTab`, so that call is now a local wrapper over
+`setActiveTabState`: it records the outgoing tab's `scrollTop` before the state
+change, and a `useLayoutEffect` on `activeTab` restores the incoming tab's
+offset. Three details are load-bearing:
+
+- The restore re-applies its target while the container is still too short to
+  hold it, then releases (and releases on the first `touchstart`/`wheel` so it
+  can never fight a user who starts scrolling). Pages fetch on mount and Home
+  renders its body only when `!loading`, so a one-shot assignment is clamped to
+  the short shell and lost.
+- It is a `useLayoutEffect`, so it runs before the incoming page's own passive
+  effects. Schedule's week landing is a passive effect, so it still wins on the
+  first entry, which is why that behaviour was not lost. Inverting the two would
+  wipe the landing on every visit.
+- `MyShiftsTab`'s landing is now gated on `hasSavedTabScroll('schedule')`: first
+  entry in a session lands on the current week, later entries get the remembered
+  offset. Re-centering on every entry would just overwrite the memory.
+
+**Verified with a harness, not on the live app.** A throwaway page (the real
+`tab-scroll.js` module, React 19 from esm.sh, the App-side effect code copied,
+a Home whose rows arrive 400ms late and a Schedule with its own 2000px landing)
+measured: fresh load 0; first entry to Schedule 700 -> 2000 (the landing
+survived the reset); leave Schedule at 2600, return to Home -> falls to 0 while
+the shell is short, settles at 700 once 40 rows arrive (3500px of content,
+577px viewport); return to Schedule -> 2600 with no re-jump; back to Home ->
+700 again. Registry ends at `{home: 700, schedule: 2600}`. What that does NOT
+prove is the wiring in the real app (the ref on the container, every navigation
+path going through the wrapper), so on-device behaviour is unproven until Jefle
+checks his phone. The harness file was deleted and is not in the commit.
+
+**Known trade-off, deliberate.** Because the offset can only be applied once the
+page is tall enough to hold it, returning to a tab whose content is fetched on
+mount shows the short shell for the length of the fetch (about 400ms in the
+harness) before it lands. Hiding that window means either blanking the page or a
+per-page "data ready" signal, neither of which is worth it yet.
 
 ## Decisions made / deviations worth knowing about
 
