@@ -1981,6 +1981,51 @@ mount shows the short shell for the length of the fetch (about 400ms in the
 harness) before it lands. Hiding that window means either blanking the page or a
 per-page "data ready" signal, neither of which is worth it yet.
 
+## The rule between two finished shifts on My Shifts (2026-09-18)
+
+**The complaint.** Where two finished (dimmed) shifts sat next to each other on
+Schedule's My Shifts list, the horizontal and vertical rules between them were
+barely visible.
+
+**Why.** Two different mechanisms were painting the two halves of that junction.
+A finished row is the row button at `opacity-35`, and the vertical rule between
+its date column and its body is a child of that button, so it painted `#e5e5ea`
+under a 0.35 fade and composited to `#f6f6f8` on the white card, 1.08:1, which
+is not a rule anyone can see. The horizontal rule is `ShiftListDivider`, a
+sibling of the row inside the list, so it never faded and stayed at the
+hairline's 1.26:1. Measured on the live signed-in app against 51 finished rows,
+so this was not a guess about which element was which.
+
+**Fix.** A finished row's rule now paints at full strength in a new token,
+`--color-divider-finished: #d8d8dd`, one step darker than the hairline at
+1.42:1. That value still sits under the finished row's own meta line (1.60:1),
+so the rule keeps receding behind the text; the next step up is
+`--color-chevron-muted` at 1.68:1.
+
+- To paint at all, the vertical rule had to come out of the fade, so the dim
+  moved off the row button and onto its children:
+  `[&>*:not([data-row-divider])]:opacity-35`, with the rule marked
+  `data-row-divider`. This is the same shape as the standing rule that an
+  element under `opacity` cannot also carry a contrasting band, except here the
+  banded thing is a 1px rule inside the row rather than the row's background.
+  **Do not "simplify" this back to `opacity-35` on the button: the rule
+  disappears again.** Every other element of a finished row composites to the
+  same value it did before (the time line still lands at `#b0b0b1`, 2.17:1).
+- `ShiftListDivider` gained a `tone` prop; the darker tone is passed only when
+  BOTH rows the rule separates are finished. 30 of the list's rules take it, the
+  hairline default is untouched, and Pool was re-measured after the deploy to
+  confirm it still draws `#e5e5ea` at a 75px inset.
+- **A day-off row is not treated as finished.** It draws no dim, so the rules
+  above and below it keep the hairline. A past week therefore alternates rule
+  darkness around its day-off rows. That is the literal reading of the ask and
+  it is one line to change (`finished: dayHasPassed`) if it reads wrong on the
+  phone.
+
+**Verified on the live signed-in app**, before and after the deploy, as the test
+nurse on My Shifts: vertical 1.08:1 to 1.42:1, horizontal 1.26:1 to 1.42:1, with
+the live `index-Ch9WRPpf.css` carrying both the token and the `:not(...)`
+selector.
+
 ## Decisions made / deviations worth knowing about
 
 - **Home's section headers are 18px, not the mockup's 16px** (2026-09-17, by
