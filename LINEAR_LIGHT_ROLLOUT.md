@@ -2326,28 +2326,36 @@ one token in `src/tailwind.css`. The bell beside it deliberately keeps
 and the shared `Avatar` is used in exactly one other place, Profile's identity circle,
 which was left alone.
 
-**Evidence, and the one gap on this entry.** Every value above is measured, not
-eyeballed, against the built stylesheet at 390x844: computed `outline-width: 1px`,
-`outline-style: solid`, `outline-color: rgb(161, 161, 166)`, `outline-offset: 2px`,
-and the card shadow present as the LAST layer of the computed `box-shadow`
+**Verified on live production, signed in, hash-matched (`index-B7F7Dd-2.js`, the same
+asset name a rebuild at `466a95c` produces), nurse `alex.ramirez@shiftko.test` with his
+real photo, 390x844.** The control's own class string is
+`outline-1 outline-offset-2 outline-avatar-ring shadow-card-lift`, and it computes:
+`outline-width: 1px`, `outline-style: solid`, `outline-color: rgb(161, 161, 166)`,
+`outline-offset: 2px`, `border-width: 0px` (the old rim border is gone), and the card
+shadow as the last layer of the computed `box-shadow`
 (`rgba(53, 87, 97, 0.12) 0px 5px 15px 0px`; do not truncate that value, Tailwind v4
-builds it as a five entry list where only the last entry is the real shadow). The
-pixels were scanned as well, at dpr 3: the line lands on exactly 3 device pixels of
-`#a1a1a6`, the gap between it and the disc is exactly 6 device pixels (2 CSS px) of
-ground, the disc is 36x36 at (20, 24), and the shadow darkens the ground to `#e9ecef`
-(1.13:1 against the untouched `#f9f9fb`) and is spent by about 17px below the line.
-The ring measures 2.45:1 on the open ground and 2.17:1 where the shadow has taken the
-ground under it.
+builds it as a five entry list where only the last entry is the real shadow).
 
-**This entry is NOT a live signed-in pass.** Production is green for `628f1b6`
-(Vercel, "Deployment has completed"), but from partway through this session
-shiftko.com served a `Vercel Security Checkpoint` to both curl and the automation
-browser ("Failed to verify your browser, Code 21"), so the signed-in visual check on
-the deployed build did not run. The measurements above are a local render against the
-built stylesheet from the deployed commit, which proves the CSS produces the intended
-values and nothing overflows; it does not prove the deployed screen looks right.
-Re-run the signed-in pass when the wall lifts (it was caused by curl polling the site
-during a deploy watch, so do not do that again) or check it on a phone.
+**The pixels were scanned, not eyeballed.** On a dpr 3 render the line lands on
+exactly 1 CSS px of `#a1a1a6` (3 device pixels, antialiased to `#a9a9ae` on one edge),
+the gap between the line and the photo is exactly 2 CSS px (6 device pixels) of ground
+showing the shadow, and the shadow darkens that ground to `#f0f1f4`, 1.07:1 against
+the untouched `#f9f9fb`, spent by about 18px out. The ring reads 2.45:1 on open ground
+and 2.28:1 where the shadow has taken the ground under it, against 1.35:1 for the
+`--color-control-edge` the first pass used.
+
+Geometry unchanged, same session: avatar 36x36 at (20, 24), profile and bell controls
+both 36x36, greeting 10px to the right of the control, 57px from the control line to
+the Today card, no overflow at 390.
+
+**One process note, because it cost the first attempt and misled the record above.**
+shiftko.com served a `Vercel Security Checkpoint` ("Failed to verify your browser,
+Code 21") to curl and to the existing automation browser for a while, which is why an
+earlier version of this entry said the pass had not been run. A FRESH browser session
+(the `shiftko-live` session, so a new profile) passed the challenge on the first try
+and the pass then completed normally. Do not poll the site with curl to watch a
+deploy; use the GitHub deployments API, and if you need the live bundle, read it out of
+the DOM while signed in.
 
 ## Open product decisions (carried over from `HANDOFF.md`, still relevant)
 
