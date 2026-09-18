@@ -2377,6 +2377,16 @@ below the control line. `HomeBellControl` is Home-only and this is the only `Bel
 slightly finer; if the bell looks thin next to the 36px control, 2 is the pairing and
 it is a one number change.
 
+**Verified on live production, signed in, hash-matched (`index-nb0E3ZFY.js`, the asset
+name a rebuild at `b5acfba` produces), nurse `alex.ramirez@shiftko.test`, 390x844.**
+The svg carries `width="20" height="20"` and `stroke-width="1.75"` and measures 20x20
+rendered; its ink (the bell path itself, measured from pixels rather than the box) spans
+16.7 CSS px wide against about 15.0 for the 18px glyph, so it grew 1.7 CSS px while the
+box grew 2. It is centred in the control to within half a pixel, and the control keeps
+8.0px of clearance on each side. The control is still 36x36, the row box still 72px
+(36px of content), the greeting still 10px from the profile control, the Today card
+still 57px below the control line, and nothing overflows at 390.
+
 ## Open product decisions (carried over from `HANDOFF.md`, still relevant)
 
 - ~~Section 0.3, Offer-shift: mockup's 4-screen stepper vs. the live 1-tap
