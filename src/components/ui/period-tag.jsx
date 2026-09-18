@@ -1,4 +1,4 @@
-import { Sun, Sunset, Moon, Pencil, Clock } from 'lucide-react'
+import { Sun, Sunset, Moon, Pencil, Clock, Circle, CheckCircle2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 // Colored Day/Evening/Night/Personal tag, per the Linear Light source
@@ -52,10 +52,15 @@ export function PeriodTag({ period, variant = 'pill' }) {
 // left on the old two-color pill, so it doesn't read as a leftover. "pending"
 // reuses the established status-tag teal tint (matches Claims' .pending
 // color); "offered" has no established color anywhere yet, so it stays a
-// plain neutral pill rather than inventing one.
+// plain neutral pill rather than inventing one. "open" and "assigned" follow
+// the same reasoning and land on the same neutral pill: teal is reserved for
+// in-flight states (pending/offered), and neither of the two-terminal states
+// has a token of its own. Used by ShiftDetail's hero card footer.
 const STATUS_TAG_CONFIG = {
   pending: { label: 'Pending', icon: Clock, bg: 'bg-teal-tint', fg: 'text-teal-foreground' },
   offered: { label: 'Offered', icon: null, bg: 'bg-press-state', fg: 'text-ink-secondary' },
+  open: { label: 'Open', icon: Circle, bg: 'bg-press-state', fg: 'text-ink-secondary' },
+  assigned: { label: 'Assigned', icon: CheckCircle2, bg: 'bg-press-state', fg: 'text-ink-secondary' },
 }
 
 export function ShiftStatusTag({ status, label }) {

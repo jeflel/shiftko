@@ -1864,6 +1864,51 @@ the nav is no longer frozen: requests against it are now ordinary work.
 
 Files: `src/components/BottomNav.jsx`.
 
+## Shift Detail: a state tag on the hero card, and the coworker rows grouped (2026-09-18)
+
+Jefle brought a dark-mode task-tracker mockup ("Project 3" / "Landing Page
+Design") and asked for its *structure* on our shift card, explicitly not its
+colours: the app stays light, on the Linear Light tokens, with no lime and no
+dark ground. What he wanted out of it was the anchor card with a label-left /
+badge-right footer row, a section header that pairs its title with a count, and
+the items grouped into one inset card with row dividers instead of floating
+loose. That last part is the ask in his words: his coworker list was "bare bones
+and tightly packed" against the mockup's tidy grouped list.
+
+This is a deliberate departure from the rollout's list-shape rule, which says
+1 to 3 non-tappable rows stay individually shadowed cards rather than grouping
+into one container. Three coworker rows would have stayed ungrouped by that
+rule; Jefle picked the grouped shape over the alternatives (per-coworker cards,
+or the bare rows given more room) after seeing all three.
+
+**The coworker list** is now the same container as every other list in the app,
+`SHIFT_LIST_CLASSNAME` plus `py-1.5` on the container and `ShiftListDivider
+inset={false}` between rows, rows `px-4 py-3.5`. Nothing about a row's own
+contents changed: 36px avatar, 14px name, 12px `credential · time` meta, the
+same values the `.coworker-row` block in `ShiftDetailMineLinearLight.dc.html`
+specifies. Only the container and the row padding are new, so the section went
+from three stacked loose rows to one card. The header gained `{n} on this
+shift` on the right, which is the mockup's "Total Tasks: 4" move and needed no
+new vocabulary. `PersonalEventDetail`'s `Also on <unit>` list got the same
+container in the same pass so the app's two coworker lists cannot drift apart;
+it did **not** get the count, because its header already names the unit.
+
+**The hero card footer** pairs the existing subline with a state tag on the
+right, so `Unit 1 · RN` now sits opposite `Assigned`. `HeroCard` takes an
+optional `metaRight` slot; with it omitted the card renders byte-for-byte as
+before, which is what all four other callers (ClaimStatusDetail,
+OfferShiftStatus, OfferShiftUpdate, PersonalEventDetail) still do. The tag
+reuses `ShiftStatusTag`, extended with two neutral entries: `open` and
+`assigned`. Teal stays reserved for in-flight states (`pending`, `offered`),
+which is the same reasoning that kept `offered` neutral before; neither
+terminal state has a token of its own, so neither invents one. A shift awaiting
+`Add to team schedule` gets **no** tag at all, because its subline already says
+it is not on the team schedule yet and an `Assigned` tag beside that line would
+contradict it.
+
+Files: `src/components/ui/hero-card.jsx`, `src/components/ui/period-tag.jsx`,
+`src/pages/ShiftDetail.jsx`, `src/pages/PersonalEventDetail.jsx`.
+
 ## Decisions made / deviations worth knowing about
 
 - **Home's section headers are 18px, not the mockup's 16px** (2026-09-17, by

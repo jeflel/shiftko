@@ -6,6 +6,8 @@ import { NavRow } from '@/components/ui/nav-row'
 import { HeroCard } from '@/components/ui/hero-card'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
+import { ShiftStatusTag } from '@/components/ui/period-tag'
+import { SHIFT_LIST_CLASSNAME, ShiftListDivider } from '@/components/ui/shift-list'
 import SwapFlow from './SwapFlow'
 import OfferShiftConfirm from './OfferShiftConfirm'
 import OfferShiftStatus from './OfferShiftStatus'
@@ -287,6 +289,18 @@ export default function ShiftDetail({ shift, user, onBack }) {
     )
   }
 
+  // The hero card's trailing tag, pairing "Unit 1 · RN" with the shift's state
+  // rather than leaving the state to be inferred. canConfirmForTeam is the one
+  // exception: its subline already says the shift is not on the team schedule
+  // yet, so tagging it "Assigned" would contradict the line it sits next to.
+  let heroTag = null
+  if (!canConfirmForTeam) {
+    if (claimed || myClaim) heroTag = { status: 'pending', label: 'Requested' }
+    else if (isOpen) heroTag = { status: 'open' }
+    else if (isOffered) heroTag = { status: 'offered' }
+    else if (shiftState?.status === 'scheduled') heroTag = { status: 'assigned' }
+  }
+
   return (
     <div className="fixed inset-0 z-[100] mx-auto flex w-full max-w-md flex-col bg-page-ground">
       <NavRow onBack={onBack} />
@@ -296,12 +310,21 @@ export default function ShiftDetail({ shift, user, onBack }) {
           shift={shift}
           credential={credential}
           subline={isOpen ? `${shift.unit} · No nurse assigned yet` : isOffered ? `${shift.unit} · Offered by ${shift.profiles?.full_name ?? 'a nurse'}` : canConfirmForTeam ? `${shift.unit} · Not on the team schedule yet` : undefined}
+          metaRight={heroTag ? <ShiftStatusTag status={heroTag.status} label={heroTag.label} /> : null}
         />
 
         <section className="flex flex-col gap-2.5">
-          <h2 className="text-xs font-semibold tracking-[0.05em] text-ink-secondary uppercase">
-            Working with
-          </h2>
+          <div className="flex items-baseline justify-between gap-3">
+            <h2 className="text-xs font-semibold tracking-[0.05em] text-ink-secondary uppercase">
+              Working with
+            </h2>
+
+            {!loading && !error && coworkers.length > 0 && (
+              <span className="text-xs text-ink-secondary">
+                {coworkers.length} on this shift
+              </span>
+            )}
+          </div>
 
           {loading && <p className="text-xs text-ink-secondary">Loading coworkers…</p>}
 
@@ -318,28 +341,34 @@ export default function ShiftDetail({ shift, user, onBack }) {
             />
           )}
 
-          {!loading &&
-            !error &&
-            coworkers.map((coworker) => {
-              const meta = [coworker.credential, formatShiftTimeRange(coworker.starts_at, coworker.ends_at)]
-                .filter(Boolean)
-                .join(' · ')
+          {!loading && !error && coworkers.length > 0 && (
+            <ul className={`${SHIFT_LIST_CLASSNAME} py-1.5`}>
+              {coworkers.map((coworker, index) => {
+                const meta = [coworker.credential, formatShiftTimeRange(coworker.starts_at, coworker.ends_at)]
+                  .filter(Boolean)
+                  .join(' · ')
 
-              return (
-                <div key={coworker.nurseId} className="flex items-center gap-3">
-                  <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-press-state text-[13px] font-semibold text-ink-secondary">
-                    {getInitials(coworker.full_name)}
-                  </div>
+                return (
+                  <li key={coworker.nurseId}>
+                    <div className="flex items-center gap-3 px-4 py-3.5">
+                      <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-press-state text-[13px] font-semibold text-ink-secondary">
+                        {getInitials(coworker.full_name)}
+                      </div>
 
-                  <div className="flex min-w-0 flex-col gap-px">
-                    <p className="truncate text-sm font-semibold tracking-[-0.01em] text-ink">
-                      {coworker.full_name}
-                    </p>
-                    {meta && <p className="text-xs text-ink-secondary">{meta}</p>}
-                  </div>
-                </div>
-              )
-            })}
+                      <div className="flex min-w-0 flex-col gap-px">
+                        <p className="truncate text-sm font-semibold tracking-[-0.01em] text-ink">
+                          {coworker.full_name}
+                        </p>
+                        {meta && <p className="truncate text-xs text-ink-secondary">{meta}</p>}
+                      </div>
+                    </div>
+
+                    {index < coworkers.length - 1 && <ShiftListDivider inset={false} />}
+                  </li>
+                )
+              })}
+            </ul>
+          )}
         </section>
       </main>
 

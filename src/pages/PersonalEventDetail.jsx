@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { NavRow } from '@/components/ui/nav-row'
 import { HeroCard } from '@/components/ui/hero-card'
 import { Button } from '@/components/ui/button'
+import { SHIFT_LIST_CLASSNAME, ShiftListDivider } from '@/components/ui/shift-list'
 import { formatShiftTimeRange } from '@/lib/shiftFormat'
 import { getCoworkersOnShift, deletePersonalEvent } from '@/lib/personalEvents'
 
@@ -72,31 +73,37 @@ export default function PersonalEventDetail({ event, user, onBack, onEdit, onDel
               Also on {event.unit}
             </h2>
 
-            {coworkers.map((coworker, index) => {
-              const meta = [
-                coworker.credential,
-                coworker.starts_at && coworker.ends_at
-                  ? formatShiftTimeRange(coworker.starts_at, coworker.ends_at)
-                  : null,
-              ]
-                .filter(Boolean)
-                .join(' · ')
+            <ul className={`${SHIFT_LIST_CLASSNAME} py-1.5`}>
+              {coworkers.map((coworker, index) => {
+                const meta = [
+                  coworker.credential,
+                  coworker.starts_at && coworker.ends_at
+                    ? formatShiftTimeRange(coworker.starts_at, coworker.ends_at)
+                    : null,
+                ]
+                  .filter(Boolean)
+                  .join(' · ')
 
-              return (
-                <div key={`${coworker.full_name}-${index}`} className="flex items-center gap-3">
-                  <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-press-state text-[13px] font-semibold text-ink-secondary">
-                    {getInitials(coworker.full_name)}
-                  </div>
+                return (
+                  <li key={`${coworker.full_name}-${index}`}>
+                    <div className="flex items-center gap-3 px-4 py-3.5">
+                      <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-press-state text-[13px] font-semibold text-ink-secondary">
+                        {getInitials(coworker.full_name)}
+                      </div>
 
-                  <div className="flex min-w-0 flex-col gap-px">
-                    <p className="truncate text-sm font-semibold tracking-[-0.01em] text-ink">
-                      {coworker.full_name ?? 'A teammate'}
-                    </p>
-                    {meta && <p className="text-xs text-ink-secondary">{meta}</p>}
-                  </div>
-                </div>
-              )
-            })}
+                      <div className="flex min-w-0 flex-col gap-px">
+                        <p className="truncate text-sm font-semibold tracking-[-0.01em] text-ink">
+                          {coworker.full_name ?? 'A teammate'}
+                        </p>
+                        {meta && <p className="truncate text-xs text-ink-secondary">{meta}</p>}
+                      </div>
+                    </div>
+
+                    {index < coworkers.length - 1 && <ShiftListDivider inset={false} />}
+                  </li>
+                )
+              })}
+            </ul>
           </section>
         )}
       </main>
