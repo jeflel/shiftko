@@ -2576,8 +2576,35 @@ Two mechanisms, because the two cards are shared differently.
   the deliberate scope call: the ask named Shift Detail. Making them match is deleting the
   prop and the class, and nothing else.
 
-Neither change moves a box. With border-box sizing the border was inside the box, so both
-cards keep their exact size and their inner content sits 1px further out on every edge.
+Both cards keep their width, since they stretch to the column, and lose 2px of height,
+because the border was inside an auto-height box: the hero card measures 138.5px against
+140.5, the empty coworkers card 80 against 82. Their inner content moves 1px further out on
+every edge.
+
+**Verified on live production, signed in, hash-matched (`index-BsGp1U2y.js`, the asset name
+a rebuild at `7677135` produces), at 390x844, measured before and after on the same screen
+at the same viewport:**
+
+| | before | after |
+| --- | --- | --- |
+| hero card border / height | 1px / 140.5px | **0px / 138.5px** |
+| hero date line, from the card's left / top | 17 / 21.5 | 16 / 20.5 |
+| hero time line, from the card's left | 17 | 16 |
+| coworkers card border / height, empty state | 1px / 82px | **0px / 80px** |
+| coworker icon tile, from the card's left / top | 17 / 23 | 16 / 22 |
+| coworker label, from the card's left | 65 | 64 |
+
+Both cards keep their 350px width, their 16px radius and the card-lift shadow
+(`rgba(53, 87, 97, 0.12) 0px 5px 15px 0px`), so the shadow is what carries the grouping now.
+
+**The coworker LIST state needed the removable fixture again**, since no real shift in this
+data has a coworker: one shift for Ana Florendo on Unit 1 overlapping Alex's window,
+`notes = 'verification fixture, removable'`, id `32215bb0-8dfc-498b-b03c-3044d46cf02d`,
+deleted afterwards. On that card: border 0px, 350x77, one row at `14px 16px` padding, the
+avatar 36x36 at 16px from the card's left and 20.5 from its top, the name at 64px, which is
+exactly where the empty state puts its label, so the section still reads as one container
+either way. Leftover fixtures 0 after the delete and the count the screen reads went back to
+0.
 
 ## Open product decisions (carried over from `HANDOFF.md`, still relevant)
 
