@@ -7,7 +7,7 @@ import { HeroCard } from '@/components/ui/hero-card'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
 import { ShiftStatusTag } from '@/components/ui/period-tag'
-import { SHIFT_LIST_CLASSNAME, ShiftListDivider } from '@/components/ui/shift-list'
+import { SHIFT_LIST_BORDERLESS_CLASSNAME, ShiftListDivider } from '@/components/ui/shift-list'
 import SwapFlow from './SwapFlow'
 import OfferShiftConfirm from './OfferShiftConfirm'
 import OfferShiftStatus from './OfferShiftStatus'
@@ -311,6 +311,7 @@ export default function ShiftDetail({ shift, user, onBack }) {
           credential={credential}
           subline={isOpen ? `${shift.unit} · No nurse assigned yet` : isOffered ? `${shift.unit} · Offered by ${shift.profiles?.full_name ?? 'a nurse'}` : canConfirmForTeam ? `${shift.unit} · Not on the team schedule yet` : undefined}
           metaRight={heroTag ? <ShiftStatusTag status={heroTag.status} label={heroTag.label} /> : null}
+          borderless
         />
 
         {/* The nurse's own two secondary actions sit here, right under the shift card
@@ -393,9 +394,15 @@ export default function ShiftDetail({ shift, user, onBack }) {
               a bare row on the page ground, which made the section change shape with
               the data. The class string is the list's own, py-1.5 included, and the
               inner div carries a row's padding, so the icon tile lands where a
-              coworker's avatar does. Layout, icon, wording and tone are unchanged. */}
+              coworker's avatar does. Layout, icon, wording and tone are unchanged.
+              Both cards are BORDERLESS now (2026-09-18, his ask): the same
+              SHIFT_LIST_BORDERLESS_CLASSNAME Schedule's lists already use, so the lift
+              shadow carries the grouping on its own and no drawn outline is left on
+              this screen (the rule between two coworker rows stays; that is a divider,
+              not a box). Dropping the 1px border leaves the card's box the same size
+              with its content 1px further out on every edge. */}
           {!loading && !error && coworkers.length === 0 && (
-            <div className={`${SHIFT_LIST_CLASSNAME} py-1.5`}>
+            <div className={`${SHIFT_LIST_BORDERLESS_CLASSNAME} py-1.5`}>
               <div className="px-4 py-3.5">
                 <EmptyState
                   icon={Users}
@@ -408,7 +415,7 @@ export default function ShiftDetail({ shift, user, onBack }) {
           )}
 
           {!loading && !error && coworkers.length > 0 && (
-            <ul className={`${SHIFT_LIST_CLASSNAME} py-1.5`}>
+            <ul className={`${SHIFT_LIST_BORDERLESS_CLASSNAME} py-1.5`}>
               {coworkers.map((coworker, index) => {
                 const meta = [coworker.credential, formatShiftTimeRange(coworker.starts_at, coworker.ends_at)]
                   .filter(Boolean)

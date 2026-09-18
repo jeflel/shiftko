@@ -2558,6 +2558,27 @@ a bright seam. Layout is untouched: the buttons are still 169x50 and 171x50 at y
 the same 20px below the card, and the stylesheet hash did not move because the utility was
 already in it.
 
+## Shift Detail: both cards lose their outline (2026-09-18)
+
+"next is to remove the card border of the main shift card and the coworkers shift card on
+the shift detail."
+
+Two mechanisms, because the two cards are shared differently.
+
+- **The coworkers card already had a borderless twin.** It was `SHIFT_LIST_CLASSNAME`, the
+  list base plus `border border-hairline`; it is `SHIFT_LIST_BORDERLESS_CLASSNAME` now, the
+  same constant Schedule's four lists use. The empty state that stands in for it moved to
+  the same constant, so the section still keeps one container either way.
+- **The hero card's outline lives inside the component.** `HeroCard` serves six screens
+  (ShiftDetail, ClaimStatusDetail, OfferShiftConfirm, OfferShiftStatus, OfferShiftUpdate,
+  PersonalEventDetail), so the hairline now sits behind a `borderless` prop that defaults
+  to the old behaviour and only ShiftDetail opts in. The other five still draw it, which is
+  the deliberate scope call: the ask named Shift Detail. Making them match is deleting the
+  prop and the class, and nothing else.
+
+Neither change moves a box. With border-box sizing the border was inside the box, so both
+cards keep their exact size and their inner content sits 1px further out on every edge.
+
 ## Open product decisions (carried over from `HANDOFF.md`, still relevant)
 
 - ~~Section 0.3, Offer-shift: mockup's 4-screen stepper vs. the live 1-tap

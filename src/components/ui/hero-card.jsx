@@ -1,5 +1,6 @@
 import { PeriodTag } from '@/components/ui/period-tag'
 import { formatShiftDate, formatShiftTimeRange, getShiftPeriod } from '@/lib/shiftFormat'
+import { cn } from '@/lib/utils'
 
 // A status-detail screen's headline shift card (.hero-card in the Linear
 // Light source) - date + period tag, big time range, unit/credential
@@ -12,7 +13,16 @@ import { formatShiftDate, formatShiftTimeRange, getShiftPeriod } from '@/lib/shi
 // pair "Unit 1 · RN" with a state tag on the right, the way the reference
 // mockup's card pairs its label with a badge. Omit it and the card renders
 // exactly as before, which is what every other caller does.
-export function HeroCard({ shift, credential, subline, period, metaRight }) {
+//
+// `borderless` drops the 1px hairline so the card's lift shadow carries the
+// grouping on its own, the same choice `SHIFT_LIST_BORDERLESS_CLASSNAME` makes
+// for a list. ShiftDetail opts in (2026-09-18); the default keeps the outline,
+// so the five other callers (ClaimStatusDetail, OfferShiftConfirm,
+// OfferShiftStatus, OfferShiftUpdate, PersonalEventDetail) are unchanged. With
+// border-box sizing removing the border widens the padding box by 1px each
+// side, so the card's box is the same size and its inner content sits 1px
+// further out on every edge.
+export function HeroCard({ shift, credential, subline, period, metaRight, borderless }) {
   const sublineContent = subline ?? (
     <>
       {shift.unit}
@@ -21,7 +31,12 @@ export function HeroCard({ shift, credential, subline, period, metaRight }) {
   )
 
   return (
-    <div className="flex flex-col gap-2 rounded-card border border-hairline bg-card-surface px-4 py-[18px] shadow-card-lift">
+    <div
+      className={cn(
+        'flex flex-col gap-2 rounded-card bg-card-surface px-4 py-[18px] shadow-card-lift',
+        !borderless && 'border border-hairline',
+      )}
+    >
       <div className="flex items-center justify-between">
         <span className="text-[13px] font-semibold text-ink-secondary">
           {formatShiftDate(shift.starts_at)}
