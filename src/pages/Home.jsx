@@ -403,28 +403,9 @@ function WeeklyProgress({ shifts, weekOffset, onChangeWeekOffset }) {
 
   return (
     <section className="flex flex-col gap-2.5">
-      <SectionHeader title="Weekly Progress">
-        <div className="flex gap-1">
-          <button
-            type="button"
-            onClick={() => onChangeWeekOffset(weekOffset - 1)}
-            aria-label="Previous week"
-            className="flex size-6 items-center justify-center rounded-control-sm border border-hairline bg-white text-ink-secondary"
-          >
-            <ChevronLeft size={13} strokeWidth={2} />
-          </button>
-          <button
-            type="button"
-            onClick={() => onChangeWeekOffset(weekOffset + 1)}
-            aria-label="Next week"
-            className="flex size-6 items-center justify-center rounded-control-sm border border-hairline bg-white text-ink-secondary"
-          >
-            <ChevronRight size={13} strokeWidth={2} />
-          </button>
-        </div>
-      </SectionHeader>
+      <SectionHeader title="Weekly Progress" />
 
-      <div className="flex flex-col gap-3.5 rounded-card bg-white p-4 shadow-card-lift">
+      <div className="flex flex-col gap-3 rounded-card bg-white px-4 pt-4 pb-3 shadow-card-lift">
         <div className="flex items-stretch">
           <div className="flex flex-1 flex-col gap-2">
             <span className="flex items-center gap-1.5 text-[12px] font-medium tracking-[-0.01em] text-ink-secondary">
@@ -433,9 +414,9 @@ function WeeklyProgress({ shifts, weekOffset, onChangeWeekOffset }) {
               </span>
               Shifts worked
             </span>
-            <p className="text-[26px] leading-none font-semibold tracking-[-0.02em] text-ink">
+            <p className="text-[28px] leading-none font-semibold tracking-[-0.02em] text-ink tabular-nums">
               {shiftCount}
-              <span className="ml-1.5 text-[15px] font-medium text-ink-secondary">/{shiftsTarget}</span>
+              <span className="ml-1.5 text-[16px] font-medium text-ink-secondary">/{shiftsTarget}</span>
             </p>
             <div className="h-1.5 overflow-hidden rounded-full bg-track-neutral">
               <div
@@ -454,9 +435,9 @@ function WeeklyProgress({ shifts, weekOffset, onChangeWeekOffset }) {
               </span>
               Hours worked
             </span>
-            <p className="text-[26px] leading-none font-semibold tracking-[-0.02em] text-ink">
+            <p className="text-[28px] leading-none font-semibold tracking-[-0.02em] text-ink tabular-nums">
               {totalHours}
-              <span className="ml-1.5 text-[15px] font-medium text-ink-secondary">/{hoursTarget}</span>
+              <span className="ml-1.5 text-[16px] font-medium text-ink-secondary">/{hoursTarget}</span>
             </p>
             <div className="h-1.5 overflow-hidden rounded-full bg-track-neutral">
               <div
@@ -468,7 +449,25 @@ function WeeklyProgress({ shifts, weekOffset, onChangeWeekOffset }) {
         </div>
 
         <div className="h-px bg-hairline" />
-        <p className="text-xs text-ink-secondary">{formatWeekRange(start, end)}</p>
+        <div className="flex items-center justify-center gap-2.5">
+          <button
+            type="button"
+            onClick={() => onChangeWeekOffset(weekOffset - 1)}
+            aria-label="Previous week"
+            className="flex size-6 shrink-0 items-center justify-center rounded-control-sm border border-hairline bg-white text-ink-secondary"
+          >
+            <ChevronLeft size={13} strokeWidth={2} />
+          </button>
+          <span className="text-xs text-ink-secondary">{formatWeekRange(start, end)}</span>
+          <button
+            type="button"
+            onClick={() => onChangeWeekOffset(weekOffset + 1)}
+            aria-label="Next week"
+            className="flex size-6 shrink-0 items-center justify-center rounded-control-sm border border-hairline bg-white text-ink-secondary"
+          >
+            <ChevronRight size={13} strokeWidth={2} />
+          </button>
+        </div>
       </div>
     </section>
   )
