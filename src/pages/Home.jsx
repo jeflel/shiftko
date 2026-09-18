@@ -24,6 +24,7 @@ import PersonalEventPanel from '@/components/PersonalEventPanel'
 import { ActivationBanner } from '@/components/ui/activation-banner'
 import { EmptyState } from '@/components/ui/empty-state'
 import { dismissActivation, fetchActivation } from '@/lib/activation'
+import { avatarPublicUrl } from '@/lib/avatar'
 import { HomeBellControl, HomeProfileControl } from '@/components/ui/home-header-actions'
 import { fetchMyPersonalEvents } from '@/lib/personalEvents'
 import { Wordmark } from '@/components/ui/wordmark'
@@ -513,6 +514,7 @@ function getSummaryRange() {
 export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoToApprovals, onGoToPool, onGoToSchedule, onOpenProfile }) {
   const [fullName, setFullName] = useState(null)
   const [credential, setCredential] = useState(null)
+  const [avatarPath, setAvatarPath] = useState(null)
   const [homeUnit, setHomeUnit] = useState(null)
   const [shifts, setShifts] = useState([])
   const [notifications, setNotifications] = useState([])
@@ -580,7 +582,7 @@ export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoTo
         await Promise.all([
           supabase
             .from('profiles')
-            .select('full_name, credential, home_unit')
+            .select('full_name, credential, home_unit, avatar_url')
             .eq('id', user.id)
             .maybeSingle(),
           shiftsQuery,
@@ -594,6 +596,7 @@ export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoTo
         setError(profileResult.error.message)
         setFullName(null)
         setCredential(null)
+        setAvatarPath(null)
         setHomeUnit(null)
         setShifts([])
         setNotifications([])
@@ -606,6 +609,7 @@ export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoTo
         setError(shiftsResult.error.message)
         setFullName(profileResult.data?.full_name ?? null)
         setCredential(profileResult.data?.credential ?? null)
+        setAvatarPath(profileResult.data?.avatar_url ?? null)
         setHomeUnit(profileResult.data?.home_unit ?? null)
         setShifts([])
         setNotifications([])
@@ -616,6 +620,7 @@ export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoTo
 
       setFullName(profileResult.data?.full_name ?? null)
       setCredential(profileResult.data?.credential ?? null)
+      setAvatarPath(profileResult.data?.avatar_url ?? null)
       setHomeUnit(profileResult.data?.home_unit ?? null)
       setShifts(shiftsResult.data ?? [])
       setNotifications(notificationsResult.error ? [] : (notificationsResult.data ?? []))
@@ -842,7 +847,11 @@ export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoTo
             what sets the row's height. */}
         <div className="flex flex-1 flex-col px-5 pt-2">
           <div className="flex items-center gap-2.5 pt-4 pb-5">
-            <HomeProfileControl onOpenProfile={onOpenProfile} />
+            <HomeProfileControl
+              name={fullName}
+              avatarUrl={avatarPublicUrl(avatarPath)}
+              onOpenProfile={onOpenProfile}
+            />
             <p className="min-w-0 flex-1 truncate text-[15px] tracking-[-0.01em] text-ink-secondary">
               {getGreeting()}{nurseFirstName ? `, ${nurseFirstName}` : ''}
             </p>

@@ -1,20 +1,12 @@
-import { useEffect, useState } from 'react'
-import { Building2, ChevronDown, LogOut } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { Building2, Camera, ChevronDown, LogOut } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Avatar } from '@/components/ui/avatar'
 import { SHIFT_LIST_CLASSNAME, ShiftListDivider } from '@/components/ui/shift-list'
+import { avatarPublicUrl, removeAvatar, uploadAvatar } from '../lib/avatar'
 import JoinWorkspaceForm from '../components/JoinWorkspaceForm'
-
-function initials(name) {
-  if (!name) return '?'
-  return name
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join('')
-}
 
 function SettingsRow({ label, value, icon, last }) {
   return (
@@ -50,6 +42,9 @@ export default function Profile({ user, onWorkspaceLeft }) {
   const [deleteConfirmText, setDeleteConfirmText] = useState('')
   const [deleteSaving, setDeleteSaving] = useState(false)
   const [deleteError, setDeleteError] = useState(null)
+  const [avatarSaving, setAvatarSaving] = useState(false)
+  const [avatarError, setAvatarError] = useState(null)
+  const avatarInputRef = useRef(null)
 
   useEffect(() => {
     let active = true
@@ -57,7 +52,7 @@ export default function Profile({ user, onWorkspaceLeft }) {
     async function fetchAccount() {
       const { data } = await supabase
         .from('profiles')
-        .select('full_name, email, role, credential, home_unit, workspace_id')
+        .select('full_name, email, role, credential, home_unit, workspace_id, avatar_url')
         .eq('id', user.id)
         .single()
 
@@ -221,26 +216,131 @@ export default function Profile({ user, onWorkspaceLeft }) {
     setOpenAction(null)
   }
 
+  async function handleAvatarChange(event) {
+    const file = event.target.files?.[0]
+
+    // Cleared straight away so picking the same file twice in a row still fires
+    // a change event, which is what a nurse retrying after a failure will do.
+    event.target.value = ''
+
+    if (!file) return
+
+    setAvatarSaving(true)
+    setAvatarError(null)
+
+    const { path, error: uploadError } = await uploadAvatar({
+      userId: user.id,
+      file,
+      previousPath: profile?.avatar_url ?? null,
+    })
+
+    setAvatarSaving(false)
+
+    if (uploadError) {
+      setAvatarError(uploadError)
+      return
+    }
+
+    setProfile((current) => (current ? { ...current, avatar_url: path } : current))
+  }
+
+  async function handleRemoveAvatar() {
+    setAvatarSaving(true)
+    setAvatarError(null)
+
+    const { error: removeError } = await removeAvatar({
+      userId: user.id,
+      previousPath: profile?.avatar_url ?? null,
+    })
+
+    setAvatarSaving(false)
+
+    if (removeError) {
+      setAvatarError(removeError)
+      return
+    }
+
+    setProfile((current) => (current ? { ...current, avatar_url: null } : current))
+  }
+
   return (
     <main className="mx-auto w-full max-w-md px-5 pb-12">
       <div className="mt-4 flex items-center justify-between">
         <h1 className="font-display-title text-[26px] font-semibold tracking-[-0.02em] text-ink">Profile</h1>
       </div>
 
-      {/* Identity header */}
+      {/* Identity header. The circle is the control for the photo (camera badge
+          on its corner) and the two text actions sit under the name, so a nurse
+          does not have to guess that the avatar is tappable. The fallback is the
+          shared initials circle, so a nurse without a photo looks deliberate
+          rather than like an image that failed to load. */}
       {profile && (
         <div className="mt-8 flex items-center gap-4">
-          <div className="flex size-14 shrink-0 items-center justify-center rounded-full bg-press-state text-[17px] font-semibold text-ink">
-            {initials(profile.full_name)}
-          </div>
+          <button
+            type="button"
+            onClick={() => avatarInputRef.current?.click()}
+            disabled={avatarSaving}
+            aria-label={profile.avatar_url ? 'Change profile photo' : 'Add profile photo'}
+            data-testid="profile-avatar-button"
+            className="relative shrink-0 rounded-full"
+          >
+            <Avatar
+              name={profile.full_name}
+              src={avatarPublicUrl(profile.avatar_url)}
+              size="md"
+            />
+            <span className="absolute -right-0.5 -bottom-0.5 flex size-6 items-center justify-center rounded-full border border-hairline bg-card-surface text-ink-secondary">
+              <Camera size={13} strokeWidth={2} />
+            </span>
+          </button>
+
           <div className="min-w-0">
             <p className="truncate text-[17px] font-semibold tracking-[-0.01em] text-ink">{profile.full_name}</p>
             <p className="truncate text-[13px] text-ink-secondary">
               {[profile.credential, profile.home_unit].filter(Boolean).join(' · ') || 'No details yet'}
             </p>
+
+            <div className="mt-1.5 flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => avatarInputRef.current?.click()}
+                disabled={avatarSaving}
+                className="text-[13px] font-medium text-teal-foreground disabled:opacity-60"
+              >
+                {avatarSaving
+                  ? 'Uploading…'
+                  : profile.avatar_url
+                    ? 'Change photo'
+                    : 'Add photo'}
+              </button>
+
+              {profile.avatar_url && !avatarSaving && (
+                <button
+                  type="button"
+                  onClick={handleRemoveAvatar}
+                  data-testid="profile-avatar-remove"
+                  className="text-[13px] font-medium text-ink-secondary"
+                >
+                  Remove
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}
+
+      {avatarError && (
+        <p className="mt-2 text-sm text-red-700">{avatarError}</p>
+      )}
+
+      <input
+        ref={avatarInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleAvatarChange}
+        data-testid="profile-avatar-input"
+      />
 
       {/* Facility */}
       {profile && (
