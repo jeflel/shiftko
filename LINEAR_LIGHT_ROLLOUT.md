@@ -2498,6 +2498,27 @@ rendered in the today card, which is not tappable. The harness that carries the 
 markup and the built stylesheet covers it as well, at 320, 360, 375, 390 and 430, along
 with `Duplicate a Week` and `Approvals`.
 
+## Shift Detail: the offer and swap buttons move under the shift card (2026-09-18)
+
+"can we move the buttons "offer" and "swap" to right under the shift card on the shift
+detail screen? just shorten the width and place them side by side, no edits on the style,
+maybe use "Request swap" and "Offer shift" so its shorter."
+
+The nurse's two secondary actions were stacked full width in the fixed bottom bar, one
+above the other, below everything else. They now sit in one row directly under the
+`HeroCard`, inside the scrolling column: same `Button` variants, same 50px height, same
+16px radius, same icons, same two `data-testid`s. The only style change is the width,
+`w-full` to `flex-1`, which is what puts two of them on one line, and the labels shorten
+to `Request swap` and `Offer shift` so they fit at that width. `View offer status`, which
+is the offer control's other state, moved with them rather than jumping back to the
+bottom bar the moment a shift is offered. `Claim this shift`, `Withdraw` and `Add to team
+schedule` stay where they were, and so do the two error lines above them.
+
+Two consequences worth knowing. The pair scrolls with the content now instead of being
+pinned, and on a nurse's own shift the bottom bar has nothing left in it, so it is its
+own `pt-2 pb-1` of empty space below the scroll area. Neither is visible as a change to
+the card or to the buttons themselves.
+
 ## Open product decisions (carried over from `HANDOFF.md`, still relevant)
 
 - ~~Section 0.3, Offer-shift: mockup's 4-screen stepper vs. the live 1-tap

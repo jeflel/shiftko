@@ -313,6 +313,56 @@ export default function ShiftDetail({ shift, user, onBack }) {
           metaRight={heroTag ? <ShiftStatusTag status={heroTag.status} label={heroTag.label} /> : null}
         />
 
+        {/* The nurse's own two secondary actions sit here, right under the shift card
+            and side by side, instead of stacked full width in the bottom bar
+            (2026-09-18, his ask). Same Button variants, same 50px height, same 16px
+            radius, same icons; only the width changed, `w-full` to `flex-1`, and the
+            labels are shortened to fit two per row: "Request swap" and "Offer shift".
+            `View offer status` is the offer control's other state, so it moves with
+            them rather than jumping between two places when a shift is offered. The
+            claim, withdraw and add-to-team actions stay in the bottom bar. */}
+        {(canRequestSwap || canStartOffer || canViewOfferStatus) && (
+          <div className="flex gap-2.5">
+            {canRequestSwap && (
+              <Button
+                type="button"
+                variant={canConfirmForTeam ? 'secondary' : 'primary'}
+                onClick={() => setShowSwapFlow(true)}
+                data-testid="shift-detail-swap-request"
+                className="h-[50px] flex-1 rounded-[16px]"
+              >
+                <Repeat size={17} strokeWidth={1.9} />
+                Request swap
+              </Button>
+            )}
+
+            {canStartOffer && (
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => setShowOfferConfirm(true)}
+                data-testid="shift-detail-offer-toggle"
+                className="h-[50px] flex-1 rounded-[16px]"
+              >
+                <Upload size={17} strokeWidth={1.9} />
+                Offer shift
+              </Button>
+            )}
+
+            {canViewOfferStatus && (
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => setShowOfferStatus(true)}
+                data-testid="shift-detail-offer-toggle"
+                className="h-[50px] flex-1 rounded-[16px]"
+              >
+                View offer status
+              </Button>
+            )}
+          </div>
+        )}
+
         <section className="flex flex-col gap-2.5">
           <div className="flex items-baseline justify-between gap-3">
             <h2 className="text-xs font-semibold tracking-[0.05em] text-ink-secondary uppercase">
@@ -431,44 +481,6 @@ export default function ShiftDetail({ shift, user, onBack }) {
               Withdraw
             </Button>
           </>
-        )}
-
-        {canRequestSwap && (
-          <Button
-            type="button"
-            variant={canConfirmForTeam ? 'secondary' : 'primary'}
-            onClick={() => setShowSwapFlow(true)}
-            data-testid="shift-detail-swap-request"
-            className="h-[50px] w-full rounded-[16px]"
-          >
-            <Repeat size={17} strokeWidth={1.9} />
-            Request a swap
-          </Button>
-        )}
-
-        {canStartOffer && (
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={() => setShowOfferConfirm(true)}
-            data-testid="shift-detail-offer-toggle"
-            className="h-[50px] w-full rounded-[16px]"
-          >
-            <Upload size={17} strokeWidth={1.9} />
-            Offer this shift
-          </Button>
-        )}
-
-        {canViewOfferStatus && (
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={() => setShowOfferStatus(true)}
-            data-testid="shift-detail-offer-toggle"
-            className="h-[50px] w-full rounded-[16px]"
-          >
-            View offer status
-          </Button>
         )}
       </div>
     </div>
