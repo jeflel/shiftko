@@ -2264,6 +2264,34 @@ exactly what the white text it replaced could not do, and the reason the header
 rework of 2026-09-17 had to move off white at all: white measured 2.97:1 on the
 gradient start and 1.95:1 on the mid stop.
 
+**Verified on live production, signed in, hash-matched (`index-CsAk9aKd.js`, the
+same asset name a local rebuild at `6197c02` produces), nurse
+`alex.ramirez@shiftko.test`, 2026-09-18.** The greeting reads `Good morning, Alex`:
+
+- Computed `font-family` starts with `Fraunces`, `font-size` 15px, `font-weight` 400,
+  `letter-spacing` -0.15px. Family and colour only, exactly as intended.
+- `document.fonts.check('15px Fraunces')` is **true**, and the Fraunces 400 face in
+  `document.fonts` reports `loaded`, so this is the real face and not a fallback
+  that happens to be named first.
+- Computed colour **`rgb(29, 29, 31)`**, the `--color-ink` value (`#1d1d1f`).
+- Both controls 36x36, the greeting on the same 36px line and centred against them,
+  10px from the profile control. The row box is 72px (16 top + 36 control line + 20
+  bottom), unchanged. The greeting does not truncate at 390 (`scrollWidth` equals
+  `clientWidth`) and nothing overflows the viewport.
+- No gradient on the page: every ancestor's computed `background-image` is `none`,
+  the greeting element included.
+
+**The 24px gap in the brief is not this tree, and was not this tree before the
+change either.** Measured at 390x844: profile and bell bottom at y=60, section
+header top at y=80 (20px), header 27px tall, Today card top at y=117. So the
+controls sit **20px** above the section header and the card is a further 10px below
+that, 57px from the control line to the card, 37px from the row box's bottom edge to
+the card. Those are the same numbers as the 2026-09-17 entry above ("the control
+sits 20px above the section title, which sits 10px above the card"), which is the
+point: this change is two classes on a text node and it moved nothing. The 24px
+belonged to the superseded two-line row, where the greeting stack sat on its own
+line between the controls.
+
 **What the brief asked for that this tree is not.** The request described the
 greeting as white on the teal gradient, on a row sitting 24px above the Today card,
 with two lines to re-colour. That is the state at `12e5f55`/`647f6fa`, superseded
