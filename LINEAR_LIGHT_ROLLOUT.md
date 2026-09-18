@@ -2468,6 +2468,36 @@ something to change silently in this pass.
 button is unmoved and the header stays 40px, which is the check that the spacer costs
 nothing.
 
+**Verified on live production, signed in, hash-matched (`index-D6vBpcm4.js`, the asset
+name a rebuild at `baf679c` produces), 390x844 and 1280x633.** Three screens driven, and
+the numbers below are the header's own offsets rather than absolute coordinates, since
+those are what hold at any width:
+
+| screen | header | back button | title | centred off by |
+| --- | --- | --- | --- | --- |
+| ShiftDetail, `Shift Detail` | 40px, new grid class | 34x34 at +20 left, +9 top | 89.6px ink, 17px/600 `rgb(29, 29, 31)` | 0.01px |
+| Request a Swap (was 480px left-aligned) | 40px | 34x34 at +20/+9, exactly its pre-change (436, 9) | 128.6px ink | 0.00px |
+| Duplicate a Week (longest in the app) | 40px | 34x34 at +20/+9 | 139.6px ink, one line, not truncated, 71.2px clear of the button | 0.00px |
+| Approvals (the subtitle) | 65.5px | 34x34 at +20 left, +17.75 top | 80.5px ink | 0.01px |
+
+The back button was measured before the change on the same screens at the same viewport,
+so "unmoved" is a comparison and not an assertion: its 34x34 box and its 20px left and 9px
+top offsets from the header are identical on every screen without a subtitle. The
+subtitle row is stacked under the title and centred (0.01px off), and on Approvals the
+button sits 17.75px down because the taller header re-centres it: its centre and the
+title+subtitle block's centre are the same point, 0.00px apart. That screen's header
+grows from 40px to 65.5px, which is the documented cost of stacking rather than an
+accident.
+
+**The no-title case was measured on the live app too**, by emptying the title text in the
+DOM on a live React screen (the exact condition `PersonalEventDetail` renders) and putting
+it back: header 40px, back button 34x34 at +20/+9, middle column 0 high, all unchanged
+from the titled state. `PersonalEventDetail` itself could not be opened signed in as Alex
+because he has no personal-event row on Home at all, his single event being today's and
+rendered in the today card, which is not tappable. The harness that carries the exact
+markup and the built stylesheet covers it as well, at 320, 360, 375, 390 and 430, along
+with `Duplicate a Week` and `Approvals`.
+
 ## Open product decisions (carried over from `HANDOFF.md`, still relevant)
 
 - ~~Section 0.3, Offer-shift: mockup's 4-screen stepper vs. the live 1-tap
