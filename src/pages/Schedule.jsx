@@ -194,7 +194,11 @@ function MyShiftRow({ shift, credential, isPast, onClick }) {
       data-testid="schedule-my-shift-row"
       className={cn(
         'flex w-full items-center gap-3 px-4 py-4.5 text-left transition-colors duration-150 ease-out active:bg-press-state',
-        isPast && 'opacity-35',
+        // The finished dim is applied per child rather than to the button, so the
+        // vertical rule between the date column and the body is excluded from it
+        // and can be painted at full strength in --color-divider-finished. On the
+        // button itself the rule composites to 1.08:1 on white and disappears.
+        isPast && '[&>*:not([data-row-divider])]:opacity-35',
       )}
     >
       <div className="ml-0.5 mr-0.5 flex w-8 shrink-0 flex-col items-center">
@@ -204,7 +208,11 @@ function MyShiftRow({ shift, credential, isPast, onClick }) {
         <span className="text-[19px] leading-[1.15] font-semibold text-ink">{date.getDate()}</span>
       </div>
 
-<div className="min-h-9 w-px shrink-0 self-stretch bg-hairline" aria-hidden="true" />
+      <div
+        data-row-divider
+        className={cn('min-h-9 w-px shrink-0 self-stretch', isPast ? 'bg-divider-finished' : 'bg-hairline')}
+        aria-hidden="true"
+      />
 
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <PeriodTag period={period} variant="bare" />
@@ -252,7 +260,11 @@ function MyPersonalEventRow({ event, isPast, onClick }) {
       data-testid="schedule-my-personal-event-row"
       className={cn(
         'flex w-full items-center gap-3 px-4 py-4.5 text-left transition-colors duration-150 ease-out active:bg-press-state',
-        isPast && 'opacity-35',
+        // The finished dim is applied per child rather than to the button, so the
+        // vertical rule between the date column and the body is excluded from it
+        // and can be painted at full strength in --color-divider-finished. On the
+        // button itself the rule composites to 1.08:1 on white and disappears.
+        isPast && '[&>*:not([data-row-divider])]:opacity-35',
       )}
     >
       <div className="ml-0.5 mr-0.5 flex w-8 shrink-0 flex-col items-center">
@@ -262,7 +274,11 @@ function MyPersonalEventRow({ event, isPast, onClick }) {
         <span className="text-[19px] leading-[1.15] font-semibold text-ink">{date.getDate()}</span>
       </div>
 
-<div className="min-h-9 w-px shrink-0 self-stretch bg-hairline" aria-hidden="true" />
+      <div
+        data-row-divider
+        className={cn('min-h-9 w-px shrink-0 self-stretch', isPast ? 'bg-divider-finished' : 'bg-hairline')}
+        aria-hidden="true"
+      />
 
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <PeriodTag period={getShiftPeriod(event.starts_at)} variant="bare" />
@@ -972,7 +988,7 @@ function MyShiftsTab({ user, contentView }) {
                 const dayItems = combinedByDay[key] ?? []
 
                 if (dayItems.length === 0) {
-                  rows.push({ key, node: <MyDayOffRow date={date} /> })
+                  rows.push({ key, node: <MyDayOffRow date={date} />, finished: false })
                   return
                 }
 
@@ -982,6 +998,7 @@ function MyShiftsTab({ user, contentView }) {
                   if (item._kind === 'personal') {
                     rows.push({
                       key: `personal-${item.id}`,
+                      finished: isPast,
                       node: (
                         <MyPersonalEventRow
                           event={item}
@@ -993,6 +1010,7 @@ function MyShiftsTab({ user, contentView }) {
                   } else {
                     rows.push({
                       key: item.id,
+                      finished: isPast,
                       node: (
                         <MyShiftRow
                           shift={item}
@@ -1034,12 +1052,21 @@ function MyShiftsTab({ user, contentView }) {
                     />
                   </div>
                   <ul className={`${SHIFT_LIST_BORDERLESS_CLASSNAME} py-1.5`}>
-                    {rows.map((row, index) => (
-                      <li key={row.key}>
-                        {row.node}
-                        {index < rows.length - 1 && <ShiftListDivider />}
-                      </li>
-                    ))}
+                    {rows.map((row, index) => {
+                      // A rule between two finished rows gets the darker tone. A
+                      // finished row scored through by a hairline is what made the
+                      // pair read as one washed-out block.
+                      const betweenFinished = row.finished && rows[index + 1]?.finished === true
+
+                      return (
+                        <li key={row.key}>
+                          {row.node}
+                          {index < rows.length - 1 && (
+                            <ShiftListDivider tone={betweenFinished ? 'finished' : 'default'} />
+                          )}
+                        </li>
+                      )
+                    })}
                   </ul>
                 </div>
               )

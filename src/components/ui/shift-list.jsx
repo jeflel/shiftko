@@ -20,11 +20,21 @@ export const SHIFT_LIST_BORDERLESS_CLASSNAME = SHIFT_LIST_BASE
 // column now shares one geometry, a 32px column with 2px margins:
 //   16 + 2 + 32 + 2 + 12 + 1 + 12 = 77px of text, so the line insets to 75px.
 // 16px (`inset={false}`) is for lists whose rows carry no date column at all.
+//
+// `tone="finished"` paints the rule with --color-divider-finished. It is for a
+// rule that separates two finished (past, dimmed) rows: those rows are drawn at
+// 35%, so their own vertical rule has to sit outside that fade to be paintable
+// at all (see MyShiftRow in Schedule.jsx), and this is the horizontal half of
+// the same junction. Every other caller keeps the hairline default.
 
-export function ShiftListDivider({ inset = true }) {
+export function ShiftListDivider({ inset = true, tone = 'default' }) {
   return (
     <div
-      className={cn('h-px bg-hairline', inset ? 'ml-[75px]' : 'ml-4')}
+      className={cn(
+        'h-px',
+        tone === 'finished' ? 'bg-divider-finished' : 'bg-hairline',
+        inset ? 'ml-[75px]' : 'ml-4',
+      )}
       aria-hidden="true"
     />
   )

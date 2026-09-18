@@ -23,6 +23,16 @@
   --color-ink-secondary: #6e6e73;
   --color-ink-tertiary: #48484a;
   --color-hairline: #e5e5ea;
+  /* The one rule drawn where a FINISHED (past, dimmed) Schedule row meets the
+     next one: the row's own vertical rule and the horizontal shift-list divider
+     under it. A finished row is painted at 35%, so its own vertical rule
+     composites to #f6f6f8 on white (1.08:1) and all but disappears, while the
+     horizontal one stayed at the hairline's 1.26:1. Both are painted at full
+     strength in this value instead, one step darker than the hairline at
+     1.42:1, which still sits under the finished row's own meta line (1.60:1) so
+     the rule keeps receding behind the text. Next step up is
+     --color-chevron-muted at 1.68:1. */
+  --color-divider-finished: #d8d8dd;
   --color-track-neutral: #ededf2;
   --color-press-state: #f2f2f7;
   --color-teal: #38bde5;
