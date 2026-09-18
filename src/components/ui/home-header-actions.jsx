@@ -5,7 +5,11 @@ import { Avatar } from '@/components/ui/avatar'
 // and the notification bell at the right gutter.
 //
 // The bell is a white 36x36 control (`size-9 rounded-control`) with a 1px
-// `--color-control-edge` border and a muted `text-ink-secondary` glyph. The teal
+// `--color-control-edge` border and a muted `text-ink-secondary` glyph. The glyph
+// went 18px to 20px on 2026-09-18 ("its too small i think"): one number, `size` on
+// the `Bell`, leaving 8px of clearance inside the 36px control. `strokeWidth` stayed
+// at 1.75, which is the same absolute weight at a slightly larger size, so if it
+// reads thin next to the 36px control that is the second knob and nothing else. The teal
 // hero gradient is gone from Home (2026-09-17, at Jefle's request), so the old
 // `bg-white/20` fill with a white glyph had nothing left to read against, and
 // neither does the diagonal white `::before` ring they used to carry. That rule
@@ -67,7 +71,7 @@ export function HomeBellControl({ hasUnread, onOpen }) {
       data-testid="home-bell-control"
       className="relative flex size-9 shrink-0 items-center justify-center rounded-control border border-control-edge bg-white text-ink-secondary"
     >
-      <Bell size={18} strokeWidth={1.75} />
+      <Bell size={20} strokeWidth={1.75} />
       {hasUnread && (
         <span className="absolute top-[6px] right-[6px] size-2 rounded-full bg-urgency-red ring-2 ring-white" />
       )}

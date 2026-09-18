@@ -2357,6 +2357,26 @@ and the pass then completed normally. Do not poll the site with curl to watch a
 deploy; use the GitHub deployments API, and if you need the live bundle, read it out of
 the DOM while signed in.
 
+## Home bell: the glyph goes 18px to 20px (2026-09-18)
+
+"can you make the bell icon a little bigger, its too small i think." One number:
+`size` on the `Bell` inside `HomeBellControl`, 18 to 20. The 36x36 control, its
+`--color-control-edge` rim, the `strokeWidth` of 1.75 and the unread dot's
+`top-[6px] right-[6px]` all stay as they were, and the glyph keeps 8px of clearance
+inside the box. This is the first change to that glyph since the header row was built;
+the 2026-09-17 entry above records it at 18px/stroke 1.75, which was the state before
+this.
+
+Nothing that reads geometry moves: the control is still 36x36, the row still carries a
+36px content line, the greeting is still 10px away and the Today card still sits 57px
+below the control line. `HomeBellControl` is Home-only and this is the only `Bell` in
+`src/`, so no other screen changes.
+
+**Two knobs:** `size` (which is this change, 18 to 20) and `strokeWidth` (left at
+1.75). A stroke is an absolute weight, so at a larger glyph the same 1.75 reads
+slightly finer; if the bell looks thin next to the 36px control, 2 is the pairing and
+it is a one number change.
+
 ## Open product decisions (carried over from `HANDOFF.md`, still relevant)
 
 - ~~Section 0.3, Offer-shift: mockup's 4-screen stepper vs. the live 1-tap
