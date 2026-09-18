@@ -89,11 +89,17 @@ export async function uploadAvatar({ userId, file, previousPath }) {
     return { error: updateError.message }
   }
 
+  // Reported separately rather than swallowed. The row is what every screen
+  // reads, so a failed cleanup must not fail the upload, but a silent one leaks
+  // storage forever: that is exactly what happened before
+  // 20260918020540 added the select policy a delete needs.
+  let cleanupError = null
   if (previousPath && previousPath !== path) {
-    await supabase.storage.from(BUCKET).remove([previousPath])
+    const { error: removeError } = await supabase.storage.from(BUCKET).remove([previousPath])
+    cleanupError = removeError?.message ?? null
   }
 
-  return { path }
+  return { path, cleanupError }
 }
 
 export async function removeAvatar({ userId, previousPath }) {
@@ -104,7 +110,11 @@ export async function removeAvatar({ userId, previousPath }) {
 
   if (error) return { error: error.message }
 
-  if (previousPath) await supabase.storage.from(BUCKET).remove([previousPath])
+  let cleanupError = null
+  if (previousPath) {
+    const { error: removeError } = await supabase.storage.from(BUCKET).remove([previousPath])
+    cleanupError = removeError?.message ?? null
+  }
 
-  return { path: null }
+  return { path: null, cleanupError }
 }

@@ -228,7 +228,7 @@ export default function Profile({ user, onWorkspaceLeft }) {
     setAvatarSaving(true)
     setAvatarError(null)
 
-    const { path, error: uploadError } = await uploadAvatar({
+    const { path, error: uploadError, cleanupError } = await uploadAvatar({
       userId: user.id,
       file,
       previousPath: profile?.avatar_url ?? null,
@@ -241,6 +241,10 @@ export default function Profile({ user, onWorkspaceLeft }) {
       return
     }
 
+    if (cleanupError) {
+      setAvatarError('Photo saved, but the previous file could not be deleted.')
+    }
+
     setProfile((current) => (current ? { ...current, avatar_url: path } : current))
   }
 
@@ -248,7 +252,7 @@ export default function Profile({ user, onWorkspaceLeft }) {
     setAvatarSaving(true)
     setAvatarError(null)
 
-    const { error: removeError } = await removeAvatar({
+    const { error: removeError, cleanupError } = await removeAvatar({
       userId: user.id,
       previousPath: profile?.avatar_url ?? null,
     })
@@ -258,6 +262,10 @@ export default function Profile({ user, onWorkspaceLeft }) {
     if (removeError) {
       setAvatarError(removeError)
       return
+    }
+
+    if (cleanupError) {
+      setAvatarError('Photo removed, but the file could not be deleted.')
     }
 
     setProfile((current) => (current ? { ...current, avatar_url: null } : current))
