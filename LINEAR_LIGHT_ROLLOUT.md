@@ -2519,6 +2519,29 @@ pinned, and on a nurse's own shift the bottom bar has nothing left in it, so it 
 own `pt-2 pb-1` of empty space below the scroll area. Neither is visible as a change to
 the card or to the buttons themselves.
 
+**Verified on live production, signed in as `alex.ramirez@shiftko.test`, hash-matched
+(`index-BkMudxrR.js`, the asset name a rebuild at `02fd7fe` produces), at 390x844 and
+1280x633, on his own Tue Sep 22 evening shift.** The row is a `flex gap-2.5` inside the
+scrolling `main`, 20px under the card (the column's own `gap-5`), and its two buttons split
+the card's width between them: at 390 the card spans x 20 to 370, `Request swap` is 169x50
+at x=20 and `Offer shift` is 171x50 at x=199, both at y=212.5. Those two widths sum to the
+340 left after the 10px gap, so the 2px difference between them is rounding on an even
+split rather than a sizing rule. The row's right edge lands on 370, the same 20px gutter as
+the card, with no overflow. Same y for both, so they are side by side and not stacked.
+
+Nothing about their style moved: both keep the 50px height, the 12px computed radius the
+`Button` base already produced (the `rounded-[16px]` in the class string never won, before
+or after), 15px/600 type, and their variants, with the swap button still primary
+(`rgb(14, 116, 144)` on white text) because this nurse cannot confirm a team shift. The
+labels read `Request swap` and `Offer shift`, and the two `data-testid`s are unchanged.
+The bottom bar is now empty on this screen (12px of its own padding, no children), since
+claim, withdraw and add-to-team are all inert for a nurse's own assigned shift.
+
+**Both buttons were tapped, not just measured.** `Request swap` opens the swap flow
+(`Request a Swap`, the shift and the coworker list), and `Offer shift` opens
+`Offer This Shift` with its confirmation copy. Both were left without confirming, so no
+offer and no swap request was written.
+
 ## Open product decisions (carried over from `HANDOFF.md`, still relevant)
 
 - ~~Section 0.3, Offer-shift: mockup's 4-screen stepper vs. the live 1-tap
