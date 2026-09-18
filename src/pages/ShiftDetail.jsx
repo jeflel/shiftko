@@ -320,7 +320,13 @@ export default function ShiftDetail({ shift, user, onBack }) {
             labels are shortened to fit two per row: "Request swap" and "Offer shift".
             `View offer status` is the offer control's other state, so it moves with
             them rather than jumping between two places when a shift is offered. The
-            claim, withdraw and add-to-team actions stay in the bottom bar. */}
+            claim, withdraw and add-to-team actions stay in the bottom bar.
+
+            Each button carries `shadow-card-lift` (2026-09-18): the page's single
+            shadow token, the same `0 5px 15px rgba(53,87,97,.12)` every card uses, so
+            they lift off the page ground the way the cards above them do. `Button`
+            has no shadow in any variant, so this is per-usage, and the token is the
+            one knob if it reads heavy on a 50px button. */}
         {(canRequestSwap || canStartOffer || canViewOfferStatus) && (
           <div className="flex gap-2.5">
             {canRequestSwap && (
@@ -329,7 +335,7 @@ export default function ShiftDetail({ shift, user, onBack }) {
                 variant={canConfirmForTeam ? 'secondary' : 'primary'}
                 onClick={() => setShowSwapFlow(true)}
                 data-testid="shift-detail-swap-request"
-                className="h-[50px] flex-1 rounded-[16px]"
+                className="h-[50px] flex-1 rounded-[16px] shadow-card-lift"
               >
                 <Repeat size={17} strokeWidth={1.9} />
                 Request swap
@@ -342,7 +348,7 @@ export default function ShiftDetail({ shift, user, onBack }) {
                 variant="secondary"
                 onClick={() => setShowOfferConfirm(true)}
                 data-testid="shift-detail-offer-toggle"
-                className="h-[50px] flex-1 rounded-[16px]"
+                className="h-[50px] flex-1 rounded-[16px] shadow-card-lift"
               >
                 <Upload size={17} strokeWidth={1.9} />
                 Offer shift
@@ -355,7 +361,7 @@ export default function ShiftDetail({ shift, user, onBack }) {
                 variant="secondary"
                 onClick={() => setShowOfferStatus(true)}
                 data-testid="shift-detail-offer-toggle"
-                className="h-[50px] flex-1 rounded-[16px]"
+                className="h-[50px] flex-1 rounded-[16px] shadow-card-lift"
               >
                 View offer status
               </Button>
