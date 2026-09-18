@@ -2649,6 +2649,26 @@ hero-card screens render.
 eyebrow at the top and the full date on its own row, measured at 183px with the eyebrow row
 at y=20 and the date at y=52.5. Its numbers are replaced by the ones below.
 
+**Verified on live production, signed in as `alex.ramirez@shiftko.test`, hash-matched
+(`index-BBjauu62.js`, the asset name a rebuild at `f597c6a` produces), at 390x844.** The card
+reads: `Tue, Sep 22` with `Evening` opposite it, `3:00 PM - 11:30 PM`, the rule, `Unit 1 · CNA`
+with `Assigned` opposite, then `BURLINGAME SNF`. Measured: 350 wide, **180px** tall against
+183 for the superseded revision and 138.5 before any of this, padding `20px 16px`, block gap
+10px, radius 16px, the card-lift shadow, no border, no overflow. The rule is at y=100, 1px,
+318 wide, 16px in from the card's edge. The short date is 72.3px wide at 13px/600
+`rgb(110, 110, 115)` and y=22.5, against **185.5px** measured for the full "Tuesday,
+September 22, 2026" in the same 13px/600 type, so the date's own line is 113px narrower than
+it was; the time is 25px/600 `rgb(29, 29, 31)` at y=52.5; `Unit 1 · CNA` is 13px
+`rgb(110, 110, 115)` at y=113.5; the workspace row is 11px/600 uppercase at y=143.5, on its own
+line 30px below the unit row.
+
+**The other layout path was checked live on this build too, on the `Offer This Shift` screen**,
+since five other screens render a hero card: its card still computes a `1px` border, `18px`
+vertical padding, an 8px gap, 135.5px of height, three lines with the full date sharing its row
+with the period tag, and no rule. So `borderless`, `layout` and `facility` are independent, and
+the default path is untouched. The confirm screen was left without confirming, so no offer was
+written.
+
 ## Open product decisions (carried over from `HANDOFF.md`, still relevant)
 
 - ~~Section 0.3, Offer-shift: mockup's 4-screen stepper vs. the live 1-tap
