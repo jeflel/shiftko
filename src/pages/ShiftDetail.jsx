@@ -332,13 +332,21 @@ export default function ShiftDetail({ shift, user, onBack }) {
             <p className="text-xs text-red-700">Could not load coworkers: {error}</p>
           )}
 
+          {/* The empty state sits in the SAME card the coworker list uses, so the
+              section keeps one container either way (2026-09-18). Before this it was
+              a bare row on the page ground, which made the section change shape with
+              the data. `px-4 py-3.5` is the row's own padding, so the icon tile lands
+              where a coworker's avatar would. Layout, icon, wording and tone are
+              unchanged. */}
           {!loading && !error && coworkers.length === 0 && (
-            <EmptyState
-              icon={Users}
-              title="No coworkers on this shift"
-              layout="row"
-              tone="neutral"
-            />
+            <div className={`${SHIFT_LIST_CLASSNAME} px-4 py-3.5`}>
+              <EmptyState
+                icon={Users}
+                title="No coworkers on this shift"
+                layout="row"
+                tone="neutral"
+              />
+            </div>
           )}
 
           {!loading && !error && coworkers.length > 0 && (

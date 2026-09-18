@@ -2387,6 +2387,26 @@ box grew 2. It is centred in the control to within half a pixel, and the control
 (36px of content), the greeting still 10px from the profile control, the Today card
 still 57px below the control line, and nothing overflows at 390.
 
+## Shift Detail: the empty "Working with" state gets the list's card (2026-09-18)
+
+The section changed container with the data: the coworker list renders inside
+`SHIFT_LIST_CLASSNAME` (plus `py-1.5`), while the no-coworkers branch rendered a bare
+`EmptyState layout="row"` on the page ground, so the section lost its card exactly when
+it had nothing in it. The empty branch now uses the same container class string with the
+row's own `px-4 py-3.5`, which puts the icon tile where a coworker's avatar sits.
+
+Nothing else in the section moved: same heading, same `N on this shift` count (still
+rendered only when there ARE coworkers), same loading and error branches, and the
+`EmptyState` keeps `layout="row"`, the `Users` icon, its wording and `tone="neutral"`.
+
+**This is the app's first empty state inside a grouped list card.** The other list
+screens (Pool, Claim Status, Swap Status, Coordinator Manage, Staff Roster) still render
+`EmptyState` bare on the page ground. Home's Upcoming list is the only place that wraps
+a row empty state in a card at all, with `rounded-card bg-white shadow-card-lift` and no
+inner padding of its own, so its icon tile sits flush with that card's left edge while
+its rows carry `px-4` and its list container carries `bg-white py-1.5`. Worth aligning
+those when they are next touched. Out of scope here, and deliberately not changed.
+
 ## Open product decisions (carried over from `HANDOFF.md`, still relevant)
 
 - ~~Section 0.3, Offer-shift: mockup's 4-screen stepper vs. the live 1-tap
