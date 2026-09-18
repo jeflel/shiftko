@@ -772,14 +772,13 @@ The analysis is kept because the findings outlive the frame:
   the activity tile *inside* it already uses `bg-teal-tint` in its approved
   state, so a teal frame would swallow it; spending the accent on decoration is
   also what the `Operate` guidance warns against.
-- **Open defect: the Home hero header text fails WCAG AA everywhere.** White
-  text on the gradient measures 2.97:1 at the teal end and 1.29:1 near the page
-  ground; the 20px greeting sits at roughly 2.1:1 and needs 4.5:1. This is
-  pre-existing (the old gradient started at 1.95:1), not something the design
-  pass introduced, and `impeccable detect` flagged the same pattern
-  independently on the unauthenticated landing page. Candidate fix: hold the
-  darkest teal for the first ~120px where the text sits and fade after it,
-  instead of fading from 0.
+- **Defect CLOSED 2026-09-17: the Home header text failed WCAG AA everywhere.**
+  White text on the gradient measured 2.97:1 at the teal end and 1.29:1 near the
+  page ground; the 20px greeting sat at roughly 2.1:1 and needed 4.5:1. It was
+  pre-existing (the old gradient started at 1.95:1), not something this pass
+  introduced. Closed by removing the gradient from Home rather than by plating
+  the text: the greeting is `#6e6e73` on the page ground at 4.82:1. See "Home
+  header: profile on the left, muted greeting, no gradient".
 
 ## Request Activity card restructure (2026-09-12, same day)
 
@@ -1683,6 +1682,92 @@ reader's own day.
 
 Files: `src/pages/Home.jsx` (the row, the `getHeaderLine` helper, `pb-15`).
 Commit `12e5f55`.
+
+**Superseded the same day** by the section below.
+
+## Home header: profile on the left, muted greeting, no gradient (2026-09-17)
+
+Jefle picked this by looking, off a mockup round
+(`home-header-white-controls.html` in `~/shiftko-design-v2-visual-pass-dup`,
+earlier round kept beside it as `home-header-profile-left.html`). It supersedes
+the two-line greeting row above, landed the same day: he wants the header to read
+as page furniture rather than a banner, so **Home carries no gradient at all any
+more** and the row is the profile control on the left, the greeting beside it,
+the bell on the right.
+
+**Verified on live production, signed in, hash-matched (`index-DkF_z8VK.js`),
+nurse `alex.ramirez@shiftko.test` at a 390x844 viewport:**
+
+- Both controls measure 36x36, 9px radius, white fill, `1px rgb(216,216,221)`
+  (`--color-control-edge`), glyph `rgb(110,110,115)` at 18px/stroke 1.75.
+- Greeting `Good morning, Alex` is 15px/400 `rgb(110,110,115)`, 10px from the
+  profile control, both centred on the same 36px line, 4.82:1 on the page ground.
+- Row padding is 16px top / 20px bottom, so the control sits **20px** above the
+  section title, which sits **10px** above the card (`gap-2.5`), matching every
+  other section's rhythm (`gap-5` between sections).
+- The section title above the Today card reads `Evening shift today`, 18px/600
+  `rgb(58,74,79)` at -0.72px computed tracking.
+- The card is 16px radius, 16px padding, margin-top 0, `0 5px 15px
+  rgba(53,87,97,.12)`, and its top row is `justify-end` holding just the unit pill
+  and the period tag. No uppercase `TODAY` eyebrow anywhere in the section.
+- **No gradient anywhere above the row:** every ancestor's computed
+  `background-image` is `none`, and the wrapper's is `none`.
+
+**Coordinator, same session (`jefleangelo@gmail.com`):** the same row and
+controls, 15px/400 greeting `Good morning, Jefle`, and `CoverageHero` starts at
+y=80 against the control's bottom edge at y=60, so 20px of clearance rather than
+the 16px overlap the old `-mt-9` would have produced. Its own eyebrow stays,
+since the coordinator gets no section header (their header text is the greeting
+alone).
+
+**Both controls were driven, not just measured:** the bell opens the full-screen
+Notifications panel (7 unread, the `ring-2 ring-white` dot is gone while it is
+open, Back returns to Home) and the profile control opens the Profile tab as
+`AR / Alex Ramirez / CNA · Unit 1`.
+
+What is in the code:
+
+- **The gradient is gone from Home.** The wrapper lost `bg-gradient-to-b
+  from-hero-gradient-start via-hero-gradient-mid via-70% to-hero-gradient-end
+  bg-[length:100%_193px] bg-top bg-no-repeat`. The three
+  `--color-hero-gradient-*` tokens are deliberately left in `tailwind.css`,
+  unused, so bringing the gradient back is one class list rather than a
+  re-derivation. `theme-color` and the `html`/`body` ground were already the page
+  ground, so the mobile chrome still matches the top of the page.
+- **New token `--color-control-edge: #d8d8dd`**, the single knob for the control
+  border. Not the hairline: `#e5e5ea` measures 1.19:1 against the ground and reads
+  as no control at all; `#d1d1d6` is 1.45:1, which he saw in the ladder and asked
+  to lighten; `#d8d8dd` is 1.35:1. The glyph also gains a step on white
+  (`#6e6e73` is 5.07:1 there against 4.35:1 on the old `#ededf2` fill).
+- **`.home-glass-ring::before` is deleted** from `tailwind.css`. It existed to put
+  a 1px diagonal white ring on the two glass controls, and with the gradient gone
+  there is nothing behind them for it to separate.
+- **The bell no longer owns the notifications panel.** It used to fetch its own
+  notifications and return the panel in place of itself, which worked as a
+  full-width bar; as a 36px control inside the row it would render the panel
+  inside the row. `Home.jsx`'s own `showNotifications` (also how the Request
+  Activity card's View All opens it) is the single owner now, the bell reports
+  taps, and the unread dot reads Home's own notifications. One duplicate query
+  fewer.
+- **`getHeaderLine` became `getTodayHeader` and moved into a section header.** The
+  12px sentence under the greeting is gone; the same fact is now the
+  `SectionHeader` above the Today card, so it inherits the shared 18px/600 and the
+  10px `gap-2.5`. Reads `Evening shift today`, `Event today`, or `No shift today`.
+- **The Today card lost its `TODAY` eyebrow and its `-mt-9`.** Ten pixels under a
+  section header saying the same thing read as the same label twice, and the
+  pull-up only existed to tuck the card under the old `pb-15`. `CoverageHero` lost
+  the same `-mt-9` on the coordinator side.
+- **The profile control draws a lucide `User` glyph, not initials**, and
+  `getInitials` left `Home.jsx` with it. The mockup round flagged the risk (a
+  generic glyph can read as an avatar that failed to load, since the greeting
+  names the reader right beside it). Swapping back to initials is one line.
+
+Files: `src/pages/Home.jsx`, `src/components/ui/home-header-actions.jsx` (now two
+presentational controls, `HomeProfileControl` + `HomeBellControl`),
+`src/tailwind.css`. Commit `7eda391`.
+
+**The white-on-gradient contrast defect recorded in the 2026-09-12 pass is closed
+by this change**, and not by a plate: the header text is no longer white.
 
 ## Bottom nav: wider tabs, a chip that clears its label, and a rail that reads on white (2026-09-17)
 
