@@ -2407,6 +2407,36 @@ inner padding of its own, so its icon tile sits flush with that card's left edge
 its rows carry `px-4` and its list container carries `bg-white py-1.5`. Worth aligning
 those when they are next touched. Out of scope here, and deliberately not changed.
 
+**Verified on live production, signed in, hash-matched (`index-C6PpTI4x.js`, the asset
+name a rebuild at `a5a41d1` produces), nurse `alex.ramirez@shiftko.test`, 390x844, on
+shift `b2bd38f3` (Tue Sep 22, evening, Unit 1), which has nobody else on it.** Both
+states measured at phone width, empty first and then with one coworker:
+
+| | no coworkers | one coworker |
+| --- | --- | --- |
+| children of the section | 2 | 2 |
+| header | `WORKING WITH` | `WORKING WITH` + `1 on this shift` |
+| card element | `div` | `ul` |
+| card class | the list's class string, `py-1.5` included | the same class string |
+| card box | 350x82 | 350x79 |
+| ground / edge / radius / shadow | `#ffffff` / `1px #e5e5ea` / 16px / `0 5px 15px rgba(53,87,97,.12)` | identical |
+| icon or avatar | 36x36 at left 17, top 23 | 36x36 at left 17, top 21.5 |
+| text left inset | 65 | 65 |
+| text | `No coworkers on this shift`, 15px/600 `rgb(29, 29, 31)` | `Ana Florendo`, 14px/600 |
+
+The first pass put the list's padding on the container itself (`px-4 py-3.5` on
+`SHIFT_LIST_CLASSNAME`) and measured 70px tall with the tile 17px down, 9px shorter than
+a one-coworker card and 4.5px above where an avatar sits. That is why it now uses the
+list's own class string, `py-1.5` included, with a row's padding on an inner div, which
+lands within 1.5px.
+
+**The non-empty branch needed a fixture, because no real shift in this data has a
+coworker.** One shift inserted for Ana Florendo (`a0e5aaca`) on Unit 1 overlapping Alex's
+window, `notes = 'verification fixture, removable'`, id
+`7765c3bb-dfa8-4425-bf2e-c81254b70cb8`, then deleted. Proof either side of the delete:
+leftover fixtures 0 before and 0 after, and the count the screen's own query reads went
+1 then 0, which is the pair of states above.
+
 ## Open product decisions (carried over from `HANDOFF.md`, still relevant)
 
 - ~~Section 0.3, Offer-shift: mockup's 4-screen stepper vs. the live 1-tap
