@@ -2244,72 +2244,40 @@ Files: `supabase/migrations/20260918015408_profile_avatar.sql`,
   `NavRow`**, because the mockup's header needs a trailing "Mark all read"
   action NavRow does not support, and NavRow is imported by 18 files.
 
-## Home greeting: Fraunces at ink (2026-09-18)
+## Home greeting: Fraunces at ink (2026-09-18, reverted the same session)
 
-The greeting line on Home is `font-display-title` at `text-ink` now, in
-`src/pages/Home.jsx`'s greeting row. It was the last heading on the page still set
-on the body stack, and the last one still in muted `ink-secondary`; the page titles
-(Schedule, Pool, Profile) already carried the display token. Same size (15px),
-weight (400) and tracking (`-0.01em`), only the family and the colour change, and
-the colour is the same `--color-ink` those titles use, so **no new token and no new
-CSS vocabulary**. That is visible in the build: the stylesheet hash is unchanged
-(`index-B3mGrJ_A.css`), because `.font-display-title` and `.text-ink` were both
-already in it, and only the JS asset moves.
+Built and reverted inside the same session. The greeting line went to
+`font-display-title` at `text-ink` in `src/pages/Home.jsx` (`6197c02`, verified live
+and hash-matched), and Jefle did not want Fraunces there: he looked at it and asked
+for the revert. Nothing about it failed on the numbers, so this is a taste call and
+**do not re-propose Fraunces for the greeting line.** The greeting is back at
+15px/400 `-0.15px` on the body stack in `ink-secondary` `#6e6e73`.
 
-**Contrast, computed.** The greeting at ink `#1d1d1f` on the page ground `#f9f9fb`
-is **16.01:1**, against the **4.82:1** the muted `#6e6e73` gave. Ink also passes on
-the teal gradient Home no longer paints, which is worth knowing if it ever comes
-back: 5.68:1 on the start `#0aa2cf` and 8.64:1 on the mid `#5dc7e6`. That is
-exactly what the white text it replaced could not do, and the reason the header
-rework of 2026-09-17 had to move off white at all: white measured 2.97:1 on the
-gradient start and 1.95:1 on the mid stop.
+**What it measured, for the record**, live and signed in as
+`alex.ramirez@shiftko.test` at 390x844 on `index-CsAk9aKd.js`: family `Fraunces`,
+15px, weight 400, colour `rgb(29, 29, 31)` (`--color-ink`), and
+`document.fonts.check('15px Fraunces')` true with the Fraunces 400 face reporting
+`loaded`. Both controls 36x36 with the greeting on the same line and 10px from the
+profile control, row box 72px, no truncation, no overflow. Ink on the page ground is
+16.01:1 against the 4.82:1 the muted grey gives, and ink would also pass on the teal
+gradient Home no longer paints (5.68:1 on `#0aa2cf`, 8.64:1 on `#5dc7e6`) where
+white could not (2.97:1, and 1.95:1 on the mid stop). Contrast was never the problem
+and is not why it went.
 
-**Verified on live production, signed in, hash-matched (`index-CsAk9aKd.js`, the
-same asset name a local rebuild at `6197c02` produces), nurse
-`alex.ramirez@shiftko.test`, 2026-09-18.** The greeting reads `Good morning, Alex`:
+**The knob is one class string.** `font-display-title` on the greeting's own `<p>`,
+plus `text-ink` for the colour; the revert removes both and puts `text-ink-secondary`
+back. No token, no new CSS and no geometry is involved either way, which is why the
+stylesheet hash (`index-B3mGrJ_A.css`) never moved across the attempt or the revert,
+only the JS asset did.
 
-- Computed `font-family` starts with `Fraunces`, `font-size` 15px, `font-weight` 400,
-  `letter-spacing` -0.15px. Family and colour only, exactly as intended.
-- `document.fonts.check('15px Fraunces')` is **true**, and the Fraunces 400 face in
-  `document.fonts` reports `loaded`, so this is the real face and not a fallback
-  that happens to be named first.
-- Computed colour **`rgb(29, 29, 31)`**, the `--color-ink` value (`#1d1d1f`).
-- Both controls 36x36, the greeting on the same 36px line and centred against them,
-  10px from the profile control. The row box is 72px (16 top + 36 control line + 20
-  bottom), unchanged. The greeting does not truncate at 390 (`scrollWidth` equals
-  `clientWidth`) and nothing overflows the viewport.
-- No gradient on the page: every ancestor's computed `background-image` is `none`,
-  the greeting element included.
-
-**The 24px gap in the brief is not this tree, and was not this tree before the
-change either.** Measured at 390x844: profile and bell bottom at y=60, section
-header top at y=80 (20px), header 27px tall, Today card top at y=117. So the
-controls sit **20px** above the section header and the card is a further 10px below
-that, 57px from the control line to the card, 37px from the row box's bottom edge to
-the card. Those are the same numbers as the 2026-09-17 entry above ("the control
-sits 20px above the section title, which sits 10px above the card"), which is the
-point: this change is two classes on a text node and it moved nothing. The 24px
-belonged to the superseded two-line row, where the greeting stack sat on its own
-line between the controls.
-
-**What the brief asked for that this tree is not.** The request described the
-greeting as white on the teal gradient, on a row sitting 24px above the Today card,
-with two lines to re-colour. That is the state at `12e5f55`/`647f6fa`, superseded
-on 2026-09-17 by the section above it in this file. Nothing was reverted or
-restored to match the brief:
-
-- Home still paints no gradient, on Jefle's own call of 2026-09-17, so the greeting
-  has no gradient to sit on and the contrast numbers above are against the page
-  ground.
-- The greeting is ONE line, because the two-line row collapsed to a single line in
-  the same rework. There is no separate name line to set in Fraunces, and one was
-  not reintroduced: it would have changed the row's height, and the brief asked for
-  the sizes and the geometry to be left alone.
-- The row is 36px against both controls and the gap to the Today card is the
-  section rhythm, 20px to the section header plus 10px to the card, not 24px. 24px
-  belonged to the superseded two-line row.
-- No plate, chip or scrim was added, which the brief rejected and this change never
-  needed.
+**The brief it came from described a superseded tree.** It called for the greeting in
+white on the teal gradient, as two lines, on a row 24px above the Today card. That is
+`12e5f55`/`647f6fa`, before the 2026-09-17 header rework documented in the section
+above. This tree has no gradient on Home at all, one greeting line rather than two,
+and 20px to the section header plus 10px to the Today card, so 57px from the control
+line to the card and 37px from the row box's bottom edge. Check a brief's named
+surfaces against the tree before implementing it; the numbers above are what the tree
+said, not what the brief said.
 
 ## Open product decisions (carried over from `HANDOFF.md`, still relevant)
 
