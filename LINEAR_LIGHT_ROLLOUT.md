@@ -1907,7 +1907,26 @@ it is not on the team schedule yet and an `Assigned` tag beside that line would
 contradict it.
 
 Files: `src/components/ui/hero-card.jsx`, `src/components/ui/period-tag.jsx`,
-`src/pages/ShiftDetail.jsx`, `src/pages/PersonalEventDetail.jsx`.
+`src/pages/ShiftDetail.jsx`, `src/pages/PersonalEventDetail.jsx`. Commit
+`91cbd42`.
+
+**Verified on live production, signed in, hash-matched (`index-Dacj88Cw.js`).**
+Nurse `alex.ramirez@shiftko.test`, reached from Home's My Upcoming row. The
+coworker card measures 408 wide, 16px radius, `1px #E5E5EA`, shadow
+`rgba(53,87,97,.12) 0 5px 15px`, 6px of its own padding, two 65px rows at
+`14px 16px` with a 12px gap, and the divider is a real 1px box at
+`margin-left: 16px`, 390 wide, flush with the card's right edge. The count's
+right edge lands exactly on the list's right edge. The hero's `Assigned` tag is
+`#F2F2F7` on `#6E6E73`, 11px/600, 17px in from the card's right edge (16px
+padding plus the 1px border). The no-tag case renders too: the same shift with
+no coworkers shows the empty state, no count, and no stray container.
+
+The list was only non-empty because of two fixture shifts (Derek Okafor and
+James Reyes, Unit 1, 09-22, `notes = 'verification fixture, removable'`); both
+were deleted straight after and the table is back to its exact prior state, 0
+leftovers. `PersonalEventDetail`'s `Also on <unit>` list was exercised the same
+way on a real personal event and measures the same 408 / 16px / 1px / same
+shadow, one row, no divider (correct for a single row).
 
 ## Decisions made / deviations worth knowing about
 
