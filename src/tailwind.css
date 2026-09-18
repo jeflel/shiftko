@@ -41,6 +41,10 @@
   --color-teal-wash: rgba(56, 189, 229, 0.1);
   --color-urgency-red: #d9291c;
   --color-chevron-muted: #c7c7cc;
+  /* Home's header controls (profile + bell) are a white fill, so this 1px edge is
+     the only thing that draws them. Not the hairline: #e5e5ea measures 1.19:1
+     against the page ground and reads as no control at all. #d8d8dd is 1.35:1. */
+  --color-control-edge: #d8d8dd;
   --color-selection-ink: #10222a;
 
   /* Colored period tags, from the Linear Light home-linear-light source
@@ -203,28 +207,6 @@ body {
 
 body {
   font-family: var(--font-sans);
-}
-
-/* 1px diagonal white gradient ring for the Home header's glass controls
-   (avatar + notification bell). Masked so only the 1px border shows on top
-   of the existing bg-white/20 fill without changing it. Home-only. */
-.home-glass-ring::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 9px;
-  padding: 1px;
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 1) 0%,
-    rgba(255, 255, 255, 0.25) 35%,
-    rgba(255, 255, 255, 0.25) 70%,
-    rgba(255, 255, 255, 1) 100%
-  );
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
 }
 
 /* The page now paints edge to edge under the status bar (viewport-fit=cover),

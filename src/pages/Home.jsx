@@ -24,7 +24,7 @@ import PersonalEventPanel from '@/components/PersonalEventPanel'
 import { ActivationBanner } from '@/components/ui/activation-banner'
 import { EmptyState } from '@/components/ui/empty-state'
 import { dismissActivation, fetchActivation } from '@/lib/activation'
-import { HomeHeaderActions } from '@/components/ui/home-header-actions'
+import { HomeBellControl, HomeProfileControl } from '@/components/ui/home-header-actions'
 import { fetchMyPersonalEvents } from '@/lib/personalEvents'
 import { Wordmark } from '@/components/ui/wordmark'
 import { PeriodTag } from '@/components/ui/period-tag'
@@ -119,11 +119,12 @@ function TodayHero({ todaysShift, todaysEvent, credential }) {
     : [todaysShift?.unit, credential].filter(Boolean).join(' · ')
 
   return (
-    <div className="-mt-9 flex flex-col gap-2.5 rounded-card bg-white p-4 shadow-card-lift">
-      <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold tracking-[0.05em] text-ink-secondary uppercase">
-          Today
-        </span>
+    <div className="flex flex-col gap-2.5 rounded-card bg-white p-4 shadow-card-lift">
+      {/* No uppercase TODAY eyebrow: since 2026-09-17 the section header above
+          the card says it ("Evening shift today"), and the two 10px apart read as
+          the same label twice. The pills keep the top row to themselves, right
+          aligned, so nothing below them moved. */}
+      <div className="flex items-center justify-end">
         <div className="flex min-w-0 items-center gap-[6px]">
           {titleLine && (
             <span className="inline-flex max-w-[180px] items-center truncate rounded-[8px] bg-press-state px-2 py-[3px] text-[11px] font-semibold text-ink-secondary">
@@ -483,18 +484,21 @@ function getGreeting() {
 // the greeting row is what the page gets read for first and the card below it is
 // where the detail lives. Sized to the controls beside it: 12px on one line.
 //
-// getShiftPeriod returns 'Day' / 'Evening' / 'Night' for the period tags, so it
-// is lowercased here and given its article, which is why an evening shift reads
-// "an evening shift" and the other two read "a day/night shift".
+// The section header above the Today card (2026-09-17). It replaced the 12px
+// sentence line that used to sit under the greeting: the same fact, promoted to
+// a real section header, so it gets SectionHeader's 18px/600 and the 10px gap
+// above the card that every other section already uses.
 //
-// A personal event gets the word event rather than shift: the app dropped the
-// Personal tag from its rows, but the panel behind it is still Add Personal
-// Event, so calling an event a shift here would be the only place that lies.
-function getHeaderLine(item, isShift) {
-  if (!item) return 'No shift today, enjoy the day off'
-  const period = getShiftPeriod(item.starts_at).toLowerCase()
-  const article = period === 'evening' ? 'an' : 'a'
-  return `You have ${article} ${period} ${isShift ? 'shift' : 'event'} today`
+// getShiftPeriod returns 'Day' / 'Evening' / 'Night', so an evening shift reads
+// "Evening shift today" with no lowercasing and no article to get wrong.
+//
+// A personal event says event rather than shift: the app dropped the Personal
+// tag from its rows, but the panel behind it is still Add Personal Event, so
+// calling an event a shift here would be the only place that lies.
+function getTodayHeader(item, isShift) {
+  if (!item) return 'No shift today'
+  const period = getShiftPeriod(item.starts_at)
+  return `${period} ${isShift ? 'shift' : 'event'} today`
 }
 
 function getSummaryRange() {
@@ -505,13 +509,6 @@ function getSummaryRange() {
   return { start, end }
 }
 
-function getInitials(fullName) {
-  if (!fullName) return null
-  const parts = fullName.trim().split(/\s+/)
-  const first = parts[0]?.[0] ?? ''
-  const last = parts.length > 1 ? parts[parts.length - 1][0] : ''
-  return (first + last).toUpperCase() || null
-}
 
 export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoToApprovals, onGoToPool, onGoToSchedule, onOpenProfile }) {
   const [fullName, setFullName] = useState(null)
@@ -808,7 +805,6 @@ export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoTo
 
   const today = new Date()
   const nurseFirstName = fullName?.trim().split(' ')[0] ?? null
-  const initials = getInitials(fullName)
   const todaysShift = shifts.find((shift) => isSameLocalDay(new Date(shift.starts_at), today))
   const todaysEvent =
     personalEvents
@@ -825,47 +821,35 @@ export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoTo
     ...upcomingPersonalEvents.map((event) => ({ kind: 'personal', item: event })),
   ].sort((a, b) => new Date(a.item.starts_at) - new Date(b.item.starts_at))
   const latestNotification = notifications.find((n) => !n.read) ?? notifications[0] ?? null
-  // Nurses only: the sentence is about the reader's own day, and the coordinator's
-  // body is a different screen where the greeting stands alone.
-  const headerLine = isCoordinator
+  // Nurses only: this names the reader's own day, and the coordinator's body is a
+  // different screen whose first section is the coverage card.
+  const todayHeader = isCoordinator
     ? null
-    : getHeaderLine(todaysShift ?? todaysEvent, Boolean(todaysShift))
+    : getTodayHeader(todaysShift ?? todaysEvent, Boolean(todaysShift))
+  const hasUnreadNotifications = notifications.some((notification) => !notification.read)
 
   return (
     <div className="flex min-h-screen w-full flex-col bg-page-ground">
       <main className="mx-auto flex w-full max-w-md flex-1 flex-col pb-12">
-        {/* The greeting row is the top row of the page now: the shared top bar
-            that used to sit above it is gone (2026-09-16), so the bell and the
-            avatar ride on the greeting's own line and nothing is pinned over the
-            hero. The 193px gradient is untouched, and the hero still carries the
-            horizontal padding (a background paints the padding box).
-            Since 2026-09-17 that line is a two-line stack (greeting + today's
-            sentence) centred against the two 36px controls, and the block's
-            pb-15 is what leaves 24px between the row and the Today card: the
-            card's -mt-9 measured from a 60px bottom pad puts its top edge 24px
-            under the row. */}
-        <div className="flex flex-1 flex-col px-5 pt-2 bg-gradient-to-b from-hero-gradient-start via-hero-gradient-mid via-70% to-hero-gradient-end bg-[length:100%_193px] bg-top bg-no-repeat">
-          <div className="flex flex-col gap-4 pt-4 pb-15">
-            <div className="flex items-center justify-between gap-3">
-              {/* Two stacked lines on the left, the two controls on the right, all
-                  on one row centred against their 36px. The stack measures 34.6px
-                  at 16px/1.1 plus 12px/1.25, so the row is exactly the height of
-                  the controls and nothing recomputes when the name is long. The
-                  greeting drops from the 20px it shipped at because 18px and up
-                  grows the row past the icons. pb-15 above is what puts this row
-                  24px above the Today card: the gap measures pb - 36. */}
-              <div className="flex min-w-0 flex-col gap-0.5 pl-1">
-                <p className="font-display-title truncate text-[16px] leading-[1.1] font-semibold tracking-[-0.03em] text-white">
-                  {getGreeting()}{nurseFirstName ? `, ${nurseFirstName}` : ''}
-                </p>
-                {headerLine && (
-                  <p className="truncate text-xs leading-[1.25] tracking-[-0.01em] text-white/90">
-                    {headerLine}
-                  </p>
-                )}
-              </div>
-              <HomeHeaderActions user={user} initials={initials} onOpenProfile={onOpenProfile} />
-            </div>
+        {/* No gradient and no bar on Home any more (2026-09-17, at Jefle's
+            request): the page ground runs to the top edge and this row is the
+            page's first line. The profile control sits on the left, the greeting
+            runs beside it in muted ink at 15px/400 (the lightest weight Geist
+            loads is 400), and the bell sits flush on the right gutter. pb-5 is
+            what leaves 20px between the row and the first section header, so the
+            top of the page keeps the same rhythm as the sections below it (the
+            sections container carries gap-5). Both controls are 36px, which is
+            what sets the row's height. */}
+        <div className="flex flex-1 flex-col px-5 pt-2">
+          <div className="flex items-center gap-2.5 pt-4 pb-5">
+            <HomeProfileControl onOpenProfile={onOpenProfile} />
+            <p className="min-w-0 flex-1 truncate text-[15px] tracking-[-0.01em] text-ink-secondary">
+              {getGreeting()}{nurseFirstName ? `, ${nurseFirstName}` : ''}
+            </p>
+            <HomeBellControl
+              hasUnread={hasUnreadNotifications}
+              onOpen={() => setShowNotifications(true)}
+            />
           </div>
 
           <div className="flex flex-1 flex-col gap-5 pt-0 pb-10">
@@ -882,7 +866,14 @@ export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoTo
 
             {!loading && !error && !isCoordinator && (
               <>
-                <TodayHero todaysShift={todaysShift} todaysEvent={todaysEvent} credential={credential} />
+                <section className="flex flex-col gap-2.5" data-testid="home-today">
+                  <SectionHeader title={todayHeader} />
+                  <TodayHero
+                    todaysShift={todaysShift}
+                    todaysEvent={todaysEvent}
+                    credential={credential}
+                  />
+                </section>
 
                 <QuickActionTiles
                   openCount={openCount}
@@ -1100,8 +1091,12 @@ function CoverageHero({ totalToday, staffedToday, gapsToday, nursesScheduled, un
   const hasGaps = gapsToday > 0
   const percent = totalToday > 0 ? Math.round((staffedToday / totalToday) * 100) : 100
 
+  // No -mt-9 any more: that pull-up existed to tuck this card under the header
+  // block's pb-15, and the header row now ends 20px above the sections container
+  // (pb-5), so keeping it would pull the card 16px over the row. The card keeps
+  // its own eyebrow: the coordinator has no section header above it.
   return (
-    <div className="-mt-9 flex flex-col gap-2.5 rounded-card border border-hairline bg-white p-4 shadow-card-lift">
+    <div className="flex flex-col gap-2.5 rounded-card border border-hairline bg-white p-4 shadow-card-lift">
       <div className="flex items-center justify-between">
         <span className="text-xs font-semibold tracking-[0.05em] text-ink-secondary uppercase">
           Today&rsquo;s coverage
