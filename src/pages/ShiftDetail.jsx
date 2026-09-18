@@ -26,6 +26,7 @@ export default function ShiftDetail({ shift, user, onBack }) {
   const [error, setError] = useState(null)
   const [credential, setCredential] = useState(null)
   const [role, setRole] = useState(null)
+  const [facilityName, setFacilityName] = useState(null)
   const [shiftState, setShiftState] = useState(null)
   const [hasPendingClaim, setHasPendingClaim] = useState(false)
   const [myClaim, setMyClaim] = useState(null)
@@ -44,13 +45,19 @@ export default function ShiftDetail({ shift, user, onBack }) {
     async function fetchCredential() {
       const { data } = await supabase
         .from('profiles')
-        .select('credential, role')
+        .select('credential, role, workspaces ( name )')
         .eq('id', user.id)
         .maybeSingle()
 
       if (!cancelled) {
         setCredential(data?.credential ?? null)
         setRole(data?.role ?? null)
+        // The workspace's display name, the "Burlingame SNF" Profile shows as both
+        // Facility and Workspace. It is what tells the reader whose schedule the
+        // shift sits on, so the card names it (2026-09-18). PostgREST may return the
+        // embed as an object or as a single-element array.
+        const workspace = Array.isArray(data?.workspaces) ? data.workspaces[0] : data?.workspaces
+        setFacilityName(workspace?.name ?? null)
       }
     }
 
@@ -312,6 +319,8 @@ export default function ShiftDetail({ shift, user, onBack }) {
           subline={isOpen ? `${shift.unit} · No nurse assigned yet` : isOffered ? `${shift.unit} · Offered by ${shift.profiles?.full_name ?? 'a nurse'}` : canConfirmForTeam ? `${shift.unit} · Not on the team schedule yet` : undefined}
           metaRight={heroTag ? <ShiftStatusTag status={heroTag.status} label={heroTag.label} /> : null}
           borderless
+          layout="detail"
+          facility={facilityName}
         />
 
         {/* The nurse's own two secondary actions sit here, right under the shift card

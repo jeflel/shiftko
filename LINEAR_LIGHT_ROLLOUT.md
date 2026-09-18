@@ -2606,6 +2606,39 @@ exactly where the empty state puts its label, so the section still reads as one 
 either way. Leftover fixtures 0 after the delete and the count the screen reads went back to
 0.
 
+## Shift Detail: the hero card gets room, a rule and the workspace (2026-09-18)
+
+"Update the layout of the shift detail screen shift card a little so it doesnt say Tuesday,
+September 22, 2026 in one line. lets be more generous with the card layout, maybe even add a
+divider to cleanly display the text info more and Also lets add the workspace of this shift
+like it should say burlingame shift so it sticks to the user that its a burlingame scheduled
+shift."
+
+`HeroCard` grows a `layout="detail"` structure that ShiftDetail opts into, plus a `facility`
+slot for the workspace name. The card was four lines in one block with the date sharing its
+row with the period tag, which is what made the top read as one crammed line:
+
+```
+BURLINGAME SNF            [Evening]
+Tuesday, September 22, 2026
+3:00 PM - 11:30 PM
+------------------------------------
+Unit 1 - CNA              [Assigned]
+```
+
+- The date gets a row of its own and the period tag moves up to sit opposite the workspace
+  name, so nothing shares a line with the date any more.
+- Generous: `py-[18px]` to `py-5` (20px) and the block gap from `gap-2` to `gap-2.5`, with
+  the rule dropped between the "when" block and the unit/status row.
+- The rule is `h-px bg-hairline`, the same one `ShiftListDivider` draws, not new vocabulary.
+- The workspace name is `workspaces.name` ("Burlingame SNF"), embedded in the profiles query
+  ShiftDetail already made for the credential, and set as an 11px/600 `0.03em` uppercase
+  eyebrow, the app's existing small-label style.
+
+`layout` and `facility` are separate knobs from `borderless` on purpose, so any one of them
+can be reverted on its own, and the default layout path is byte for byte what the other five
+hero-card screens render.
+
 ## Open product decisions (carried over from `HANDOFF.md`, still relevant)
 
 - ~~Section 0.3, Offer-shift: mockup's 4-screen stepper vs. the live 1-tap
