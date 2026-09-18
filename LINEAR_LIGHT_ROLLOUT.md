@@ -2639,6 +2639,24 @@ Unit 1 - CNA              [Assigned]
 can be reverted on its own, and the default layout path is byte for byte what the other five
 hero-card screens render.
 
+**Verified on live production, signed in as `alex.ramirez@shiftko.test`, hash-matched
+(`index-BavFR1cp.js`, the asset name a rebuild at `3f7b247` produces), at 390x844.** The card
+reads, top to bottom: `BURLINGAME SNF`, `Evening` (the tag, opposite it), `Tuesday,
+September 22, 2026`, `3:00 PM - 11:30 PM`, the rule, then `Unit 1 · CNA` with `Assigned`
+opposite. Measured: the card is 350 wide and **183px** tall against 138.5 before, padding
+`20px 16px`, block gap 10px, radius 16px, the card-lift shadow, and no border. The rule is at
+y=127.5, 1px, 318 wide and 16px in from the card's edge, with 10px above and below it. Inside
+the top block the gaps are 8px: the eyebrow row at y=20 (24.5 tall), the date at y=52.5
+(13px, `rgb(110, 110, 115)`), the time at y=80 (25px/600, `rgb(29, 29, 31)`), and the meta row
+at y=138.5. The workspace name renders 11px/600, `0.03em` tracking, uppercase, in
+`rgb(110, 110, 115)`, 16px from the card's left.
+
+**The other layout path was checked live too, on the `Offer This Shift` screen**, since five
+other screens render a hero card: its card still computes a `1px` border, `18px` vertical
+padding, an 8px gap, three lines with the date sharing its row with the period tag, and no
+rule. So `borderless`, `layout` and `facility` are independent, and the default path is
+untouched. The confirm screen was left without confirming, so no offer was written.
+
 ## Open product decisions (carried over from `HANDOFF.md`, still relevant)
 
 - ~~Section 0.3, Offer-shift: mockup's 4-screen stepper vs. the live 1-tap
