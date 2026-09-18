@@ -35,7 +35,12 @@ export function NavRow({ title, subtitle, onBack }) {
   return (
     <div
       className={cn(
-        'grid shrink-0 grid-cols-[auto_1fr_auto] items-center gap-2.5 px-5 pt-3',
+        // `content-center` is not decoration: the 34px back button is taller than
+        // the 28px content box left by `h-10` plus `pt-3`, so the grid's single row
+        // track is 34px and overflows it. Grid aligns an overflowing track to the
+        // content box's top by default, which put the button 3px lower than the flex
+        // row it replaced; centring the track restores its exact old y.
+        'grid shrink-0 grid-cols-[auto_1fr_auto] content-center items-center gap-2.5 px-5 pt-3',
         subtitle ? 'pb-2' : 'h-10',
       )}
     >
