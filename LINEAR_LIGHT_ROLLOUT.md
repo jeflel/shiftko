@@ -2279,6 +2279,34 @@ line to the card and 37px from the row box's bottom edge. Check a brief's named
 surfaces against the tree before implementing it; the numbers above are what the tree
 said, not what the brief said.
 
+## Home profile control: the edge floats off the face (2026-09-18)
+
+Jefle: "for the profile icon, can we add a floating gray border there, like a space
+before the border is placed." The control had a 1px `--color-control-edge` border
+painted on the rim of its 36px circle. It is now a 1px outline sitting 2px clear of
+that circle, so the page ground shows between the face and the line.
+
+**Nothing about the layout moves.** An outline is painted outside the box and takes
+no space, so the control is still 36x36, the row still carries a 36px content line,
+the greeting is still 10px away, and the 36px row / 57px to the Today card geometry
+below it is untouched. The outline's own edge reaches 3px outside the 36px box, well
+inside the row's 16px top and 20px bottom padding, so it cannot clip or crowd.
+
+**Why `outline-*` and not a `ring-*` with an offset.** A ring's offset band is painted
+in an opaque colour (`--tw-ring-offset-color`, white by default), so `ring-1
+ring-offset-2` puts a white disc behind the gap rather than letting the page ground
+show. An outline leaves the gap genuinely transparent. Both utilities in use,
+`.outline-1` and `.outline-offset-2`, compile to
+`outline-style: var(--tw-outline-style)` plus `outline-width: 1px`, and that
+variable's `@property` initial value is `solid`, so the line draws without needing an
+explicit `outline-solid`.
+
+**Two knobs, one class string:** `outline-offset-2` is the gap,
+`outline-control-edge` (`#d8d8dd`) is the colour, deliberately the same edge the bell
+beside it uses. That is the whole change, in the one `Avatar` call in
+`src/components/ui/home-header-actions.jsx`. The shared `Avatar` is used in exactly
+one other place, Profile's identity circle, which was left alone.
+
 ## Open product decisions (carried over from `HANDOFF.md`, still relevant)
 
 - ~~Section 0.3, Offer-shift: mockup's 4-screen stepper vs. the live 1-tap

@@ -14,10 +14,20 @@ import { Avatar } from '@/components/ui/avatar'
 // The profile control is a plain 36px circle instead (2026-09-18): it is the
 // nurse's own face or her initials, and a face inside a bordered square would
 // read as a photo in a frame rather than as her. It keeps the same 36px
-// footprint, so the greeting row's height and rhythm are unchanged, and it
-// inherits `--color-control-edge` as a soft edge for pale photos. This also
+// footprint, so the greeting row's height and rhythm are unchanged. This also
 // closes the old note that a generic lucide `User` glyph reads as an avatar that
 // failed to load.
+//
+// The control's edge FLOATS now (2026-09-18, his ask): a 1px
+// `--color-control-edge` ring sitting 2px clear of the face instead of a border
+// painted on its rim. Nothing about the layout moves: an outline is painted
+// outside the box and takes no space, so the control is still 36px, the row is
+// still 36px of content and the 10px gap to the greeting is unchanged. It is the
+// `outline-*` family rather than `ring-*` because a ring with an offset paints its
+// offset band in an opaque colour (`--tw-ring-offset-color`, white by default),
+// which would put a second disc behind the gap; an outline leaves the gap showing
+// the page ground. Both numbers are knobs on this one class string:
+// `outline-offset-2` sets the gap and `outline-control-edge` the colour.
 //
 // The bell no longer owns the notifications panel. It used to fetch its own
 // notifications and return the panel in place of itself, which worked while it
@@ -38,7 +48,7 @@ export function HomeProfileControl({ name, avatarUrl, onOpenProfile }) {
         name={name}
         src={avatarUrl}
         size="sm"
-        className="border border-control-edge"
+        className="outline-1 outline-offset-2 outline-control-edge"
       />
     </button>
   )
