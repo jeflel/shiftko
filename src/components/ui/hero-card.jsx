@@ -1,5 +1,5 @@
 import { PeriodTag } from '@/components/ui/period-tag'
-import { formatShiftDate, formatShiftTimeRange, getShiftPeriod } from '@/lib/shiftFormat'
+import { formatShiftDate, formatShiftDayShort, formatShiftTimeRange, getShiftPeriod } from '@/lib/shiftFormat'
 import { cn } from '@/lib/utils'
 
 // A status-detail screen's headline shift card (.hero-card in the Linear
@@ -24,19 +24,27 @@ import { cn } from '@/lib/utils'
 // further out on every edge.
 //
 // `layout="detail"` is the roomier structure ShiftDetail uses (2026-09-18, his
-// ask: "more generous... maybe even add a divider... and add the workspace").
-// It splits one block of four lines into two blocks with a rule between them:
+// ask: "more generous... maybe even add a divider... and add the workspace"). It
+// splits one block of four lines into two blocks with a rule between them:
 //
-//   BURLINGAME SNF            [Evening]     `facility`, the workspace name
-//   Tuesday, September 22, 2026             the date, on its own line
+//   Tue, Sep 22               [Evening]     the SHORT date + the period tag
 //   3:00 PM - 11:30 PM                      the headline, unchanged at 25px
 //   ------------------------------------
 //   Unit 1 - CNA              [Assigned]    the subline slot + `metaRight`
+//   BURLINGAME SNF                          `facility`, its own row, footer
 //
-// The date used to share its line with the period tag, which is what made the
-// top of the card read as one long crammed line. `facility` and `layout` are
-// separate knobs from `borderless` on purpose, so either can be reverted alone.
-// Omit `layout` and the card is the original three-line card, byte for byte.
+// The date is `formatShiftDayShort` ("Tue, Sep 22", the same form the Swap
+// cards already use) rather than the full "Tuesday, September 22, 2026", which
+// he called annoying for its length even after it got its own row. No year, the
+// way Home's upcoming rows and the notification lines already omit it. The
+// period tag sits opposite the short date, where it started, and `facility`
+// sits under the rule as a footer attribution rather than an eyebrow: he asked
+// for it in its own row in the bottom block, and there it reads as the source
+// of the shift.
+//
+// `facility` and `layout` are separate knobs from `borderless` on purpose, so
+// either can be reverted alone. Omit `layout` and the card is the original
+// three-line card, byte for byte.
 export function HeroCard({
   shift,
   credential,
@@ -66,17 +74,11 @@ export function HeroCard({
       <div className={cn(cardClass, 'gap-2.5 py-5')}>
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between gap-3">
-            {facility ? (
-              <span className="text-[11px] font-semibold tracking-[0.03em] text-ink-secondary uppercase">
-                {facility}
-              </span>
-            ) : (
-              <span />
-            )}
+            <span className="text-[13px] font-semibold text-ink-secondary">
+              {formatShiftDayShort(shift.starts_at)}
+            </span>
             {periodTag}
           </div>
-
-          <div className="text-[13px] text-ink-secondary">{formatShiftDate(shift.starts_at)}</div>
 
           <div className="text-[25px] font-semibold tracking-[-0.01em] text-ink">
             {formatShiftTimeRange(shift.starts_at, shift.ends_at)}
@@ -85,14 +87,22 @@ export function HeroCard({
 
         <div className="h-px bg-hairline" aria-hidden="true" />
 
-        {metaRight ? (
-          <div className="flex items-center justify-between gap-3">
-            <span className="min-w-0 text-[13px] text-ink-secondary">{sublineContent}</span>
-            {metaRight}
-          </div>
-        ) : (
-          <div className="text-[13px] text-ink-secondary">{sublineContent}</div>
-        )}
+        <div className="flex flex-col gap-2">
+          {metaRight ? (
+            <div className="flex items-center justify-between gap-3">
+              <span className="min-w-0 text-[13px] text-ink-secondary">{sublineContent}</span>
+              {metaRight}
+            </div>
+          ) : (
+            <div className="text-[13px] text-ink-secondary">{sublineContent}</div>
+          )}
+
+          {facility && (
+            <span className="text-[11px] font-semibold tracking-[0.03em] text-ink-secondary uppercase">
+              {facility}
+            </span>
+          )}
+        </div>
       </div>
     )
   }

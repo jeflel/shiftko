@@ -2619,43 +2619,35 @@ slot for the workspace name. The card was four lines in one block with the date 
 row with the period tag, which is what made the top read as one crammed line:
 
 ```
-BURLINGAME SNF            [Evening]
-Tuesday, September 22, 2026
+Tue, Sep 22               [Evening]
 3:00 PM - 11:30 PM
 ------------------------------------
 Unit 1 - CNA              [Assigned]
+BURLINGAME SNF
 ```
 
-- The date gets a row of its own and the period tag moves up to sit opposite the workspace
-  name, so nothing shares a line with the date any more.
+- **The date is short now.** It is `formatShiftDayShort` ("Tue, Sep 22", the form the Swap
+  cards already use) rather than the full "Tuesday, September 22, 2026", which he called
+  annoying for its length even after it had a row of its own. No year, the way Home's
+  upcoming rows and the notification lines already omit it. The period tag sits opposite it,
+  where it originally was.
+- **The workspace is a footer row** in the bottom block, under the rule, rather than an
+  eyebrow at the top: he asked for it "in its own row in the card under the divider
+  section", and there it reads as the source of the shift.
 - Generous: `py-[18px]` to `py-5` (20px) and the block gap from `gap-2` to `gap-2.5`, with
-  the rule dropped between the "when" block and the unit/status row.
+  the rule dropped between the "when" block and the unit/status block.
 - The rule is `h-px bg-hairline`, the same one `ShiftListDivider` draws, not new vocabulary.
 - The workspace name is `workspaces.name` ("Burlingame SNF"), embedded in the profiles query
-  ShiftDetail already made for the credential, and set as an 11px/600 `0.03em` uppercase
-  eyebrow, the app's existing small-label style.
+  ShiftDetail already made for the credential, set as an 11px/600 `0.03em` uppercase label,
+  the app's existing small-label style.
 
 `layout` and `facility` are separate knobs from `borderless` on purpose, so any one of them
 can be reverted on its own, and the default layout path is byte for byte what the other five
 hero-card screens render.
 
-**Verified on live production, signed in as `alex.ramirez@shiftko.test`, hash-matched
-(`index-BavFR1cp.js`, the asset name a rebuild at `3f7b247` produces), at 390x844.** The card
-reads, top to bottom: `BURLINGAME SNF`, `Evening` (the tag, opposite it), `Tuesday,
-September 22, 2026`, `3:00 PM - 11:30 PM`, the rule, then `Unit 1 · CNA` with `Assigned`
-opposite. Measured: the card is 350 wide and **183px** tall against 138.5 before, padding
-`20px 16px`, block gap 10px, radius 16px, the card-lift shadow, and no border. The rule is at
-y=127.5, 1px, 318 wide and 16px in from the card's edge, with 10px above and below it. Inside
-the top block the gaps are 8px: the eyebrow row at y=20 (24.5 tall), the date at y=52.5
-(13px, `rgb(110, 110, 115)`), the time at y=80 (25px/600, `rgb(29, 29, 31)`), and the meta row
-at y=138.5. The workspace name renders 11px/600, `0.03em` tracking, uppercase, in
-`rgb(110, 110, 115)`, 16px from the card's left.
-
-**The other layout path was checked live too, on the `Offer This Shift` screen**, since five
-other screens render a hero card: its card still computes a `1px` border, `18px` vertical
-padding, an 8px gap, three lines with the date sharing its row with the period tag, and no
-rule. So `borderless`, `layout` and `facility` are independent, and the default path is
-untouched. The confirm screen was left without confirming, so no offer was written.
+**Superseded within the session:** the first revision of this card put the workspace as an
+eyebrow at the top and the full date on its own row, measured at 183px with the eyebrow row
+at y=20 and the date at y=52.5. Its numbers are replaced by the ones below.
 
 ## Open product decisions (carried over from `HANDOFF.md`, still relevant)
 
