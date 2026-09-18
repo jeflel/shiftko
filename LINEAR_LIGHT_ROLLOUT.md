@@ -2326,6 +2326,29 @@ one token in `src/tailwind.css`. The bell beside it deliberately keeps
 and the shared `Avatar` is used in exactly one other place, Profile's identity circle,
 which was left alone.
 
+**Evidence, and the one gap on this entry.** Every value above is measured, not
+eyeballed, against the built stylesheet at 390x844: computed `outline-width: 1px`,
+`outline-style: solid`, `outline-color: rgb(161, 161, 166)`, `outline-offset: 2px`,
+and the card shadow present as the LAST layer of the computed `box-shadow`
+(`rgba(53, 87, 97, 0.12) 0px 5px 15px 0px`; do not truncate that value, Tailwind v4
+builds it as a five entry list where only the last entry is the real shadow). The
+pixels were scanned as well, at dpr 3: the line lands on exactly 3 device pixels of
+`#a1a1a6`, the gap between it and the disc is exactly 6 device pixels (2 CSS px) of
+ground, the disc is 36x36 at (20, 24), and the shadow darkens the ground to `#e9ecef`
+(1.13:1 against the untouched `#f9f9fb`) and is spent by about 17px below the line.
+The ring measures 2.45:1 on the open ground and 2.17:1 where the shadow has taken the
+ground under it.
+
+**This entry is NOT a live signed-in pass.** Production is green for `628f1b6`
+(Vercel, "Deployment has completed"), but from partway through this session
+shiftko.com served a `Vercel Security Checkpoint` to both curl and the automation
+browser ("Failed to verify your browser, Code 21"), so the signed-in visual check on
+the deployed build did not run. The measurements above are a local render against the
+built stylesheet from the deployed commit, which proves the CSS produces the intended
+values and nothing overflows; it does not prove the deployed screen looks right.
+Re-run the signed-in pass when the wall lifts (it was caused by curl polling the site
+during a deploy watch, so do not do that again) or check it on a phone.
+
 ## Open product decisions (carried over from `HANDOFF.md`, still relevant)
 
 - ~~Section 0.3, Offer-shift: mockup's 4-screen stepper vs. the live 1-tap
