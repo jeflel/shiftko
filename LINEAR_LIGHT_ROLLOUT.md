@@ -2542,6 +2542,22 @@ claim, withdraw and add-to-team are all inert for a nurse's own assigned shift.
 `Offer This Shift` with its confirmation copy. Both were left without confirming, so no
 offer and no swap request was written.
 
+**Shadows added the same session** ("lets add some shadows on them"): each button in that
+row now carries `shadow-card-lift`, the page's single shadow token, the same
+`0 5px 15px rgba(53,87,97,.12)` every card uses. `Button` has no shadow in any variant, so
+this is per-usage on those buttons rather than a variant change, and the token is the one
+knob if it reads heavy on a 50px button.
+
+**Verified on live production, signed in, hash-matched (`index-CNjXEhGe.js`).** Computed
+`box-shadow` last layer is `rgba(53, 87, 97, 0.12) 0px 5px 15px 0px` on both buttons, and
+read off the pixels at dpr 3: the ground 1px under the button is `#e7eaed`, 1.15:1 against
+the untouched `#f9f9fb`, spent about 20px below the button. The card above and the buttons
+now share the 20px gap between them, its darkest point `#ebedf0` at the card's own edge and
+its lightest `#f5f5f7`, so the two shadows meet in the middle of the gap instead of leaving
+a bright seam. Layout is untouched: the buttons are still 169x50 and 171x50 at y=212.5 with
+the same 20px below the card, and the stylesheet hash did not move because the utility was
+already in it.
+
 ## Open product decisions (carried over from `HANDOFF.md`, still relevant)
 
 - ~~Section 0.3, Offer-shift: mockup's 4-screen stepper vs. the live 1-tap
