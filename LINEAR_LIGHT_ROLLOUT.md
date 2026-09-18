@@ -2437,6 +2437,37 @@ window, `notes = 'verification fixture, removable'`, id
 leftover fixtures 0 before and 0 after, and the count the screen's own query reads went
 1 then 0, which is the pair of states above.
 
+## NavRow: the title is centred, for every pushed screen (2026-09-18)
+
+ShiftDetail now passes `title="Shift Detail"`. It and PersonalEventDetail were the only
+two of the 19 `NavRow` call sites with no title. The centring lives in `nav-row.jsx`
+rather than in ShiftDetail, so a screen cannot end up with a different header layout to
+its neighbours: the header is `grid-cols-[auto_1fr_auto]` with the title in the middle
+column. Two things in that grid are load bearing.
+
+- **The right column is an invisible 34px spacer, the back button's own box.** A `1fr`
+  middle column is centred inside its TRACK, not inside the header, so with an empty
+  right column the title lands half a back button to the RIGHT of centre. The spacer
+  makes the two `auto` columns equal, which is what puts the text's centre on the
+  header's centre. Measured off a Range box on the text itself: 0.00px off, at every
+  width from 320 to 430.
+- **The header keeps `h-10` and `pt-3` exactly as they were when there is no subtitle**,
+  so the back button keeps its 34x34 box at its old y and the 17 titled screens are
+  unchanged apart from the title moving to the centre.
+
+**The subtitle stacks under the title, centred.** Inline, the pair would be centred as a
+group, which pushes the title itself off centre by half the subtitle's width, about 42px
+for `· 2 pending`, and the title being centred is the point of this layout. That makes
+`CoordinatorApprovals` the one screen whose header grows, 40px to 65.5px, instead of
+overflowing a fixed 40px box. Its string still starts with the mockup's `· ` separator,
+which was written for inline placement; stacked, it reads as a stray dot, so dropping
+that one character from that one call site is a deliberate follow-up rather than
+something to change silently in this pass.
+
+`PersonalEventDetail` passes no title, so its middle column holds an empty span: the back
+button is unmoved and the header stays 40px, which is the check that the spacer costs
+nothing.
+
 ## Open product decisions (carried over from `HANDOFF.md`, still relevant)
 
 - ~~Section 0.3, Offer-shift: mockup's 4-screen stepper vs. the live 1-tap

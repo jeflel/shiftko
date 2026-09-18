@@ -303,7 +303,7 @@ export default function ShiftDetail({ shift, user, onBack }) {
 
   return (
     <div className="fixed inset-0 z-[100] mx-auto flex w-full max-w-md flex-col bg-page-ground">
-      <NavRow onBack={onBack} />
+      <NavRow title="Shift Detail" onBack={onBack} />
 
       <main className="flex flex-1 flex-col gap-5 overflow-y-auto px-5 pt-3 pb-6">
         <HeroCard
