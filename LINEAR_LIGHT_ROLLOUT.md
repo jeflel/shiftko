@@ -2920,6 +2920,59 @@ show/hide flip looks late in a scripted pass and is instant for a real user.
 **Files:** `src/pages/Schedule.jsx`. Commits `085f35d` (the pill), `e4dfd31` (the
 measured offset), `6be3e52` (size and clearance after Jefle looked at it live).
 
+## The teal fill is one colour app-wide (2026-09-18)
+
+Jefle: "change the blue buttons on the app to be that same color as the claim
+button on the pool page... anywhere where its blue". Every surface that was
+filled with `--color-teal-foreground` (`#0e7490`) now fills with
+`--color-teal-field` (`#0a5e73`), the colour Pool's claim button and Home's
+quick-action tiles already carried. 19 occurrences across 15 files: the `primary`
+and `default` button variants, the segmented control's active segment with its
+shadow retinted from `rgba(14,116,144,0.28)` to `rgba(10,94,115,0.28)` to match,
+the stepper's current node, the calendar strip's selected day, selection rows, the
+activation banner's current step and its 30% track, the sign-in button,
+Schedule's today circle, Post a Shift, Duplicate Week's two actions, Staff
+Roster's filter, the three onboarding option tiles, both Approve buttons, and the
+native checkbox accent.
+
+The pressed step became `--color-teal-field-hover` (`#084b5c`), which had been a
+literal in Home's tiles, Pool's claim button and the Today pill. It is a token
+now, so the next value is one line.
+
+**What did not change: teal as ink.** `text-teal-foreground` (View All, the active
+nav tab, notification actions, status chip labels), the tinted surfaces
+(`bg-teal-tint`, `--color-teal`) and the tint-plus-teal-border selection rows are
+not fills and keep their colour. Pool's claim button also dropped its
+now-redundant fill override, keeping only its touch press step, because the
+variant carries a hover and touch never fires it.
+
+This deviates from the artifact, whose `.btn-primary` is `#0E7490`
+(AddPersonalEventLinearLight.dc.html and the rest of the flow). It is Jefle's
+call, the same one as Pool's claim button, and it is recorded for that reason.
+
+**Verified on live production, signed in as `alex.ramirez@shiftko.test`,
+hash-matched (`index-D9FExv0N.js`, the asset name a rebuild at `c557c4c`
+produces), at 390x844:**
+
+| surface | measured fill |
+|---|---|
+| Shift Detail's Request swap | `rgb(10, 94, 115)` |
+| Schedule's active segment, My Shifts | `rgb(10, 94, 115)`, shadow retinted |
+| Pool's six claim buttons | `rgb(10, 94, 115)` |
+| Home's Add a Shift and Claim Shifts tiles | `rgb(10, 94, 115)`, unchanged |
+
+The remaining sites are the same two class names on screens this nurse session
+cannot open: Post a Shift's stepper and submit, Duplicate Week, Coordinator
+Manage, Coordinator Approvals, Staff Roster, the activation banner, the calendar
+strip, selection rows, and the three onboarding tiles, which are pre-auth. They
+are covered by the source sweep, zero `bg-teal-foreground` left in `src/`, and by
+the compiled CSS: `bg-teal-field`, `border-teal-field`, `bg-teal-field/30`,
+`accent-teal-field` and the `hover:`/`active:` `bg-teal-field-hover` are all
+generated, and the shipped bundle contains none of the old fill class. A
+coordinator-account pass would close them properly if that matters.
+
+**Files:** 18, `src/tailwind.css` plus 17 components and pages. Commit `c557c4c`.
+
 ## Open product decisions (carried over from `HANDOFF.md`, still relevant)
 
 - ~~Section 0.3, Offer-shift: mockup's 4-screen stepper vs. the live 1-tap
