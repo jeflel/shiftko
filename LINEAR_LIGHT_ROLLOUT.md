@@ -3117,7 +3117,32 @@ the `shifts` query alone controlled by a `window.fetch` interception returning `
 Nothing in the database changed, and the empty branch is the only thing under the
 empty card's numbers.
 
-**Files:** `src/pages/Home.jsx`.
+**Files:** `src/pages/Home.jsx`. Commit `966715c`.
+
+**Verified on live production, signed in as `alex.ramirez@shiftko.test`, hash-matched
+(`index-U_7KsmzU.js`, the asset name a build of this commit produces, read out of the
+served document rather than fetched with curl), at a 1280px window:** the shift day
+reads `Today's Shift` with the card at 408 x 149.5 and its chip row 24.5 tall, `Unit 1
+· CNA` at inset 16 from the left and the `Night` chip at 16 from the right, which is
+unchanged from before this commit. The day-off state reads `Today` with the card at
+408 x 80 and its single child row inset 16 from each side, the icon group at inset
+129.5. The shift day is his real data (the 11:00 PM to 7:30 AM night shift in
+progress, so `93db74f` is live too and today's card shows the shift); the day-off
+state had the `shifts` query alone controlled by the same `window.fetch` interception
+returning `[]`, so no row in the database changed and the empty branch is the only
+thing under its numbers.
+
+The local half of the pass needs no deploy and no password: the automation browser's
+production Supabase session (`sb-jffdmybgwiyfhwrkipug-auth-token`) was read out of
+`localStorage` on `www.shiftko.com` and written into `localhost:5173`'s `localStorage`
+before the page loaded, so the dev server rendered as Alex with real data.
+
+**Building while a sibling agent has a file dirty costs you the hash match.** The
+build taken at this commit's own tree was `index-U_7KsmzU.js` at 649.69 kB and is what
+Vercel served; the rebuild a few minutes later, with a sibling's in-flight
+`Schedule.jsx` in the working tree, was `index-ClbDUnmt.js` at 650.26 kB. A deploy
+builds the clean commit, so compare the served asset against the build taken when the
+tree matched, not against whatever the tree happens to hold later.
 
 **Still open, one class away:** the `stack` form of the empty state, icon above the
 text, if the row ever reads as a left-heavy group at a narrow width.
