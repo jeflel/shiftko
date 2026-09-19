@@ -121,24 +121,21 @@ function TodayHero({ todaysShift, todaysEvent, credential }) {
 
   return (
     <div className="flex flex-col gap-2.5 rounded-card bg-white p-4 shadow-card-lift">
-      {/* TODAY is back inside the card (2026-09-18, Jefle): the section header
-          above it now reads "Your shift", so the card carries the day and the
-          header carries nothing that is already here. This is the same span and
-          the same justify-between row commit 7eda391 removed when the header was
-          the thing saying "today"; the pills keep the right, so nothing below
-          them moved. */}
+      {/* The unit pill leads the top row and the period chip closes it
+          (2026-09-18, Jefle): the day moved back up into the section header
+          ("Today's Shift"), so the card opens with what the shift is rather than
+          carrying a TODAY eyebrow that repeats the header 10px above it. The unit
+          pill keeps its own class string, its 180px truncation cap and the 6px
+          cluster gap it had; only the row's two ends changed. */}
       <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold tracking-[0.05em] text-ink-secondary uppercase">
-          Today
-        </span>
         <div className="flex min-w-0 items-center gap-[6px]">
           {titleLine && (
             <span className="inline-flex max-w-[180px] items-center truncate rounded-[8px] bg-press-state px-2 py-[3px] text-[11px] font-semibold text-ink-secondary">
               {titleLine}
             </span>
           )}
-          {period && <PeriodTag period={period} />}
         </div>
+        {period && <PeriodTag period={period} />}
       </div>
 
       {item ? (
@@ -494,12 +491,11 @@ function getGreeting() {
 // a real section header, so it gets SectionHeader's 18px/600 and the 10px gap
 // above the card that every other section already uses.
 //
-// "Your evening shift" since 2026-09-18 (Jefle, from the header options round:
-// option B, addressed to the nurse). The card below carries the day in its own
-// TODAY eyebrow, so the header does not repeat the day; it does name the period,
-// which the card's own chip also names, and that overlap is the deliberate part
-// of this choice rather than an oversight. Option D, "Your shift", is the one
-// where nothing overlaps at all, and the round's file still holds it.
+// "Today's Shift" since 2026-09-18 (Jefle, third wording of the day). The header
+// owns the day again and the card no longer carries a TODAY eyebrow for it, so
+// the two say it once between them: the header names the day, and the card opens
+// with the unit pill and closes with the period chip, neither of which the header
+// repeats.
 //
 // A personal event says event rather than shift: the app dropped the Personal
 // tag from its rows, but the panel behind it is still Add Personal Event, so
@@ -509,8 +505,7 @@ function getGreeting() {
 // it is the one state the round left open.
 function getTodayHeader(item, isShift) {
   if (!item) return 'No shift today'
-  const period = getShiftPeriod(item.starts_at)
-  return `Your ${period.toLowerCase()} ${isShift ? 'shift' : 'event'}`
+  return isShift ? "Today's Shift" : "Today's Event"
 }
 
 function getSummaryRange() {
