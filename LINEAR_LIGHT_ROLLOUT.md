@@ -2741,6 +2741,44 @@ fill swap also lifts the label's contrast from 5.36:1 to 7.34:1.
 
 **Files:** `src/pages/Pool.jsx`. Commit `7f8831e`.
 
+## Pool: the row actions drop to the row's own size (2026-09-18)
+
+Both Pool row actions (Claim, Withdraw) carried the Button component's `sm`
+geometry, a 38px pill, with the component's base label, 15px at weight 600. The
+row title they sit beside is 13px at weight 500, so the action was the largest
+and heaviest thing in its own row: Jefle, "the buttons are too big... the text in
+them are so bold and big".
+
+Both now read one shared string, `ROW_ACTION_CLASSNAME = 'h-[34px] text-[13px]'`
+at the top of `Pool.jsx`, a 34px pill with a 13px label. That is the treatment
+the app's other compact in-row action already uses (StaffRoster's pill is
+`px-3.5 py-[7px] text-[13px] font-semibold`), and it puts the action level with
+the row title's own 13px instead of above it. It is a single knob, so the next
+value is a one-line change; the fill, the 9px radius and the 12px side padding
+are untouched, and 34px is the height the app's own nav and icon controls use, so
+the tap target stays a comfortable one.
+
+**Verified on live production, signed in as `alex.ramirez@shiftko.test`,
+hash-matched (`index-HmvRCM_w.js`, the asset name a rebuild at `15df81c`
+produces), at 390x844:**
+
+| | before | after |
+|---|---|---|
+| label | 15px, weight 600, tracking -0.15px | 13px, weight 600 |
+| pill height | 38px | 34px |
+| Claim button | 64.5 x 38 | 59.1 x 34 |
+| Withdraw button | 93.7 x 38 | 84.7 x 34 |
+| the row title beside it | 13px, weight 500 | unchanged |
+| row carrying Requested + Withdraw | 86, 2px taller than its neighbours | 84 |
+
+Every row is 84 with a 1px divider between them, so the card is 606 against 608:
+the row that stacks "Requested" over the Withdraw button used to exceed the info
+column's 56px and made the list uneven, and it no longer does. The fill is still
+`rgb(10, 94, 115)`, the radius is still 9px, and the enabled Claim button sits at
+the same y=324 as before, so nothing else in the row moved.
+
+**Files:** `src/pages/Pool.jsx`. Commit `15df81c`.
+
 ## Open product decisions (carried over from `HANDOFF.md`, still relevant)
 
 - ~~Section 0.3, Offer-shift: mockup's 4-screen stepper vs. the live 1-tap
