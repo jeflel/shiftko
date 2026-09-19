@@ -3298,6 +3298,54 @@ assigned screen has the swap/offer button row between the card and the section.
 and My Shifts' `schedule-my-personal-event-row`: same header, same hero, same empty card, and an
 `error`/`unhandledrejection` listener installed before the walk collected nothing.
 
+## Shift Detail: the workspace block moves in from Profile (2026-09-19)
+
+"i want that exact layout and design on the shift detail page, it should be whats under the shift
+card divider then the Unit 1, CNA can be on the right side instead."
+
+`facility` was a bare 11px/600 uppercase footer under the unit line. It is now Profile's own
+Workspace card (`Profile.jsx:382-393`), moved into the bottom block under the divider, with the
+subline slot and `metaRight` collapsed into ONE cluster on the right:
+
+```
+Tue, Sep 22               [Evening]
+3:00 PM - 11:30 PM
+------------------------------------
+[bldg] WORKSPACE          Unit 1 · CNA  [Assigned]
+       Burlingame SNF
+```
+
+- **Values copied, not restyled:** a 36px round `#F8F7F5` tile holding a `Building2` 16px glyph in
+  `#6B7280` at `strokeWidth 2`, then `WORKSPACE` at 11px/500 uppercase `#9CA3AF` `tracking-wide`
+  over the name at 14px/500 `#111111`, 12px gap. Those are the legacy ink values Profile still
+  carries, and they are deliberate here: the ask was for that exact block, so the hero card takes
+  its colours rather than translating them to the Linear Light tokens.
+- **His call on the status tag: it stays**, right of `Unit 1 · CNA` on the same row (the other two
+  options were dropping it or moving it up beside the period tag).
+- **Both detail screens get it**, since both opt into `layout="detail"`.
+- **`facility` stays the single knob.** With no workspace name the block falls back to the old
+  subline row (plus `metaRight` if there is one), so the four screens that never pass `facility`
+  are untouched and the detail screens do not flash an empty tile while the profiles query is in
+  flight.
+
+**Measured on the local build at 390x844, `alex.ramirez@shiftko.test`.** The block on Shift Detail
+and the same block on Profile are identical on every value that matters: 36px tile,
+`rgb(248,247,245)`, `border-radius: 33554428px` (rounded-full), a 16px glyph at `rgb(107,114,128)`
+with `stroke-width: 2`, 12px gap, label 11px/500 `rgb(156,163,175)` at `letter-spacing: 0.275px`
+uppercase, name 14px/500 `rgb(17,17,17)`. The only difference is 1px of x, because Profile's card
+carries the 1px hairline and the hero card is borderless.
+
+- Assigned shift: card 408 x **167.5** (from 180), the row `452,163.3` 376 x 36.5, the right
+  cluster `Unit 1 · CNA [Assigned]` 157.8 wide ending exactly on the content's right edge at 828.
+- Personal event: card 408 x **167.5** as well, so the two screens are now the SAME height, having
+  differed by 5px before. Right cluster is `Unit 1 · CNA` alone, ending on 828.
+- Workspace query controlled to return no name (`workspaces: null` on the profiles response, one
+  `window.fetch` interception, no rows touched): no tile, no empty block, card 408 x 150.5 with
+  the old `Unit 1 · CNA` row.
+
+Files: `src/components/ui/hero-card.jsx` only (the detail layout's bottom block, plus the
+`Building2` import), so no caller that omits `layout="detail"` can move.
+
 ## Open product decisions (carried over from `HANDOFF.md`, still relevant)
 
 - ~~Section 0.3, Offer-shift: mockup's 4-screen stepper vs. the live 1-tap
