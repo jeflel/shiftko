@@ -16,15 +16,18 @@ import { cn } from '@/lib/utils'
 //
 // `borderless` drops the 1px hairline so the card's lift shadow carries the
 // grouping on its own, the same choice `SHIFT_LIST_BORDERLESS_CLASSNAME` makes
-// for a list. ShiftDetail opts in (2026-09-18); the default keeps the outline,
-// so the five other callers (ClaimStatusDetail, OfferShiftConfirm,
-// OfferShiftStatus, OfferShiftUpdate, PersonalEventDetail) are unchanged. With
+// for a list. ShiftDetail opts in (2026-09-18) and PersonalEventDetail follows
+// (2026-09-19); the default keeps the outline, so the four other callers
+// (ClaimStatusDetail, OfferShiftConfirm, OfferShiftStatus, OfferShiftUpdate) are
+// unchanged. With
 // border-box sizing removing the border widens the padding box by 1px each
 // side, so the card's box loses 2px of height and its inner content sits 1px
 // further out on every edge.
 //
 // `layout="detail"` is the roomier structure ShiftDetail uses (2026-09-18, his
-// ask: "more generous... maybe even add a divider... and add the workspace"). It
+// ask: "more generous... maybe even add a divider... and add the workspace") and
+// PersonalEventDetail opts into (2026-09-19, so a personal event's detail screen
+// reads as the same screen as an assigned shift's). It
 // splits one block of four lines into two blocks with a rule between them:
 //
 //   Tue, Sep 22               [Evening]     the SHORT date + the period tag
@@ -44,7 +47,8 @@ import { cn } from '@/lib/utils'
 //
 // `facility` and `layout` are separate knobs from `borderless` on purpose, so
 // either can be reverted alone. Omit `layout` and the card is the original
-// three-line card, byte for byte.
+// three-line card, byte for byte, which is what the four screens still on the
+// default render.
 export function HeroCard({
   shift,
   credential,

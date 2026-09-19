@@ -3217,6 +3217,87 @@ card, which is what the design source's own Day off rows do (muted `#6E6E73` tex
 tile at all) if the grey disc ever reads as a second surface. A warm stone fill is the
 other direction, and it would need a new token.
 
+## A personal event's detail screen becomes the shift detail screen (2026-09-19)
+
+"why is the shift detail on the personal event shift detail page not the same as the assigned
+ones, it should at least show working with section, and the burlingame workspace."
+
+Both screens draw the same `HeroCard` and the same coworker vocabulary, and they still came out
+looking like two different products. Three causes, all of them "built before the other half
+existed":
+
+1. **The hero card was on the ORIGINAL layout path.** `PersonalEventDetail` passed no `layout`,
+   no `facility` and no `borderless`, and it was never moved when ShiftDetail's card grew all
+   three on 2026-09-18 (see "Shift Detail: the hero card gets room, a rule and the workspace").
+   Those knobs are opt-in on purpose, so the other hero-card callers stay byte-identical, and
+   this screen is one of the callers that opted out by simply not being updated. The screen was
+   written on 2026-09-15 (`88f9b26`), three days before the layout existed.
+2. **It never made the profiles query the workspace name comes from.** `facility` is
+   `workspaces.name`, set in ShiftDetail from a `profiles.select('credential, role, workspaces
+   ( name )')` call that lives in that file. The event screen had no such query, so it had
+   nothing to render even if it had passed `facility`.
+3. **The coworker block was a second hand-rolled implementation.** Heading `Also on <unit>`
+   instead of `Working with`, no count line, no loading row, no error row, the bordered
+   `SHIFT_LIST_CLASSNAME` instead of the borderless twin, and the whole `<section>` gated on
+   `coworkers.length > 0`, so with nobody else on the unit the section did not render at all.
+   That is the exact shape ShiftDetail's "Working with" had until it was fixed on 2026-09-18
+   ("the empty state ... gets the list's card"), and `EmptyState` was not even imported here.
+
+**The change** is one file plus a comment: `PersonalEventDetail.jsx` opts into
+`layout="detail" borderless facility={facilityName}` and passes `credential`, makes the same
+profiles query, and renders ShiftDetail's section verbatim (heading, count, loading row, error
+row, `EmptyState` row/neutral inside the borderless list card with `px-4 py-3.5` on a child,
+`ShiftListDivider inset={false}` between rows). `hero-card.jsx` changes by COMMENTS ONLY (the
+caller list drops to four); `git diff` filtered to non-comment lines is empty, so no other
+screen's card can move.
+
+**His two calls, both asked before building:**
+- **Header title is `Shift Detail`**, his words: "it should be Shift Detail since once they put
+  Unit 1 or any department, that means its a burlingame facility shift, same as any other shift."
+  The screen had a blank centred header before (NavRow with no title).
+- **An event with no department gets the same empty card, not no section.** A name-only event
+  has no shift to be "on", so it skips the coworker query entirely and renders the empty card.
+  Derived at render (`hasUnit`, `coworkerLoading`, `coworkerFailure`, `coworkerList`) rather than
+  reset by the effect, which is also what took `oxlint`'s `react(set-state-in-effect)` warning
+  off this file: HEAD carried one on the old unit-less early return, the new file carries none,
+  and the fetch is now an inner `async function` the way ShiftDetail's is.
+
+**Measured, local build (`localhost:5173`) at 390x844 with the production session copied in
+(`sb-jffdmybgwiyfhwrkipug-auth-token` read from the live tab and written to localhost's
+localStorage before the reload), signed in as `alex.ramirez@shiftko.test`.** Same event, same
+viewport, before and after: the live deployed screen rendered a 408 x 135.5 hero (18px/16px
+padding, 1px border, 8px gap), one block of three lines, full date `Friday, September 18, 2026`
+at y=73.5, `Unit 1` with no credential, no rule, and NO section at all. The local screen renders
+408 x 175 (20px/16px, no border, 10px gap), `Fri, Sep 18` at y=74.5, `11:00 PM – 7:30 AM` at
+y=104.5, the 1px rule at y=152 (376 wide, `rgb(229,229,234)`), `Unit 1 · CNA` at y=163 and
+`Burlingame SNF` as the 11px/600 uppercase footer at y=190.5.
+
+**The event screen now matches the assigned one line for line.** The assigned shift opened on
+the SAME build measures 408 x 180 with its rule at the same y=152 and the same 376 width,
+`Unit 1 · CNA` at y=165.5, workspace at y=195.5, and the same `Working with` card at 408 x 80
+(no border, 6px of own padding, a 68px row at `14px 16px`, the icon/avatar 16px in at x=452).
+The event's card is identical to the pixel; its hero is 5px shorter, which is exactly the height
+of the `Assigned` status tag the event screen has no state for, and it moves the two footer
+lines by 2.5px and 5px with it. The event's section heading sits 75px higher only because the
+assigned screen has the swap/offer button row between the card and the section.
+
+**Two branches production has no data for were reached with the ONE controlled query
+(`window.fetch` interception, not real rows) and are therefore not a live-data pass.**
+1. A coworker list: the query carrying `nurse_id=neq.` was answered with two rows. Card 408 x 143,
+   `2 on this shift`, two 65px rows at `14px 16px`, avatars at x=452/y=293.5 and x=452/y=359.5,
+   one `ShiftListDivider` at y=344, 392 wide, 16px inset. Those are the same numbers this file
+   records for ShiftDetail's populated list.
+2. A no-department event, by answering `personal_events` with a `unit: null` row: hero reads
+   `Sun, Sep 20` / `7:00 AM – 3:00 PM` / `Weekend job at Peninsula Landscaping · CNA` /
+   `BURLINGAME SNF`, the section renders the empty card at 408 x 80, and the coworker query
+   fired ZERO times (the interception logged no `nurse_id=neq.` call). The name falls back into
+   the subline because the panel clears `name` whenever a department is set, so only one of the
+   two is ever present.
+
+**Both entry points were walked on the local build**, Home's `home-upcoming-personal-event-row`
+and My Shifts' `schedule-my-personal-event-row`: same header, same hero, same empty card, and an
+`error`/`unhandledrejection` listener installed before the walk collected nothing.
+
 ## Open product decisions (carried over from `HANDOFF.md`, still relevant)
 
 - ~~Section 0.3, Offer-shift: mockup's 4-screen stepper vs. the live 1-tap
