@@ -61,6 +61,53 @@ export function isSameLocalDay(dateA, dateB) {
   return formatLocalDateKey(dateA) === formatLocalDateKey(dateB)
 }
 
+// A shift or personal event that has started and has not ended yet. An overnight
+// shift is the reason this exists: the Night preset runs 23:00 to 07:30 the next
+// morning, so it is still on after midnight while its starts_at is still on
+// yesterday's date.
+export function isInProgress(item, now = new Date()) {
+  const start = new Date(item.starts_at).getTime()
+  const end = new Date(item.ends_at).getTime()
+  const at = now.getTime()
+  return start <= at && at < end
+}
+
+// Day-ownership rule for a one-day view (2026-09-19). Every surface used to ask
+// "does this start today", so an overnight shift dropped out of today at 00:00
+// and Home showed "No shift today" with no progress bar while the nurse was
+// still working the shift. An item belongs to today when it STARTS today or when
+// it is still in progress from an earlier day. It keeps belonging to the day it
+// started as well, so it can appear on both.
+export function isOnDay(item, now = new Date()) {
+  return isInProgress(item, now) || isSameLocalDay(new Date(item.starts_at), now)
+}
+
+// The extra entries a day has to show on top of its own: items grouped under an
+// earlier start date that are still in progress. Excluding items whose start day
+// IS this day is what keeps a normal shift from being listed twice.
+export function carriedIntoDay(items, dayKey, now = new Date()) {
+  return items.filter(
+    (item) => isInProgress(item, now) && formatLocalDateKey(new Date(item.starts_at)) !== dayKey,
+  )
+}
+
+// Applies the carry above to one grouped-by-day map (the shape groupByDayKey
+// returns). The carried entry is merged into today's bucket and the bucket is
+// re-sorted by start time, so the day's own rows keep their order. Callers pass
+// the same items they grouped, and the map comes back untouched when nothing is
+// in progress, which is the usual case.
+export function withOvernightCarry(grouped, items, now = new Date()) {
+  const dayKey = formatLocalDateKey(now)
+  const carry = carriedIntoDay(items, dayKey, now)
+  if (carry.length === 0) return grouped
+
+  const next = { ...grouped }
+  next[dayKey] = [...(next[dayKey] ?? []), ...carry].sort(
+    (a, b) => new Date(a.starts_at) - new Date(b.starts_at),
+  )
+  return next
+}
+
 export function isWithinNextSevenDays(startsAt) {
   const shiftKey = formatLocalDateKey(new Date(startsAt))
   const todayKey = formatLocalDateKey(new Date())

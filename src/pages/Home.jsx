@@ -35,7 +35,8 @@ import {
   formatShiftDayShort,
   formatShiftTimeRange,
   getShiftPeriod,
-  isSameLocalDay,
+  isInProgress,
+  isOnDay,
   isWithinNextSevenDays,
 } from '../lib/shiftFormat'
 
@@ -551,13 +552,19 @@ export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoTo
       const shiftsQuery = isCoordinator
         ? (() => {
             const { start, end } = getSummaryRange()
+            // One day of slack at the bottom edge (2026-09-19): a night shift
+            // that started at 23:00 yesterday is still running and belongs to
+            // today's coverage, and no filter can bring back a row this query
+            // never fetched.
+            const queryStart = new Date(start)
+            queryStart.setDate(queryStart.getDate() - 1)
             return supabase
               .from('shifts')
               .select('id, unit, nurse_id, starts_at, ends_at, status')
               // Coverage is a picture of the team schedule, so a shift still
               // waiting on its nurse's confirmation does not count yet.
               .eq('team_confirmed', true)
-              .gte('starts_at', start.toISOString())
+              .gte('starts_at', queryStart.toISOString())
               .lt('starts_at', end.toISOString())
               .order('starts_at', { ascending: true })
           })()
@@ -816,16 +823,24 @@ export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoTo
 
   const today = new Date()
   const nurseFirstName = fullName?.trim().split(' ')[0] ?? null
-  const todaysShift = shifts.find((shift) => isSameLocalDay(new Date(shift.starts_at), today))
+  // isOnDay, not "starts today": an overnight shift that began at 23:00 is
+  // still today's shift after midnight, which is when this card used to lose
+  // it, and the progress bar with it (2026-09-19).
+  const todaysShift = shifts.find((shift) => isOnDay(shift, today))
   const todaysEvent =
     personalEvents
-      .filter((event) => isSameLocalDay(new Date(event.starts_at), today))
+      .filter((event) => isOnDay(event, today))
       .sort((a, b) => new Date(a.starts_at) - new Date(b.starts_at))[0] ?? null
+  // isWithinNextSevenDays still sets the seven day window, and isInProgress is
+  // the second way in: a shift already running has a start date behind today, so
+  // the window test alone would keep rejecting it.
   const upcomingShifts = shifts.filter(
-    (shift) => isWithinNextSevenDays(shift.starts_at) && shift.id !== todaysShift?.id,
+    (shift) =>
+      shift.id !== todaysShift?.id &&
+      (isWithinNextSevenDays(shift.starts_at) || isInProgress(shift, today)),
   )
-  const upcomingPersonalEvents = personalEvents.filter((event) =>
-    isWithinNextSevenDays(event.starts_at),
+  const upcomingPersonalEvents = personalEvents.filter(
+    (event) => isWithinNextSevenDays(event.starts_at) || isInProgress(event, today),
   )
   const upcomingItems = [
     ...upcomingShifts.map((shift) => ({ kind: 'shift', item: shift })),
@@ -1041,7 +1056,9 @@ export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoTo
 // the coordinator counterpart to the nurse TodayHero/QuickActionTiles/
 // WeeklyProgress stack above, sharing the same gradient header.
 function CoordinatorHomeContent({ shifts, today, pendingApprovalsCount, onGoToManage, onGoToPostShift, onGoToApprovals }) {
-  const todayShifts = shifts.filter((shift) => isSameLocalDay(new Date(shift.starts_at), today))
+  // isOnDay: a night shift still running from yesterday counts toward today's
+  // coverage until it ends at 07:30 (2026-09-19).
+  const todayShifts = shifts.filter((shift) => isOnDay(shift, today))
   const staffedTodayShifts = todayShifts.filter(
     (shift) => shift.status !== 'open' && shift.status !== 'pending',
   )

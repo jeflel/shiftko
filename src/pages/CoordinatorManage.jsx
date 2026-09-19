@@ -40,7 +40,10 @@ export default function CoordinatorManage({ onBack, onGoToPostShift, onGoToStaff
     const { data, error: fetchError } = await supabase
       .from('shifts')
       .select('id, unit, starts_at, ends_at, status, nurse_id, notes, profiles!nurse_id ( full_name )')
-      .gte('starts_at', new Date().toISOString())
+      // Not yet finished rather than not yet started (2026-09-19): an overnight
+      // shift that began at 23:00 is still upcoming at 00:30, and the old
+      // predicate dropped it out of this list the moment the date rolled over.
+      .gte('ends_at', new Date().toISOString())
       .order('starts_at', { ascending: true })
 
     if (fetchError) {

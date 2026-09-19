@@ -31,6 +31,7 @@ import {
   getShiftPeriod,
   getSundayWeekStart,
   groupByDayKey,
+  withOvernightCarry,
 } from '../lib/shiftFormat'
 
 const weekdayFormatter = new Intl.DateTimeFormat(undefined, { weekday: 'short' })
@@ -963,7 +964,14 @@ function MyShiftsTab({ user, contentView }) {
     ...shifts.map((shift) => ({ ...shift, _kind: 'shift' })),
     ...personalEvents.map((event) => ({ ...event, _kind: 'personal' })),
   ]
-  const combinedByDay = groupByDayKey(combinedItems, (item) => item.starts_at)
+  // withOvernightCarry: a night shift that started at 23:00 is still running
+  // after midnight, so it joins today's group instead of leaving today with
+  // nothing but its "Day off" row (2026-09-19). It stays on its start day too,
+  // so the same row can appear under both days.
+  const combinedByDay = withOvernightCarry(
+    groupByDayKey(combinedItems, (item) => item.starts_at),
+    combinedItems,
+  )
 
   const weekOffsets = []
   for (let offset = -MAX_WEEKS_BACK; offset <= MAX_WEEKS_FORWARD; offset += 1) {
@@ -1298,15 +1306,26 @@ function TeamScheduleTab({ user, onChangeView, contentView: contentViewProp }) {
     return () => { cancelled = true }
   }, [refreshKey])
 
-  const shiftsByDay = groupByDayKey(shifts, (shift) => shift.starts_at)
-  const personalEventsByDay = groupByDayKey(personalEvents, (event) => event.starts_at)
+  const shiftsByDay = withOvernightCarry(
+    groupByDayKey(shifts, (shift) => shift.starts_at),
+    shifts,
+  )
+  const personalEventsByDay = withOvernightCarry(
+    groupByDayKey(personalEvents, (event) => event.starts_at),
+    personalEvents,
+  )
   const days = getFourWeekDays()
 
   const combinedItems = [
     ...shifts.map((shift) => ({ ...shift, _kind: 'shift' })),
     ...personalEvents.map((event) => ({ ...event, _kind: 'personal' })),
   ]
-  const combinedByDay = groupByDayKey(combinedItems, (item) => item.starts_at)
+  // Same carrier as the list above, so a running overnight shift also puts a dot
+  // on today in the team month calendar (2026-09-19).
+  const combinedByDay = withOvernightCarry(
+    groupByDayKey(combinedItems, (item) => item.starts_at),
+    combinedItems,
+  )
   const selectedDayItems = combinedByDay[selectedCalendarDateKey] ?? []
 
   if (loading) return <p className="text-sm text-[#6B7280]">Loading team schedule…</p>
