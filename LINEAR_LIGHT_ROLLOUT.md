@@ -3011,12 +3011,13 @@ The eyebrow costs no height, which is what the options file predicted at its own
 137px: the row was already 24.5 tall for the pills, so the eyebrow's own 16px line
 sits inside it, and nothing below the top row moved by a pixel.
 
-**Still open: the no-shift day.** `getTodayHeader` returns "No shift today" for it,
-which now sits beside the same eyebrow, so that state says today twice. The round
+**Was still open: the no-shift day.** `getTodayHeader` returned "No shift today" for
+it, which sat beside the same eyebrow, so that state said today twice. The round
 offered two ways to close it, dropping the header in that state or shortening the
-card's own empty title to "No shift", and Jefle has not picked one. That state is
-also the one this pass could not exercise, since it needs a day with no shift and
-this account has one today.
+card's own empty title to "No shift", and Jefle picked neither wording: on
+2026-09-19 the header became "Today" and the card kept its own title, see the
+no-shift section below. That state is also the one this pass could not exercise,
+since it needs a day with no shift and this account has one today.
 
 **Superseded the same day: the header reads "Your evening shift".** Jefle picked
 option B from the round after seeing "Your shift" live, so `getTodayHeader`
@@ -3063,6 +3064,63 @@ produces), at 390x844:**
 
 **Files:** `src/pages/Home.jsx`. Commits `da2dda0` (the eyebrow and "Your shift"),
 `8d9a610` ("Your evening shift"), `81b7e26` (this arrangement).
+
+## Home: the no-shift card centres, and the header stops repeating it (2026-09-19)
+
+Jefle: "the design is lacking a bit, let's try centering the content inside the card
+and make it easy to look at. Also not sure why it says CNA in the top right corner,
+you dont have a shift."
+
+Three changes, all in `TodayHero` and `getTodayHeader`, one file:
+
+1. **The card's top row is skipped when there is no item.** The row is the shift's own
+   chrome, and its title line is built as `[todaysShift?.unit, credential]`, so with no
+   shift it degraded to the credential alone: an empty card opened with a bare `CNA`
+   chip 16px from its left edge (measured in the live DOM at 39.8 x 22.5,
+   `rgb(242, 242, 247)`, 11px/600, so top-LEFT rather than the top-right corner the ask
+   described) over otherwise empty space. `{item && (...)}` around the row is the whole
+   fix. The row is untouched for a shift day, where it still measures 24.5 tall with the
+   unit pill at inset 16 from the card's left and the period chip at inset 16 from its
+   right.
+2. **The empty state is centred.** `layout="row"` with `className="justify-center"`, so
+   the icon and its two lines sit as one group in the middle of the card (icon at inset
+   129.5 from the card's left, the text block's own right inset also 129.5, symmetric)
+   while the text stays left aligned inside itself. The compact row form is kept
+   deliberately: the centred `stack` form was tried on this card on 2026-09-15 and read
+   as an empty box with a hole in it. Centring in the row form costs no height.
+3. **The header reads "Today" on a no-shift day.** It had said "No shift today", word
+   for word the card's own title 10px below it, which is the wording the 2026-09-18
+   round left open. The header keeps owning the day, the card keeps owning the fact.
+
+**Measured at a 1280px window, where the card is 408 wide inside the app's `max-w-md`
+column:**
+
+| | before | after |
+|---|---|---|
+| section header | `No shift today` | `Today` |
+| `No shift today` occurrences in the section | 2 | **1** |
+| the credential chip | `CNA`, 39.8 x 22.5, inset 16 from the card's left | absent |
+| card | 408 x 112.5 | **408 x 80** |
+| the card's own children | 2 (chip row, empty state) | **1** (empty state) |
+| empty state row | `flex items-center gap-3 py-0.5`, icon at inset 16 | `flex items-center gap-3 py-0.5 justify-center`, icon at inset **129.5** |
+| title and subline | 15px/600 `rgb(29, 29, 31)`, 13px `rgb(110, 110, 115)` | unchanged |
+| shift-day card | 408 x 149.5 | **408 x 149.5** |
+
+The before column is the live production bundle. The after column is the local build
+at this commit, measured on a real signed-in session: the browser's production
+Supabase session was copied into `localhost:5173`, so Home rendered Alex Ramirez's
+real profile, real credential and real personal events. Both cards were measured in
+that one session, the shift day on his real data (an 11:00 PM to 7:30 AM night shift
+in progress, which commit `93db74f` now carries past midnight, so today's card shows
+the shift and its progress bar instead of the empty state) and the day-off state with
+the `shifts` query alone controlled by a `window.fetch` interception returning `[]`.
+Nothing in the database changed, and the empty branch is the only thing under the
+empty card's numbers.
+
+**Files:** `src/pages/Home.jsx`.
+
+**Still open, one class away:** the `stack` form of the empty state, icon above the
+text, if the row ever reads as a left-heavy group at a narrow width.
 
 ## Open product decisions (carried over from `HANDOFF.md`, still relevant)
 

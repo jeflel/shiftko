@@ -127,17 +127,24 @@ function TodayHero({ todaysShift, todaysEvent, credential }) {
           ("Today's Shift"), so the card opens with what the shift is rather than
           carrying a TODAY eyebrow that repeats the header 10px above it. The unit
           pill keeps its own class string, its 180px truncation cap and the 6px
-          cluster gap it had; only the row's two ends changed. */}
-      <div className="flex items-center justify-between">
-        <div className="flex min-w-0 items-center gap-[6px]">
-          {titleLine && (
-            <span className="inline-flex max-w-[180px] items-center truncate rounded-[8px] bg-press-state px-2 py-[3px] text-[11px] font-semibold text-ink-secondary">
-              {titleLine}
-            </span>
-          )}
+          cluster gap it had; only the row's two ends changed.
+
+          The whole row is skipped when there is no item (2026-09-19, Jefle). It
+          is the shift's own chrome, and with no shift the title line degrades to
+          the credential alone, so an empty card used to open with a stray "CNA"
+          chip 16px from its left edge over nothing. */}
+      {item && (
+        <div className="flex items-center justify-between">
+          <div className="flex min-w-0 items-center gap-[6px]">
+            {titleLine && (
+              <span className="inline-flex max-w-[180px] items-center truncate rounded-[8px] bg-press-state px-2 py-[3px] text-[11px] font-semibold text-ink-secondary">
+                {titleLine}
+              </span>
+            )}
+          </div>
+          {period && <PeriodTag period={period} />}
         </div>
-        {period && <PeriodTag period={period} />}
-      </div>
+      )}
 
       {item ? (
         <>
@@ -147,11 +154,17 @@ function TodayHero({ todaysShift, todaysEvent, credential }) {
           <ShiftProgress item={item} />
         </>
       ) : (
+        /* Centred (2026-09-19, Jefle). The icon and its two lines sit as one
+           group in the middle of the card instead of hugging its left edge, and
+           the compact row form is kept so centring costs no height: the card is
+           80px, against 112.5px while the stray credential chip row was above it.
+           The group's own text stays left aligned inside itself. */
         <EmptyState
           icon={MoonStar}
           title="No shift today"
           subline="Enjoy the day off"
           layout="row"
+          className="justify-center"
           tone="night"
         />
       )}
@@ -502,10 +515,12 @@ function getGreeting() {
 // tag from its rows, but the panel behind it is still Add Personal Event, so
 // calling an event a shift here would be the only place that lies.
 //
-// The no-shift day still says "No shift today" and still echoes the eyebrow, so
-// it is the one state the round left open.
+// The no-shift day says "Today" (2026-09-19, Jefle). It used to repeat the card's
+// own "No shift today" word for word, 10px above it, which was the one wording the
+// 2026-09-18 round left open. The header keeps owning the day and the card keeps
+// owning the fact, so the two now say it once between them.
 function getTodayHeader(item, isShift) {
-  if (!item) return 'No shift today'
+  if (!item) return 'Today'
   return isShift ? "Today's Shift" : "Today's Event"
 }
 
