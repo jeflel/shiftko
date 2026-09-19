@@ -1183,7 +1183,11 @@ function MyShiftsTab({ user, contentView }) {
 
                   if (item._kind === 'personal') {
                     rows.push({
-                      key: `personal-${item.id}`,
+                      // The day is part of the key because the carry puts the same
+                      // row in two day buckets and every bucket lands in one
+                      // children array: id alone made React report a duplicate key
+                      // for a carried row (2026-09-19).
+                      key: `${key}-personal-${item.id}`,
                       dayKey: key,
                       finished: isPast,
                       node: (
@@ -1198,7 +1202,7 @@ function MyShiftsTab({ user, contentView }) {
                     })
                   } else {
                     rows.push({
-                      key: item.id,
+                      key: `${key}-${item.id}`,
                       dayKey: key,
                       finished: isPast,
                       node: (
