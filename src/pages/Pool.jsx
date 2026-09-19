@@ -319,6 +319,13 @@ export default function Pool({ user, onGoToSchedule }) {
                           <Button
                             type="button"
                             size="sm"
+                            /* Home's quick-action tiles carry the deep teal
+                               (--color-teal-field) rather than the button
+                               variant's teal-foreground, so Pool's claim
+                               action matches them. The pressed step is the
+                               same #084b5c those tiles use, because the
+                               variant's own hover IS teal-field. */
+                            className="bg-teal-field hover:bg-[#084b5c] active:bg-[#084b5c]"
                             onClick={() => handleClaim(shift)}
                             disabled={isClaiming || isPastShift}
                             data-testid="pool-claim-shift"
