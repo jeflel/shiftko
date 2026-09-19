@@ -293,17 +293,24 @@ function MyPersonalEventRow({ event, isPast, onClick }) {
   )
 }
 
-// "SEP 7 - 13" per the design's section divider: the month the week starts in
-// plus the Sunday-to-Saturday day range, naming both months when the week
-// crosses a month boundary ("AUG 31 - SEP 6"). Replaced the old relative This
-// Week / Next Week / Last Week labels and then the "AUG WEEK 4" week-number
-// form, which did not say which dates the week covered.
+// "Sep 13 - 19": the month the week starts in plus the Sunday-to-Saturday day
+// range, naming both months when the week crosses a month boundary
+// ("Aug 31 - Sep 6"). Replaced the old relative This Week / Next Week / Last
+// Week labels and then the "AUG WEEK 4" week-number form, which did not say
+// which dates the week covered.
+//
+// Mixed case, 14px, weight 600, ink as of 2026-09-18 (Jefle: bigger text and a
+// dark font instead of "SEP 13-19" in muted grey). The design source's
+// .week-label is 12px/600 uppercase #6E6E73, so this is a deliberate departure
+// from the artifact: the label now carries the app's mixed-case title treatment
+// rather than the uppercase small-label one, which is why `.toUpperCase()` and
+// the `uppercase` class are both gone rather than just the class.
 function getWeekGroupLabel(weekStart) {
   const weekEnd = new Date(weekStart)
   weekEnd.setDate(weekStart.getDate() + 6)
 
-  const startMonth = monthFormatter.format(weekStart).toUpperCase()
-  const endMonth = monthFormatter.format(weekEnd).toUpperCase()
+  const startMonth = monthFormatter.format(weekStart)
+  const endMonth = monthFormatter.format(weekEnd)
   const start = `${startMonth} ${weekStart.getDate()}`
   const end = endMonth === startMonth ? `${weekEnd.getDate()}` : `${endMonth} ${weekEnd.getDate()}`
 
@@ -1041,7 +1048,7 @@ function MyShiftsTab({ user, contentView }) {
                       and never intercepts a tap. */}
                   <div className="sticky z-[5] -mx-5 bg-page-ground px-5" style={{ top: weekLabelTop }}>
                     <div className="flex items-center gap-2.5">
-                      <p className="text-[12px] font-medium tracking-wide text-ink-secondary uppercase">
+                      <p className="text-[14px] font-semibold tracking-[-0.01em] text-ink">
                         {getWeekGroupLabel(days[0])}
                       </p>
                       <div className="h-px flex-1 bg-hairline" aria-hidden="true" />
