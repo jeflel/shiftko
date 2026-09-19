@@ -11,8 +11,9 @@ const SHIFT_LIST_BASE =
 export const SHIFT_LIST_CLASSNAME = `${SHIFT_LIST_BASE} border border-hairline`
 
 // Same container without the hairline outline, for lists where the lift shadow
-// alone carries the grouping. Schedule's shift lists use this: the outline read
-// as a box drawn around the list on that page.
+// alone carries the grouping. Schedule's shift lists (2026-09-17) and Pool's
+// open-shifts list (2026-09-18) use this: on those pages the outline read as a
+// box drawn around the list. Shift Detail's two cards do the same.
 export const SHIFT_LIST_BORDERLESS_CLASSNAME = SHIFT_LIST_BASE
 
 // `.shift-row-divider`: the line between rows starts where the info column's

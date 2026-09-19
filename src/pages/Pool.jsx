@@ -5,7 +5,7 @@ import { createClaim, deleteClaim } from '../lib/claims'
 import { PeriodTag } from '@/components/ui/period-tag'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
-import { SHIFT_LIST_CLASSNAME, ShiftListDivider } from '@/components/ui/shift-list'
+import { SHIFT_LIST_BORDERLESS_CLASSNAME, ShiftListDivider } from '@/components/ui/shift-list'
 import ClaimStatusList from './ClaimStatusList'
 import ShiftDetail from './ShiftDetail'
 import { formatShiftTimeRange, getShiftPeriod } from '../lib/shiftFormat'
@@ -266,7 +266,7 @@ export default function Pool({ user, onGoToSchedule }) {
               tone="teal"
             />
           ) : (
-            <ul className={`${SHIFT_LIST_CLASSNAME} py-1.5`}>
+            <ul className={`${SHIFT_LIST_BORDERLESS_CLASSNAME} py-1.5`}>
               {shifts.map((shift, index) => {
                 const myClaim = claims.find((c) => c.shift_id === shift.id && c.nurse_id === user.id)
                 const claimCount = claims.filter((c) => c.shift_id === shift.id).length
