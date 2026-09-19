@@ -845,6 +845,25 @@ function scrollDayRowToCenter(dayKey) {
   return true
 }
 
+// The one-tap confirmation (2026-09-19, Jefle): after the jump, a faint gray wash
+// sweeps over the row so the eye lands on it. The class is removed on animationend
+// so the element carries no state between taps, and the class is pulled off before
+// it goes back on so a second tap replays the sweep instead of being swallowed as a
+// no-op (the reflow read is what forces that). Reduced motion skips the sweep
+// entirely rather than showing an instant gray frame, which is what the global
+// collapsed duration would give.
+function flashTodayRow(row) {
+  if (!row) return
+  if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return
+
+  row.classList.remove('today-row-flash')
+  void row.offsetWidth
+  row.addEventListener('animationend', () => row.classList.remove('today-row-flash'), {
+    once: true,
+  })
+  row.classList.add('today-row-flash')
+}
+
 // contentView (list/calendar) is owned by ScheduleTab and passed down, not
 // local state here — so the persistent header up there can drive it and the
 // loading/error returns below only ever replace this tab's own body, never
@@ -922,11 +941,17 @@ function MyShiftsTab({ user, contentView }) {
   }, [loading, contentView])
 
   function jumpToToday() {
+    const dayKey = formatLocalDateKey(new Date())
+
     // Falls back to the week label when today's row is not in the DOM, so the
-    // button can never be a no-op.
-    if (!scrollDayRowToCenter(formatLocalDateKey(new Date()))) {
+    // button can never be a no-op. No flash on that path: there is no row to
+    // mark, and the week label already reads as the answer.
+    if (!scrollDayRowToCenter(dayKey)) {
       scrollWeekMarkerUnderHeader(weekMarkerRefs.current[0])
+      return
     }
+
+    flashTodayRow(document.querySelector(`[data-day-key="${dayKey}"]`))
   }
 
   // The pill floats above the bottom nav, so its offset comes off that nav's own

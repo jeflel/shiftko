@@ -35,6 +35,14 @@
   --color-divider-finished: #d8d8dd;
   --color-track-neutral: #ededf2;
   --color-press-state: #f2f2f7;
+  /* The wash that sweeps over today's Schedule row when the Today pill is tapped
+     (2026-09-19). It is NOT --color-press-state: at #f2f2f7 that is 1.05:1 on the
+     white row and invisible at a glance, which defeats the point of a highlight
+     whose job is to be spotted. #e4e4ea is 1.30:1, visible as a band next to the
+     white rows around it while still sitting under the 14px ink meta line at
+     5.07:1, so it never competes with the text. One stop darker is
+     --color-divider-finished at 1.42:1. One value, tune here. */
+  --color-today-flash: #e4e4ea;
   --color-teal: #38bde5;
   --color-teal-foreground: #0e7490;
   --color-teal-foreground-hover: #0a5e73;
@@ -261,5 +269,41 @@ body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+}
+
+
+/* The Today pill's landing cue (2026-09-19, Jefle): after the jump, a faint gray
+   wash sweeps over today's row so the eye lands on it instead of hunting for it
+   among seven. One keyframe rather than a transition, so it cleans itself up with
+   no timer: the colour arrives in the first 15% and fades out over the rest, on
+   the motion scale's slowest step (350ms, MOTION.md's ceiling for a value
+   transition), with ease-out so the fade is decisive rather than hanging.
+   Schedule.jsx adds the class and drops it on animationend, which is what lets a
+   second tap replay the sweep.
+
+   Reduced motion gets NO sweep at all, not an instant gray block: the global rule
+   above collapses every duration to 0.01ms, which would leave the row flashing a
+   single grey frame and read as a glitch. Schedule.jsx checks the same media query
+   before adding the class, so this rule is the belt to that braces. */
+@keyframes today-row-flash {
+  0% {
+    background-color: transparent;
+  }
+  15% {
+    background-color: var(--color-today-flash);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+.today-row-flash {
+  animation: today-row-flash var(--motion-slow) ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .today-row-flash {
+    animation: none;
   }
 }
