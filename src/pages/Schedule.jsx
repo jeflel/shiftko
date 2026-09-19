@@ -811,6 +811,40 @@ function scrollWeekMarkerUnderHeader(marker) {
   scroller.scrollTop = targetTop - pinnedHeight
 }
 
+// The Today pill's target (2026-09-19, Jefle). It used to park the WEEK label
+// under the pinned header, and on a Saturday that leaves today's rows at the far
+// end of a seven row card, off screen, so the button did not visibly take you to
+// today. This centres today's own row in the band the user can actually see:
+// bounded by the pinned Schedule header above and the bottom nav below, both of
+// which overlap the scroller, so centring on the scroller itself would land the
+// row under one of them. The result is clamped to the scrollable range, which is
+// what keeps a Sunday (today at the top of the week) from asking for a negative
+// offset and a Saturday from scrolling past the last week.
+function scrollDayRowToCenter(dayKey) {
+  const row = document.querySelector(`[data-day-key="${dayKey}"]`)
+  if (!row) return false
+
+  const scroller = row.closest('.app-content')
+  if (!scroller) {
+    row.scrollIntoView({ block: 'center' })
+    return true
+  }
+
+  const scrollerRect = scroller.getBoundingClientRect()
+  const rowRect = row.getBoundingClientRect()
+  const pinnedHeader = document.querySelector('[data-testid="schedule-sticky-header"]')
+  const nav = document.querySelector('nav[aria-label="Main navigation"]')
+  const topBound = pinnedHeader ? pinnedHeader.getBoundingClientRect().bottom - scrollerRect.top : 0
+  const bottomBound = nav ? nav.getBoundingClientRect().top - scrollerRect.top : scrollerRect.height
+  const band = Math.max(0, bottomBound - topBound)
+  const rowTop = rowRect.top - scrollerRect.top + scroller.scrollTop
+  const target = rowTop - topBound - (band - rowRect.height) / 2
+  const maxScroll = scroller.scrollHeight - scroller.clientHeight
+
+  scroller.scrollTop = Math.max(0, Math.min(target, maxScroll))
+  return true
+}
+
 // contentView (list/calendar) is owned by ScheduleTab and passed down, not
 // local state here — so the persistent header up there can drive it and the
 // loading/error returns below only ever replace this tab's own body, never
@@ -865,9 +899,15 @@ function MyShiftsTab({ user, contentView }) {
   }, [])
 
   useEffect(() => {
-    // Only the list view has week markers. The calendar renders none, so there is
-    // no target to watch there and the pill stays out of the way.
-    const marker = contentView === 'list' ? weekMarkerRefs.current[0] : null
+    // Today's own row is what decides whether the pill is worth showing: the pill
+    // says Today and its target is now that row, so watching the week container
+    // would leave it up after a tap had already centred today (2026-09-19). Only
+    // the list view has day rows, and the calendar has none to watch, so the pill
+    // stays out of the way there.
+    const marker =
+      contentView === 'list'
+        ? document.querySelector(`[data-day-key="${formatLocalDateKey(new Date())}"]`)
+        : null
     if (!marker) {
       setShowTodayJump(false)
       return
@@ -882,7 +922,11 @@ function MyShiftsTab({ user, contentView }) {
   }, [loading, contentView])
 
   function jumpToToday() {
-    scrollWeekMarkerUnderHeader(weekMarkerRefs.current[0])
+    // Falls back to the week label when today's row is not in the DOM, so the
+    // button can never be a no-op.
+    if (!scrollDayRowToCenter(formatLocalDateKey(new Date()))) {
+      scrollWeekMarkerUnderHeader(weekMarkerRefs.current[0])
+    }
   }
 
   // The pill floats above the bottom nav, so its offset comes off that nav's own
@@ -1096,7 +1140,7 @@ function MyShiftsTab({ user, contentView }) {
                 const dayItems = combinedByDay[key] ?? []
 
                 if (dayItems.length === 0) {
-                  rows.push({ key, node: <MyDayOffRow date={date} />, finished: false })
+                  rows.push({ key, dayKey: key, node: <MyDayOffRow date={date} />, finished: false })
                   return
                 }
 
@@ -1115,6 +1159,7 @@ function MyShiftsTab({ user, contentView }) {
                   if (item._kind === 'personal') {
                     rows.push({
                       key: `personal-${item.id}`,
+                      dayKey: key,
                       finished: isPast,
                       node: (
                         <MyPersonalEventRow
@@ -1129,6 +1174,7 @@ function MyShiftsTab({ user, contentView }) {
                   } else {
                     rows.push({
                       key: item.id,
+                      dayKey: key,
                       finished: isPast,
                       node: (
                         <MyShiftRow
@@ -1180,7 +1226,7 @@ function MyShiftsTab({ user, contentView }) {
                       const betweenFinished = row.finished && rows[index + 1]?.finished === true
 
                       return (
-                        <li key={row.key}>
+                        <li key={row.key} data-day-key={row.dayKey}>
                           {row.node}
                           {index < rows.length - 1 && (
                             <ShiftListDivider tone={betweenFinished ? 'finished' : 'default'} />
@@ -1194,7 +1240,7 @@ function MyShiftsTab({ user, contentView }) {
             })}
           </div>
 
-          {/* Returns to today's week once it has scrolled out of view. Fixed above
+          {/* Centres today's row once it has scrolled out of view. Fixed above
               the bottom nav, so it adds nothing to the scrolling surface and takes
               no part in the list's layout. Opacity and an 8px translate only, on
               the motion scale's Base duration with ease-out, plus the authored
