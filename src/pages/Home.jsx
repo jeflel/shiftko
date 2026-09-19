@@ -154,18 +154,25 @@ function TodayHero({ todaysShift, todaysEvent, credential }) {
           <ShiftProgress item={item} />
         </>
       ) : (
-        /* Centred (2026-09-19, Jefle). The icon and its two lines sit as one
-           group in the middle of the card instead of hugging its left edge, and
-           the compact row form is kept so centring costs no height: the card is
-           80px, against 112.5px while the stray credential chip row was above it.
-           The group's own text stays left aligned inside itself. */
+        /* Centred layout, and a neutral tile (2026-09-19, Jefle's second pass on
+           this card). The row form with justify-center only moved the group
+           sideways: its text stayed left aligned inside itself, so the card did
+           not read as centred. The stack form centres the icon, the title and the
+           subline as one column, text-centre and all, and size="inline" keeps the
+           card from ballooning the way the size="section" stack does.
+           The tile is neutral grey rather than the night tint it shipped with this
+           morning: that purple is the Night period chip's own colour, so an empty
+           card carried a tile that read as a night shift. Teal is not the
+           alternative because it is the app's most used accent, and the other
+           period tints all have the same problem as the night one. `neutral` is
+           EmptyState's own quiet tile and eight other screens already use it. */
         <EmptyState
           icon={MoonStar}
           title="No shift today"
           subline="Enjoy the day off"
-          layout="row"
-          className="justify-center"
-          tone="night"
+          layout="stack"
+          size="inline"
+          tone="neutral"
         />
       )}
     </div>

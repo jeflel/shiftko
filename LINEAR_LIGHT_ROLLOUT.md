@@ -3144,8 +3144,40 @@ Vercel served; the rebuild a few minutes later, with a sibling's in-flight
 builds the clean commit, so compare the served asset against the build taken when the
 tree matched, not against whatever the tree happens to hold later.
 
-**Still open, one class away:** the `stack` form of the empty state, icon above the
-text, if the row ever reads as a left-heavy group at a narrow width.
+**Superseded in the same session: the stack form, and a neutral tile.** Jefle: "i
+meant cente the layout, not just move it in the center. Also the purple is kind of
+similar to night shift pill, which is easy to mistake. Also no light teal blue, it
+feels so overused." Both readings were right. The row form with `justify-center` only
+moved the group sideways, because its text stayed left aligned inside itself, so the
+card never read as centred; and the tile was `tone="night"`, which is the Night period
+chip's own pair, so an empty card carried a tile that read as a night shift.
+
+The empty state is now `layout="stack" size="inline" tone="neutral"`: the icon, the
+title and the subline centre as one column with `text-center` on the wrapper.
+`size="inline"` is what keeps it from ballooning, since the `size="section"` stack is
+what made this card 189px on 2026-09-15. Teal is not the substitute because it is the
+app's most used accent, and the other period tints (day amber, evening green, personal
+blue) have exactly the night tile's problem, so `neutral` is the only fill in the
+vocabulary that cannot be mistaken for a period. It is also the quiet tile eight other
+screens already use, so the change introduces nothing new. Nothing else moved: the
+header still reads "Today" and the card still skips its own top row.
+
+**Measured on the local build, same 1280px window, day-off state with the `shifts`
+query controlled:**
+
+| | first pass | shipping |
+|---|---|---|
+| card | 408 x 80 | **408 x 162.5** |
+| empty state | `flex items-center gap-3 py-0.5 justify-center`, text left aligned inside | `flex flex-col items-center text-center gap-2 py-5`, text centred |
+| icon tile | 36px, `bg-period-night-bg` `rgb(245, 223, 250)`, glyph `rgb(81, 50, 174)` | 40px, `bg-track-neutral` `rgb(237, 237, 242)`, glyph `rgb(110, 110, 115)` at 4.35:1 on its own tile |
+| icon inset from the card's left | 129.5 | **184**, and 184 from the right |
+| title | 15px/600, left aligned | 14px/600, centred |
+| subline | 13px, left aligned | 13px, centred |
+
+**Still open, one prop away:** with the tile gone the glyph sits straight on the white
+card, which is what the design source's own Day off rows do (muted `#6E6E73` text, no
+tile at all) if the grey disc ever reads as a second surface. A warm stone fill is the
+other direction, and it would need a new token.
 
 ## Open product decisions (carried over from `HANDOFF.md`, still relevant)
 
