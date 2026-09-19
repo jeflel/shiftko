@@ -3346,6 +3346,40 @@ carries the 1px hairline and the hero card is borderless.
 Files: `src/components/ui/hero-card.jsx` only (the detail layout's bottom block, plus the
 `Building2` import), so no caller that omits `layout="detail"` can move.
 
+## Shift Detail: the state pill moves up beside the period pill (2026-09-19)
+
+"wow its so crowded under the divider, can we put the Assigned pill, next to the shift pill rn,
+where it says evening."
+
+`metaRight` moved out of the bottom block and into the top row's right cluster, so the pills read as
+one pair and the bottom block carries only the workspace and the unit line:
+
+```
+Tue, Sep 22     [Evening] [Assigned]
+3:00 PM - 11:30 PM
+------------------------------------
+[bldg] WORKSPACE   Unit 1 · CNA
+       Burlingame SNF
+```
+
+- The two pills sit **8px apart** (`gap-2`, the app's own gap between adjacent tags). Measured:
+  `Evening` at x=669.2 (71.9 wide), `Assigned` at x=749.1 (78.9 wide), ending exactly on the
+  content's right edge at 828, the same edge the unit line and the workspace block use.
+- **The card got no taller.** It stays 408 x 167.5, because the top row already carried the period
+  tag and was already 24.5px tall; adding the second tag fills the row it was sitting in.
+- **It stays in the top row in the no-`facility` fallback too**, so the pill cannot hop rows while
+  the workspace query resolves. That fallback measures 408 x 150.5 with the unit line alone under
+  the rule.
+- **A duplicate render came out of measuring the fallback, not out of reading the diff.** Leaving
+  the bottom block's old `metaRight` branch in drew `Assigned` TWICE while the workspace query was
+  in flight (once at y=72 with the period tag, once at y=163 where it used to live), and the branch
+  is gone now. Both states were then re-measured with a count of the rendered `Assigned` spans:
+  `1` in each.
+- Files: `src/components/ui/hero-card.jsx` only, so the four screens that never pass
+  `layout="detail"` are untouched. Verified on the local build with the production session, on the
+  assigned shift and on the personal event (whose bottom row is workspace plus `Unit 1 · CNA`, no
+  tag to move).
+
 ## Open product decisions (carried over from `HANDOFF.md`, still relevant)
 
 - ~~Section 0.3, Offer-shift: mockup's 4-screen stepper vs. the live 1-tap

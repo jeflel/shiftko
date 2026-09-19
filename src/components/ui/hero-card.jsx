@@ -31,10 +31,10 @@ import { cn } from '@/lib/utils'
 // reads as the same screen as an assigned shift's). It
 // splits one block of four lines into two blocks with a rule between them:
 //
-//   Tue, Sep 22               [Evening]     the SHORT date + the period tag
-//   3:00 PM - 11:30 PM                      the headline, unchanged at 25px
+//   Tue, Sep 22     [Evening] [Assigned]     the SHORT date, the period tag, `metaRight`
+//   3:00 PM - 11:30 PM                       the headline, unchanged at 25px
 //   ------------------------------------
-//   [bldg] WORKSPACE          Unit 1 - CNA  [Assigned]
+//   [bldg] WORKSPACE   Unit 1 - CNA          the subline slot, right aligned
 //          Burlingame SNF
 //
 // The date is `formatShiftDayShort` ("Tue, Sep 22", the same form the Swap
@@ -50,11 +50,20 @@ import { cn } from '@/lib/utils'
 // footer with the unit line above it; it is now the same block Profile.jsx
 // renders, values copied rather than restyled: a 36px round `#F8F7F5` tile with
 // a `Building2` 16px glyph in `#6B7280`, `WORKSPACE` at 11px/500 uppercase
-// `#9CA3AF`, and the name at 14px/500 `#111111`. The subline slot and
-// `metaRight` become one cluster on the RIGHT of that row, which is where the
-// unit/credential line used to sit on the left. With no `facility` the block
-// falls back to the old subline row, so a caller whose workspace query has not
-// resolved (or the four screens that never pass one) renders as before.
+// `#9CA3AF`, and the name at 14px/500 `#111111`. The subline slot sits on the
+// RIGHT of that row, which is where the unit/credential line used to be on the
+// left. With no `facility` the block falls back to the old subline row, so a
+// caller whose workspace query has not resolved (or the four screens that never
+// pass one) renders as before.
+//
+// **`metaRight` lives in the TOP row now, beside the period tag**, because the
+// bottom block read as crowded with two tags and a workspace in it (same day:
+// "its so crowded under the divider, can we put the Assigned pill, next to the
+// shift pill rn, where it says evening"). It keeps its place in the no-`facility`
+// fallback too, so the pill cannot hop rows mid-load, and the bottom block no
+// longer renders it at all: leaving the old branch in drew the tag TWICE while
+// the workspace query was in flight, which only showed up because the fallback
+// was measured rather than assumed.
 //
 // `facility` and `layout` are separate knobs from `borderless` on purpose, so
 // either can be reverted alone. Omit `layout` and the card is the original
@@ -92,7 +101,19 @@ export function HeroCard({
             <span className="text-[13px] font-semibold text-ink-secondary">
               {formatShiftDayShort(shift.starts_at)}
             </span>
-            {periodTag}
+
+            {/* The period tag and the state tag sit together on the right of the short
+                date (2026-09-19). His ask: "its so crowded under the divider, can we put
+                the Assigned pill, next to the shift pill rn, where it says evening". So
+                `metaRight` moved OUT of the bottom block, which now carries only the
+                workspace and the unit line, and joined the period tag it belongs beside:
+                one pair of pills, one row. 8px apart, the app's own gap between two
+                adjacent tags. It stays here in the no-`facility` fallback too, so the
+                pill cannot jump rows when the workspace query resolves. */}
+            <div className="flex shrink-0 items-center gap-2">
+              {periodTag}
+              {metaRight}
+            </div>
           </div>
 
           <div className="text-[25px] font-semibold tracking-[-0.01em] text-ink">
@@ -110,8 +131,7 @@ export function HeroCard({
             // CNA can be on the right side instead"). Same 36px round tile, same
             // `Building2` 16px glyph, same 11px/500 uppercase label over the 14px/500 name,
             // same values, so the two screens are the same object. The unit/credential line
-            // and `metaRight` move to the right of it as one cluster, which is where the
-            // unit used to be on the left.
+            // sits on the right of it, which is where the unit used to be on the left.
             <div className="flex items-center justify-between gap-3">
               <div className="flex min-w-0 flex-1 items-center gap-3">
                 <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#F8F7F5] text-[#6B7280]">
@@ -125,17 +145,13 @@ export function HeroCard({
                 </div>
               </div>
 
-              <div className="flex shrink-0 items-center gap-2.5">
-                <span className="text-[13px] text-ink-secondary">{sublineContent}</span>
-                {metaRight}
-              </div>
-            </div>
-          ) : metaRight ? (
-            <div className="flex items-center justify-between gap-3">
-              <span className="min-w-0 text-[13px] text-ink-secondary">{sublineContent}</span>
-              {metaRight}
+              <span className="shrink-0 text-[13px] text-ink-secondary">{sublineContent}</span>
             </div>
           ) : (
+            // No workspace name yet: the unit line on its own. `metaRight` is NOT
+            // rendered here any more, it lives in the top row now, and leaving this
+            // branch in drew the state tag twice (caught by measuring the fallback,
+            // 2026-09-19).
             <div className="text-[13px] text-ink-secondary">{sublineContent}</div>
           )}
         </div>
