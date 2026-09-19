@@ -3035,8 +3035,34 @@ the same height as before either header wording, with `TODAY` in its top row
 beside the `Unit 1 · CNA` and `Evening` chips. Reading the header's own words
 against the card's strings, the only one shared is `evening`.
 
+**Superseded again the same day, and this is what ships:** Jefle moved the day
+back up into the header as "Today's Shift", took the TODAY eyebrow out of the card
+again entirely, and put the `Unit 1 · CNA` pill at the top row's left end with the
+period chip closing the row on the right. So the day is said once, by the header,
+and the card carries only what the header does not: the unit, the credential and
+the period. The unit pill is unchanged apart from which end it sits at: same class
+string, same 11px/600, same 180px truncation cap, and the 6px cluster gap is still
+declared in the row it now leads.
+
+The three wordings Jefle passed through in one day are all still in the options
+round's file (`home-today-header-options.html`), so a fourth reversal costs a
+look rather than a rebuild.
+
+**Verified on live production, signed in as `alex.ramirez@shiftko.test`,
+hash-matched (`index-CgXMi95F.js`, the asset name a rebuild at `81b7e26`
+produces), at 390x844:**
+
+| | measured |
+|---|---|
+| header | `Today's Shift`, 18px/600, `rgb(58, 74, 79)`, 10px above the card |
+| TODAY inside the card | 0 occurrences |
+| card | 350 x 149.5, the same height through all four wordings |
+| top row | `justify-between`, 24.5 tall |
+| unit pill | `Unit 1 · CNA`, 11px/600, 76.3 x 22.5, inset 16 from the card's left, 180px cap |
+| period chip | `Evening`, 71.9 x 24.5, inset 16 from the card's right |
+
 **Files:** `src/pages/Home.jsx`. Commits `da2dda0` (the eyebrow and "Your shift"),
-`8d9a610` (this wording).
+`8d9a610` ("Your evening shift"), `81b7e26` (this arrangement).
 
 ## Open product decisions (carried over from `HANDOFF.md`, still relevant)
 
