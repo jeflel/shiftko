@@ -36,12 +36,14 @@
   --color-track-neutral: #ededf2;
   --color-press-state: #f2f2f7;
   /* The wash that sweeps over today's Schedule row when the Today pill is tapped
-     (2026-09-19). It is NOT --color-press-state: at #f2f2f7 that is 1.05:1 on the
-     white row and invisible at a glance, which defeats the point of a highlight
-     whose job is to be spotted. #e4e4ea is 1.30:1, visible as a band next to the
-     white rows around it while still sitting under the 14px ink meta line at
-     5.07:1, so it never competes with the text. One stop darker is
-     --color-divider-finished at 1.42:1. One value, tune here. */
+     (2026-09-19). It is NOT --color-press-state: #f2f2f7 measures 1.116:1 on the
+     white row, which is the same near-invisible step that makes a #f9f9fb chrome
+     tint read as white, and a highlight whose job is to be spotted cannot be that
+     faint. #e4e4ea measures 1.266:1, visible as a band against the white rows
+     around it while staying under the 14px ink meta line at 5.071:1 so it never
+     competes with the text. The neighbouring steps, for tuning: #ededf2 1.167:1,
+     #dcdce4 1.364:1, --color-divider-finished #d8d8dd 1.42:1. One value, tune
+     here. */
   --color-today-flash: #e4e4ea;
   --color-teal: #38bde5;
   --color-teal-foreground: #0e7490;
