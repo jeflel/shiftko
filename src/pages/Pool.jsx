@@ -12,6 +12,14 @@ import { formatShiftTimeRange, getShiftPeriod } from '../lib/shiftFormat'
 
 const weekdayFormatter = new Intl.DateTimeFormat(undefined, { weekday: 'short' })
 
+// Pool's row actions sit one step below the Button component's own `sm` size: a
+// 13px label in a 34px pill. That is the type treatment the app's other compact
+// in-row actions already use (StaffRoster's pill), and it puts the action level
+// with the row title's own 13px instead of shouting over it, which is what a
+// 15px/600 label in a 38px pill did against a 13px/500 title. Both row actions
+// read this one string, so the next value is a one-line change.
+const ROW_ACTION_CLASSNAME = 'h-[34px] text-[13px]'
+
 function ShiftCard({ date, title, subtitle, period, trailing, onOpen }) {
   const leftGroup = (
     <>
@@ -308,6 +316,7 @@ export default function Pool({ user, onGoToSchedule }) {
                               type="button"
                               variant="secondary"
                               size="sm"
+                              className={ROW_ACTION_CLASSNAME}
                               onClick={() => handleWithdraw(shift)}
                               disabled={isWithdrawing}
                               data-testid="pool-withdraw-claim"
@@ -325,7 +334,7 @@ export default function Pool({ user, onGoToSchedule }) {
                                action matches them. The pressed step is the
                                same #084b5c those tiles use, because the
                                variant's own hover IS teal-field. */
-                            className="bg-teal-field hover:bg-[#084b5c] active:bg-[#084b5c]"
+                            className={`${ROW_ACTION_CLASSNAME} bg-teal-field hover:bg-[#084b5c] active:bg-[#084b5c]`}
                             onClick={() => handleClaim(shift)}
                             disabled={isClaiming || isPastShift}
                             data-testid="pool-claim-shift"
