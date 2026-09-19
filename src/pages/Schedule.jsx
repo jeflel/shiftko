@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { ArrowLeftRight, Calendar, Check, ChevronLeft, ChevronRight, List, X } from 'lucide-react'
+import { ArrowLeftRight, Check, ChevronLeft, ChevronRight, X } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { hasSavedTabScroll } from '../lib/tab-scroll'
 import ShiftDetail from './ShiftDetail'
@@ -70,6 +70,46 @@ function ScheduleViewToggle({ value, onChange }) {
   )
 }
 
+// List / Calendar switch. Words instead of the two glyphs it replaces
+// (2026-09-18, Jefle): the old control was two 30x26 icon cells with no label
+// anywhere on the screen, so the choice of view was invisible until you knew
+// what each glyph meant. The geometry matches the My Shifts / Team Schedule
+// control it sits above (12px track, 3px inset, 9px segments, 30px cells), but
+// the active segment stays WHITE rather than filled teal, so teal still marks
+// the one primary choice on this header, and the swap button beside it. The
+// words are the label, so no aria-label is needed here; data-testid and
+// aria-pressed keep the names testing/flows.json drives.
+function ScheduleContentViewToggle({ value, onChange }) {
+  return (
+    <div className="flex gap-1 rounded-[12px] bg-track-neutral p-[3px]">
+      {[
+        { id: 'list', label: 'List' },
+        { id: 'calendar', label: 'Calendar' },
+      ].map((option) => {
+        const isActive = value === option.id
+
+        return (
+          <button
+            key={option.id}
+            type="button"
+            onClick={() => onChange(option.id)}
+            data-testid={`schedule-content-view-${option.id}`}
+            aria-pressed={isActive}
+            className={cn(
+              'flex h-[30px] items-center justify-center rounded-[9px] px-2.5 text-[12px] whitespace-nowrap transition-colors duration-[var(--motion-base)] ease-in-out',
+              isActive
+                ? 'bg-card-surface font-semibold text-ink shadow-[0_1px_2px_rgba(0,0,0,0.10)]'
+                : 'font-medium text-ink-secondary',
+            )}
+          >
+            {option.label}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
 // Owns the persistent header (title, list/calendar toggle, My Shifts/Team
 // Schedule segmented control) so switching sub-tabs never remounts or hides
 // it — only MyShiftsTab/TeamScheduleTab's own body swaps and shows its own
@@ -110,39 +150,12 @@ function ScheduleTab({ user }) {
                 onClick={() => setShowSwapStatus(true)}
                 aria-label="Swap status"
                 data-testid="schedule-swap-status-button"
-                className="flex size-9 shrink-0 items-center justify-center rounded-control border border-hairline bg-card-surface text-ink-secondary"
+                className="flex size-9 shrink-0 items-center justify-center rounded-control bg-teal-tint text-teal-foreground"
               >
                 <ArrowLeftRight size={16} strokeWidth={1.75} />
               </button>
             )}
-            <div className="flex gap-1 rounded-[11px] bg-track-neutral p-[3px]">
-              <button
-                type="button"
-                onClick={() => setContentView('list')}
-                aria-label="List view"
-                data-testid="schedule-content-view-list"
-                aria-pressed={contentView === 'list'}
-                className={cn(
-                  'flex h-[26px] w-[30px] items-center justify-center rounded-[7px]',
-                  contentView === 'list' ? 'bg-card-surface text-ink' : 'text-ink-secondary',
-                )}
-              >
-                <List size={15} strokeWidth={1.75} />
-              </button>
-              <button
-                type="button"
-                onClick={() => setContentView('calendar')}
-                aria-label="Calendar view"
-                data-testid="schedule-content-view-calendar"
-                aria-pressed={contentView === 'calendar'}
-                className={cn(
-                  'flex h-[26px] w-[30px] items-center justify-center rounded-[7px]',
-                  contentView === 'calendar' ? 'bg-card-surface text-ink' : 'text-ink-secondary',
-                )}
-              >
-                <Calendar size={15} strokeWidth={1.75} />
-              </button>
-            </div>
+            <ScheduleContentViewToggle value={contentView} onChange={setContentView} />
           </div>
         </div>
 
@@ -1330,34 +1343,7 @@ function TeamScheduleTab({ user, onChangeView, contentView: contentViewProp }) {
       >
         <div className="flex items-center justify-between">
           <h1 className="font-display-title text-[26px] font-semibold tracking-[-0.02em] text-ink">Schedule</h1>
-          <div className="flex gap-1 rounded-[11px] bg-track-neutral p-[3px]">
-            <button
-              type="button"
-              onClick={() => setLocalContentView('list')}
-              aria-label="List view"
-              data-testid="schedule-content-view-list"
-              aria-pressed={contentView === 'list'}
-              className={cn(
-                'flex h-[26px] w-[30px] items-center justify-center rounded-[7px]',
-                contentView === 'list' ? 'bg-card-surface text-ink' : 'text-ink-secondary',
-              )}
-            >
-              <List size={15} strokeWidth={1.75} />
-            </button>
-            <button
-              type="button"
-              onClick={() => setLocalContentView('calendar')}
-              aria-label="Calendar view"
-              data-testid="schedule-content-view-calendar"
-              aria-pressed={contentView === 'calendar'}
-              className={cn(
-                'flex h-[26px] w-[30px] items-center justify-center rounded-[7px]',
-                contentView === 'calendar' ? 'bg-card-surface text-ink' : 'text-ink-secondary',
-              )}
-            >
-              <Calendar size={15} strokeWidth={1.75} />
-            </button>
-          </div>
+          <ScheduleContentViewToggle value={contentView} onChange={setLocalContentView} />
         </div>
       </div>
 
