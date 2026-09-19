@@ -494,11 +494,12 @@ function getGreeting() {
 // a real section header, so it gets SectionHeader's 18px/600 and the 10px gap
 // above the card that every other section already uses.
 //
-// "Your shift" since 2026-09-18 (Jefle, from the header options round): the
-// card below carries the day in its own TODAY eyebrow and the period in its own
-// chip, so the header naming either would be the same fact twice within 10px.
-// What is left for the header is whose it is, which is also the shape the app's
-// other section headers use ("My Upcoming", "Weekly Progress").
+// "Your evening shift" since 2026-09-18 (Jefle, from the header options round:
+// option B, addressed to the nurse). The card below carries the day in its own
+// TODAY eyebrow, so the header does not repeat the day; it does name the period,
+// which the card's own chip also names, and that overlap is the deliberate part
+// of this choice rather than an oversight. Option D, "Your shift", is the one
+// where nothing overlaps at all, and the round's file still holds it.
 //
 // A personal event says event rather than shift: the app dropped the Personal
 // tag from its rows, but the panel behind it is still Add Personal Event, so
@@ -508,7 +509,8 @@ function getGreeting() {
 // it is the one state the round left open.
 function getTodayHeader(item, isShift) {
   if (!item) return 'No shift today'
-  return isShift ? 'Your shift' : 'Your event'
+  const period = getShiftPeriod(item.starts_at)
+  return `Your ${period.toLowerCase()} ${isShift ? 'shift' : 'event'}`
 }
 
 function getSummaryRange() {
