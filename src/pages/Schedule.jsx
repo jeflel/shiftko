@@ -829,6 +829,7 @@ function MyShiftsTab({ user, contentView }) {
   // way out and once on the way back, and never re-fires on a re-render, a tab
   // switch or a scroll frame, which is the failure mode MOTION.md calls out.
   const [showTodayJump, setShowTodayJump] = useState(false)
+  const [jumpBottom, setJumpBottom] = useState(null)
 
   useEffect(() => {
     const pinnedHeader = document.querySelector('[data-testid="schedule-sticky-header"]')
@@ -859,6 +860,26 @@ function MyShiftsTab({ user, contentView }) {
   function jumpToToday() {
     scrollWeekMarkerUnderHeader(weekMarkerRefs.current[0])
   }
+
+  // The pill floats above the bottom nav, so its offset comes off that nav's own
+  // top edge rather than a hardcoded number: the nav's height carries the safe
+  // area and the active tab's size, both of which can change. Measured against
+  // the document's client box, not window.innerHeight, because that is what a
+  // fixed element's `bottom` resolves against; the two differ by the height of
+  // whatever chrome the browser reserves, and using the wrong one put the pill
+  // 8px into the nav.
+  useEffect(() => {
+    function measureGap() {
+      const nav = document.querySelector('nav[aria-label="Main navigation"]')
+      if (!nav) return
+      const navTop = nav.getBoundingClientRect().top
+      setJumpBottom(Math.round(document.documentElement.clientHeight - navTop) + 12)
+    }
+
+    measureGap()
+    window.addEventListener('resize', measureGap)
+    return () => window.removeEventListener('resize', measureGap)
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -1144,6 +1165,7 @@ function MyShiftsTab({ user, contentView }) {
             aria-label="Jump to today's shift"
             aria-hidden={showTodayJump ? undefined : true}
             tabIndex={showTodayJump ? 0 : -1}
+            style={jumpBottom === null ? undefined : { bottom: `${jumpBottom}px` }}
             className={cn(
               'fixed inset-x-0 bottom-[calc(84px+env(safe-area-inset-bottom))] z-20 mx-auto flex w-fit items-center gap-1.5 rounded-full border border-hairline bg-card-surface px-3.5 py-2 text-[13px] font-semibold tracking-[-0.01em] text-ink shadow-card-lift',
               '[transition:opacity_var(--motion-base)_ease-out,transform_var(--motion-base)_ease-out,background-color_var(--motion-fast)_ease-out]',
