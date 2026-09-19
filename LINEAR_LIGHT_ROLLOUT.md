@@ -2973,6 +2973,53 @@ coordinator-account pass would close them properly if that matters.
 
 **Files:** 18, `src/tailwind.css` plus 17 components and pages. Commit `c557c4c`.
 
+## Home: the today card says Today again, and the header says "Your shift" (2026-09-18)
+
+Jefle: "the TODAY text isn't inside the card anymore, let's add it back", and for
+the section header above it, "give me some options" so the word today stops being
+said twice. The options round is
+`~/shiftko-design-v2-visual-pass-dup/home-today-header-options.html`: the shipped
+version as the reference, four header wordings, and the empty state, each the real
+header above the real card at the card's own 350px, with the generator
+(`home-today-header-options.py`) beside it. He picked option D.
+
+The eyebrow is back exactly as commit `7eda391` removed it on 2026-09-17: the same
+`text-xs font-semibold tracking-[0.05em] text-ink-secondary uppercase` span, with
+the card's top row restored from `justify-end` to `justify-between`. `7eda391` had
+removed it because the header above had taken over saying the day, and it no
+longer does.
+
+`getTodayHeader` now returns "Your shift", and "Your event" for a personal event
+so the header still never calls an event a shift, instead of
+`${period} shift today`. The period is not lost: the card's own chip carries it,
+which is why option D needed no change beyond the header's one string.
+
+**Verified on live production, signed in as `alex.ramirez@shiftko.test`,
+hash-matched (`index-DetaaMWI.js`, the asset name a rebuild at `da2dda0`
+produces), at 390x844:**
+
+| | before | after |
+|---|---|---|
+| header | `Evening shift today` | `Your shift` |
+| TODAY inside the card | absent | `TODAY`, 12px/600, 0.05em, `rgb(110, 110, 115)`, 16 in from the card's left, 20.3 from its top |
+| card height | 149.5 | **149.5** |
+| top row | `justify-end`, 24.5 tall | `justify-between`, 24.5 tall |
+| the pills' right edge | 354 | 354, against the card's own 370 |
+| the 25px time | `rgb(0, 68, 88)` | unchanged |
+
+The eyebrow costs no height, which is what the options file predicted at its own
+137px: the row was already 24.5 tall for the pills, so the eyebrow's own 16px line
+sits inside it, and nothing below the top row moved by a pixel.
+
+**Still open: the no-shift day.** `getTodayHeader` returns "No shift today" for it,
+which now sits beside the same eyebrow, so that state says today twice. The round
+offered two ways to close it, dropping the header in that state or shortening the
+card's own empty title to "No shift", and Jefle has not picked one. That state is
+also the one this pass could not exercise, since it needs a day with no shift and
+this account has one today.
+
+**Files:** `src/pages/Home.jsx`. Commit `da2dda0`.
+
 ## Open product decisions (carried over from `HANDOFF.md`, still relevant)
 
 - ~~Section 0.3, Offer-shift: mockup's 4-screen stepper vs. the live 1-tap
