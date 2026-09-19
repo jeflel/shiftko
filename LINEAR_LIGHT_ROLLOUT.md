@@ -2669,6 +2669,42 @@ with the period tag, and no rule. So `borderless`, `layout` and `facility` are i
 the default path is untouched. The confirm screen was left without confirming, so no offer was
 written.
 
+## Pool: the open-shifts list loses its outline (2026-09-18)
+
+Pool's open-shifts list wore the bordered grouped-list container, so a 1px
+`#e5e5ea` hairline box sat on top of the same lift shadow every other list
+carries. It now uses `SHIFT_LIST_BORDERLESS_CLASSNAME`, the twin Schedule's shift
+lists already use, so the shadow alone carries the grouping. One class string
+changed and the bordered `SHIFT_LIST_CLASSNAME` stays in the file for the screens
+still on it; no new token and no new class were introduced. Pool's claim-status
+control (the 36px icon button in the page header) keeps its hairline, because it
+is a control and not a card.
+
+**Verified on live production, signed in as `alex.ramirez@shiftko.test`,
+hash-matched (`index-BUdLq8Fs.js`, the asset name a rebuild at `5e54669`
+produces), at 390x844.** The card is 350 wide at x=20 with a 16px radius and 6px
+of list padding, unchanged except for its outline:
+
+| | before | after |
+|---|---|---|
+| border | 1px on all four sides, `rgb(229, 229, 234)` | 0px on all four sides |
+| card height | 610 | 608 |
+| first row, inset from the card | 17 left, 21 top | 16 left, 20 top |
+| date column (`THU 17`) | 19 left, 29.8 top | 18 left, 28.8 top |
+| row's vertical rule | x=85, 65 from the card | x=84, 64 from the card |
+| row title (`11:00 PM - 7:30 AM`) | 78 left, 39.5 top | 77 left, 38.5 top |
+| divider between rows | not measured | 75 from the card, its right edge on the card's own edge |
+
+The 2px of height and the 1px of outward movement on every edge are the border
+having been inside a border-box, the same arithmetic the Shift Detail cards
+showed the same day. The card's lift shadow still computes to
+`rgba(53, 87, 97, 0.12) 0px 5px 15px`, the row's own hairline rule and the
+divider between rows are untouched, and all 7 open shifts render with their
+Claim buttons.
+
+**Files:** `src/pages/Pool.jsx`, `src/components/ui/shift-list.jsx` (its comment
+now names Pool). Commit `5e54669`.
+
 ## Open product decisions (carried over from `HANDOFF.md`, still relevant)
 
 - ~~Section 0.3, Offer-shift: mockup's 4-screen stepper vs. the live 1-tap
