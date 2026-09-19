@@ -1288,6 +1288,12 @@ function TeamScheduleTab({ user, onChangeView, contentView: contentViewProp }) {
   useEffect(() => {
     let cancelled = false
     const { start, end } = getFourWeekRange()
+    // One day of slack at the bottom edge, the same reason Home's coordinator
+    // query has it: a night shift that started at 23:00 yesterday is still
+    // running and belongs on today, but this window starts at today 00:00, so
+    // the row never arrives for the carry to place (2026-09-19).
+    const queryStart = new Date(start)
+    queryStart.setDate(queryStart.getDate() - 1)
 
     async function fetchTeamShifts() {
       setLoading(true)
@@ -1302,7 +1308,7 @@ function TeamScheduleTab({ user, onChangeView, contentView: contentViewProp }) {
         // A shift a nurse added herself is not on the team schedule until she
         // confirms it, so the team's own view leaves unconfirmed shifts out.
         .eq('team_confirmed', true)
-        .gte('starts_at', start.toISOString())
+        .gte('starts_at', queryStart.toISOString())
         .lt('starts_at', end.toISOString())
         .order('starts_at', { ascending: true })
 
@@ -1325,10 +1331,16 @@ function TeamScheduleTab({ user, onChangeView, contentView: contentViewProp }) {
   useEffect(() => {
     let cancelled = false
     const { start, end } = getFourWeekRange()
+    // One day of slack at the bottom edge, the same reason Home's coordinator
+    // query has it: a night shift that started at 23:00 yesterday is still
+    // running and belongs on today, but this window starts at today 00:00, so
+    // the row never arrives for the carry to place (2026-09-19).
+    const queryStart = new Date(start)
+    queryStart.setDate(queryStart.getDate() - 1)
 
     async function fetchTeamPersonalEvents() {
       try {
-        const data = await fetchWorkspacePersonalEvents({ start, end })
+        const data = await fetchWorkspacePersonalEvents({ start: queryStart, end })
         // Team Schedule only shows personal events that carry a unit — a
         // name-only event (no department) stays My-Shifts-only, per the
         // personal-events visibility rule.
