@@ -34,8 +34,7 @@ import { cn } from '@/lib/utils'
 //   Tue, Sep 22     [Evening] [Assigned]     the SHORT date, the period tag, `metaRight`
 //   3:00 PM - 11:30 PM                       the headline, unchanged at 25px
 //   ------------------------------------
-//   [bldg] WORKSPACE   Unit 1 - CNA          the subline slot, right aligned
-//          Burlingame SNF
+//   [bldg] Burlingame SNF   Unit 1 - CNA     `facility` + the subline slot, right aligned
 //
 // The date is `formatShiftDayShort` ("Tue, Sep 22", the same form the Swap
 // cards already use) rather than the full "Tuesday, September 22, 2026", which
@@ -43,18 +42,20 @@ import { cn } from '@/lib/utils'
 // way Home's upcoming rows and the notification lines already omit it. The
 // period tag sits opposite the short date, where it started.
 //
-// **The bottom block is Profile's Workspace card, moved here (2026-09-19).**
-// His ask: "i want that exact layout and design on the shift detail page, it
-// should be whats under the shift card divider then the Unit 1, CNA can be on
-// the right side instead." `facility` used to be a bare 11px/600 uppercase
-// footer with the unit line above it; it is now the same block Profile.jsx
-// renders, values copied rather than restyled: a 36px round `#F8F7F5` tile with
-// a `Building2` 16px glyph in `#6B7280`, `WORKSPACE` at 11px/500 uppercase
-// `#9CA3AF`, and the name at 14px/500 `#111111`. The subline slot sits on the
-// RIGHT of that row, which is where the unit/credential line used to be on the
-// left. With no `facility` the block falls back to the old subline row, so a
-// caller whose workspace query has not resolved (or the four screens that never
-// pass one) renders as before.
+// **The bottom block names the workspace (2026-09-19).** His ask: "i want that
+// exact layout and design on the shift detail page, it should be whats under the
+// shift card divider then the Unit 1, CNA can be on the right side instead",
+// which started as a straight copy of Profile's Workspace card, then: "too much
+// info on the bottom part of the divider actually, lets try to just use the
+// building icon itself (no background square) and just put the Burlingame SNF
+// text beside it, not 'WORKSPACE' text anymore, more cleaner". So `facility` is
+// a bare `Building2` 16px glyph in `#6B7280` with the name at 14px/500 `#111111`
+// beside it, one row, the subline slot on the RIGHT of that row. The 36px
+// `#F8F7F5` tile and the `WORKSPACE` label are both gone; the name keeps
+// Profile's own type and the glyph its size and stroke, so only the chrome
+// around them was dropped. With no `facility` the block falls back to the old
+// subline row, so a caller whose workspace query has not resolved (or the four
+// screens that never pass one) renders as before.
 //
 // **`metaRight` lives in the TOP row now, beside the period tag**, because the
 // bottom block read as crowded with two tags and a workspace in it (same day:
@@ -125,24 +126,21 @@ export function HeroCard({
 
         <div className="flex flex-col gap-2">
           {facility ? (
-            // The workspace gets its own block, copied from Profile.jsx's Workspace card
-            // (2026-09-19, his ask: "i want that exact layout and design on the shift
-            // detail page, it should be whats under the shift card divider then the Unit 1,
-            // CNA can be on the right side instead"). Same 36px round tile, same
-            // `Building2` 16px glyph, same 11px/500 uppercase label over the 14px/500 name,
-            // same values, so the two screens are the same object. The unit/credential line
-            // sits on the right of it, which is where the unit used to be on the left.
+            // The workspace block, started as a straight copy of Profile.jsx's Workspace
+            // card (2026-09-19, "i want that exact layout and design on the shift detail
+            // page") and then SIMPLIFIED the same day: "too much info on the bottom part
+            // of the divider actually, lets try to just use the building icon itself (no
+            // background square) and just put the Burlingame SNF text beside it, not
+            // 'WORKSPACE' text anymore, more cleaner". So the 36px `#F8F7F5` tile and the
+            // 11px `WORKSPACE` label are both gone: the bare `Building2` glyph in
+            // `#6B7280` and the name beside it, on one line. The name keeps Profile's own
+            // type (14px/500 `#111111`) and the glyph its size and stroke, so only the
+            // chrome around them was dropped. The subline slot stays on the right, where
+            // the unit/credential line has been since the block arrived.
             <div className="flex items-center justify-between gap-3">
-              <div className="flex min-w-0 flex-1 items-center gap-3">
-                <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[#F8F7F5] text-[#6B7280]">
-                  <Building2 size={16} strokeWidth={2} />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-[11px] font-medium tracking-wide text-[#9CA3AF] uppercase">
-                    Workspace
-                  </p>
-                  <p className="truncate text-sm font-medium text-[#111111]">{facility}</p>
-                </div>
+              <div className="flex min-w-0 items-center gap-2">
+                <Building2 size={16} strokeWidth={2} className="shrink-0 text-[#6B7280]" />
+                <span className="truncate text-sm font-medium text-[#111111]">{facility}</span>
               </div>
 
               <span className="shrink-0 text-[13px] text-ink-secondary">{sublineContent}</span>

@@ -3380,6 +3380,35 @@ Tue, Sep 22     [Evening] [Assigned]
   assigned shift and on the personal event (whose bottom row is workspace plus `Unit 1 · CNA`, no
   tag to move).
 
+## Shift Detail: the workspace row drops its tile and label (2026-09-19)
+
+"too much info on the bottom part of the divider actually, lets try to just use the building icon
+itself (no background square) and just put the Burlingame SNF text beside it, not 'WORKSPACE' text
+anymore, more cleaner."
+
+Third revision of this block in one session, and the smallest yet: the 36px `#F8F7F5` tile and the
+11px `WORKSPACE` label are both gone, leaving the bare `Building2` glyph and the name on one line.
+
+```
+Tue, Sep 22     [Evening] [Assigned]
+3:00 PM - 11:30 PM
+------------------------------------
+[icon] Burlingame SNF            Unit 1 · CNA
+```
+
+- **What survived:** the glyph is still `Building2` at 16px, `rgb(107,114,128)`, `stroke-width: 2`,
+  and the name still `Burlingame SNF` at 14px/500 `rgb(17,17,17)`, 8px beside the glyph (icon at
+  x=452, name at x=476). Only the chrome around them was dropped, so this is a subtraction rather
+  than a new treatment.
+- **No `WORKSPACE` string anywhere in the card** (`/WORKSPACE/i` over the card's text: false), and
+  the icon's parent no longer carries a background (`rgba(0,0,0,0)`).
+- **The card is 408 x 151**, down from 167.5: the row went from 36.5px (tile height) to 20px (the
+  text line). The rule stays at y=152, 376 wide, and the unit line stays right-aligned on the
+  content's edge at 828.
+- Identical on the assigned shift and the personal event. The no-`facility` fallback is untouched
+  by this change, since it never had the tile or the label to begin with.
+- Files: `src/components/ui/hero-card.jsx` only.
+
 ## Open product decisions (carried over from `HANDOFF.md`, still relevant)
 
 - ~~Section 0.3, Offer-shift: mockup's 4-screen stepper vs. the live 1-tap
