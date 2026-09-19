@@ -165,7 +165,12 @@ function TodayHero({ todaysShift, todaysEvent, credential }) {
            card carried a tile that read as a night shift. Teal is not the
            alternative because it is the app's most used accent, and the other
            period tints all have the same problem as the night one. `neutral` is
-           EmptyState's own quiet tile and eight other screens already use it. */
+           EmptyState's own quiet tile and eight other screens already use it.
+           py-2 overrides the component's own py-5 (cn is tailwind-merge, so the
+           className wins): the stack carries 20px on top of the card's own p-4,
+           which made this card 162.5 tall for two lines of text. The card's 16px
+           is the app's standard padding, the extra 20px was the value for a whole
+           empty SECTION and is redundant inside a card. */
         <EmptyState
           icon={MoonStar}
           title="No shift today"
@@ -173,6 +178,7 @@ function TodayHero({ todaysShift, todaysEvent, credential }) {
           layout="stack"
           size="inline"
           tone="neutral"
+          className="py-2"
         />
       )}
     </div>

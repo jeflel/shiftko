@@ -3186,6 +3186,22 @@ local build impossible. The day-off state is again the one with the `shifts` que
 controlled by the `window.fetch` interception returning `[]`, so its numbers are a
 controlled-query reading; Alex's real day holds a running overnight shift.
 
+**Then a shorter card (same session, Jefle): "can you make the padding inside the card
+a little shorter? its so tall right now".** The stack carried `py-5` of its own on top
+of the card's own `p-4`, so an empty card spent 36px above the icon and 36px below the
+subline for two lines of text. `className="py-2"` on the call site takes the stack's
+own padding to 8px; `cn` is `twMerge(clsx(...))`, so a caller's utility does win over
+the component's base class here, and the card's own 16px stays because that is the
+app's standard card padding. Card 408 x 162.5, so **408 x 138.5**, with 24px above the
+tile and 24px below the last line. Measured on the local build at the same 1280px
+window with the `shifts` query controlled, and the two neighbouring steps were measured
+the same way by setting the padding inline: 12px gives 146.5, 0px gives 130.5.
+
+**Note for the next session:** while this landed, a parallel agent was changing the
+section header above this card to a long date ("Saturday, September 19") in the same
+file, which supersedes the "the header still reads Today" line in the section above.
+The card numbers here are unaffected: that change moves the header string only.
+
 **Still open, one prop away:** with the tile gone the glyph sits straight on the white
 card, which is what the design source's own Day off rows do (muted `#6E6E73` text, no
 tile at all) if the grey disc ever reads as a second surface. A warm stone fill is the
