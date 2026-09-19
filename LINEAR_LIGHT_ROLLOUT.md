@@ -2873,6 +2873,53 @@ direction, on both accounts.
 string, and the import line, since `List` and `Calendar` are no longer used).
 Commit `42bb33b`.
 
+## Schedule: a Today pill for the nurse's list (2026-09-18)
+
+Jefle asked for a button that returns to today's shift when the list has scrolled
+too far from it, "add its animations and states ofc". It is a white pill with the
+card-lift shadow, bottom-centre above the bottom nav, icon plus "Today".
+
+Behaviour: it appears while the week containing today is out of view in either
+direction and leaves again when that week is back. The scroll is the existing
+first-load landing, extracted to `scrollWeekMarkerUnderHeader` so the landing and
+the pill share one path rather than two copies of the pinned-header arithmetic.
+That routine measures the pinned header and parks the week's own label under it:
+measured after a tap, the label's top and the header's bottom are both 128.5, so
+the label lands 0px off.
+
+Motion, per MOTION.md: opacity and an 8px translate at Base (225ms) ease-out, plus
+the authored 150ms ease-out press feedback to press-state, written as one
+transition with per-property durations. No spring, no overshoot, nothing
+animating size or position on the scrolling surface, and no scroll listener at
+all: the only input is the week marker's intersection, so the pill adds no
+per-frame work (MOTION.md: nothing animates on a scroll path).
+
+**Verified on live production, signed in as `alex.ramirez@shiftko.test`,
+hash-matched (`index-CZiSlXM3.js`, the asset name a rebuild at `6be3e52`
+produces), at 390x844:**
+
+| | measured |
+|---|---|
+| size | 96.9 x 43, centred to 0px, pill radius, white, 1px hairline, card-lift shadow |
+| clearance | 20px above the nav rail, measured off that nav's own top edge |
+| label on tap | 128.5 against the header's bottom 128.5, so 0px off |
+| visible state | opacity 1, `pointer-events: auto`, no `aria-hidden`, `tabIndex 0` |
+| hidden state | opacity 0, `pointer-events: none`, `aria-hidden`, `tabIndex -1` |
+| transition | `0.225s, 0.225s, 0.15s`, `ease-out, ease-out, ease-out` |
+| reduced motion | collapses to `1e-05s` under `prefers-reduced-motion: reduce`, and the pill still appears and takes a tap |
+| calendar view | absent from the DOM, which is where it belongs |
+
+Two things for whoever touches this next. The pill's offset is measured off the
+nav's own top edge instead of hardcoded, because a fixed element's `bottom`
+resolves against the document's client box, which is not always
+`window.innerHeight`: the first pass hardcoded a value and landed 8px inside the
+nav. And an automation browser session reports `visibilityState: hidden`, under
+which Chromium throttles IntersectionObserver delivery to seconds, so the
+show/hide flip looks late in a scripted pass and is instant for a real user.
+
+**Files:** `src/pages/Schedule.jsx`. Commits `085f35d` (the pill), `e4dfd31` (the
+measured offset), `6be3e52` (size and clearance after Jefle looked at it live).
+
 ## Open product decisions (carried over from `HANDOFF.md`, still relevant)
 
 - ~~Section 0.3, Offer-shift: mockup's 4-screen stepper vs. the live 1-tap

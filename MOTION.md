@@ -65,6 +65,14 @@ Skeletons fade out and content fades in over 150ms, `ease-out`.
 the pinned week label track the scroll exactly, with no easing, no lag and no
 transition on their offsets. A soft-follow here would look broken, not alive.
 
+**[app call] The Schedule Today pill animates on state, never on scroll.** It
+fades in and lifts 8px at Base with ease-out, uses the authored 150ms ease-out
+for its press feedback, and does nothing at all on a scroll frame: the only input
+is the week marker's intersection, so there is no scroll listener and no
+per-frame work. Its entrance also runs when returning to the tab with a saved
+offset far from today, which reads as arriving with the screen's own Fast
+cross-fade rather than as a replay.
+
 **[app call] No celebration motion.** No confetti, no success bursts, no
 count-up numbers. `react-confetti` and `lottie-react` are already in
 `package.json` and imported only by the unwired onboarding screens; adopting
