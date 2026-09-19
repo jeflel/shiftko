@@ -31,6 +31,7 @@ import {
   getShiftPeriod,
   getSundayWeekStart,
   groupByDayKey,
+  isInProgress,
   withOvernightCarry,
 } from '../lib/shiftFormat'
 
