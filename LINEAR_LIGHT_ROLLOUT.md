@@ -3018,7 +3018,25 @@ card's own empty title to "No shift", and Jefle has not picked one. That state i
 also the one this pass could not exercise, since it needs a day with no shift and
 this account has one today.
 
-**Files:** `src/pages/Home.jsx`. Commit `da2dda0`.
+**Superseded the same day: the header reads "Your evening shift".** Jefle picked
+option B from the round after seeing "Your shift" live, so `getTodayHeader`
+returns `Your ${period} ${shift|event}` lowercased, which gives "Your evening
+shift", "Your day shift" and "Your night shift". The day stays out of the header
+because the card's own eyebrow carries it. The one word now stated twice is the
+period, in the header's words and in the card's own chip, and that is exactly what
+separates B from D: the round's file still holds D if the echo starts to read as
+one.
+
+**Verified on live production, signed in as `alex.ramirez@shiftko.test`,
+hash-matched (`index-V3fx1EoR.js`, the asset name a rebuild at `8d9a610`
+produces), at 390x844:** the header reads `Your evening shift`, 18px at weight 600
+in `rgb(58, 74, 79)`, 141.5 wide, 10px above the card. The card is 350 x 149.5,
+the same height as before either header wording, with `TODAY` in its top row
+beside the `Unit 1 · CNA` and `Evening` chips. Reading the header's own words
+against the card's strings, the only one shared is `evening`.
+
+**Files:** `src/pages/Home.jsx`. Commits `da2dda0` (the eyebrow and "Your shift"),
+`8d9a610` (this wording).
 
 ## Open product decisions (carried over from `HANDOFF.md`, still relevant)
 
