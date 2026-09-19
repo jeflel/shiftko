@@ -193,11 +193,11 @@ function MyDayOffRow({ date }) {
 // Nurse-scope shift row per ScheduleList.dc.html: date + divider + time/meta
 // body + period tag, all inside one card (no external accent bar). Distinct
 // from the shared ShiftCard used by ManageTab, which keeps its own look.
-function MyShiftRow({ shift, credential, isPast, onClick }) {
+function MyShiftRow({ shift, credential, isPast, viewDate, carriedFrom, onClick }) {
   const period = getShiftPeriod(shift.starts_at)
   const isPending = shift.status === 'pending'
   const isOffered = shift.is_offered === true
-  const date = new Date(shift.starts_at)
+  const date = carriedFrom ? viewDate : new Date(shift.starts_at)
   const showsConfirmHint = shift.team_confirmed === false
   const metaParts = [shift.unit, showsConfirmHint ? null : credential].filter(Boolean)
 
@@ -233,12 +233,23 @@ function MyShiftRow({ shift, credential, isPast, onClick }) {
         <p className="truncate text-[14px] font-semibold text-ink">
           {formatShiftTimeRange(shift.starts_at, shift.ends_at)}
         </p>
-        {(metaParts.length > 0 || showsConfirmHint) && (
+        {(metaParts.length > 0 || showsConfirmHint || carriedFrom) && (
           <p className="-mt-0.5 truncate text-[12px] text-ink-secondary">
             {metaParts.join(' · ')}
+            {/* A promoted overnight row shows TODAY in its date column, because
+                that column is what tells the days apart in this list, and the
+                carried row is the only marker today has. The start date the
+                column no longer shows lives here instead. */}
+            {carriedFrom && (
+              <>
+                {metaParts.length > 0 && ' · '}
+                Started {weekdayFormatter.format(carriedFrom)} {monthFormatter.format(carriedFrom)}{' '}
+                {carriedFrom.getDate()}
+              </>
+            )}
             {showsConfirmHint && (
               <span className="font-semibold text-teal-foreground">
-                {metaParts.length > 0 && ' · '}
+                {(metaParts.length > 0 || carriedFrom) && ' · '}
                 Add to team schedule
               </span>
             )}
@@ -263,8 +274,8 @@ function MyShiftRow({ shift, credential, isPast, onClick }) {
 // border — the colored Personal tag alone carries the distinction, per the
 // standing Linear Light rule (dashed borders on personal items were tried
 // and explicitly rejected).
-function MyPersonalEventRow({ event, isPast, onClick }) {
-  const date = new Date(event.starts_at)
+function MyPersonalEventRow({ event, isPast, viewDate, carriedFrom, onClick }) {
+  const date = carriedFrom ? viewDate : new Date(event.starts_at)
   const meta = event.unit || event.name
 
   return (
@@ -299,7 +310,18 @@ function MyPersonalEventRow({ event, isPast, onClick }) {
         <p className="truncate text-[14px] font-semibold text-ink">
           {formatShiftTimeRange(event.starts_at, event.ends_at)}
         </p>
-        {meta && <p className="-mt-0.5 truncate text-[12px] text-ink-secondary">{meta}</p>}
+        {(meta || carriedFrom) && (
+          <p className="-mt-0.5 truncate text-[12px] text-ink-secondary">
+            {meta}
+            {carriedFrom && (
+              <>
+                {meta && ' · '}
+                Started {weekdayFormatter.format(carriedFrom)} {monthFormatter.format(carriedFrom)}{' '}
+                {carriedFrom.getDate()}
+              </>
+            )}
+          </p>
+        )}
       </div>
 
       <ChevronRight size={18} strokeWidth={2.25} className="shrink-0 text-chevron-muted" />
@@ -1079,6 +1101,15 @@ function MyShiftsTab({ user, contentView }) {
 
                 dayItems.forEach((item) => {
                   const isPast = new Date(item.ends_at).getTime() < Date.now()
+                  // A row that started on an earlier day and is still running is
+                  // here because withOvernightCarry promoted it onto this day.
+                  // It gets this day's date column (the column is what tells the
+                  // day diary apart, and a carried row showing its own start date
+                  // left today with no marker at all) plus a start note carrying
+                  // the truth about when it began.
+                  const startedOn = new Date(item.starts_at)
+                  const carriedFrom =
+                    isInProgress(item) && formatLocalDateKey(startedOn) !== key ? startedOn : null
 
                   if (item._kind === 'personal') {
                     rows.push({
@@ -1088,6 +1119,8 @@ function MyShiftsTab({ user, contentView }) {
                         <MyPersonalEventRow
                           event={item}
                           isPast={isPast}
+                          viewDate={date}
+                          carriedFrom={carriedFrom}
                           onClick={() => setSelectedPersonalEvent(item)}
                         />
                       ),
@@ -1101,6 +1134,8 @@ function MyShiftsTab({ user, contentView }) {
                           shift={item}
                           credential={credential}
                           isPast={isPast}
+                          viewDate={date}
+                          carriedFrom={carriedFrom}
                           onClick={() => setSelectedShift(item)}
                         />
                       ),
