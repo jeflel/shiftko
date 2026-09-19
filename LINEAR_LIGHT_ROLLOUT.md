@@ -2705,6 +2705,42 @@ Claim buttons.
 **Files:** `src/pages/Pool.jsx`, `src/components/ui/shift-list.jsx` (its comment
 now names Pool). Commit `5e54669`.
 
+## Pool: the claim button takes Home's tile teal (2026-09-18)
+
+Home's two quick-action tiles (Add a Shift, Claim Shifts) carry the deep teal
+`--color-teal-field` (`#0a5e73`); Pool's claim button was on the Button
+component's `primary` variant, `--color-teal-foreground` (`#0e7490`), a lighter
+neighbour of the same teal. Jefle asked for the Pool buttons to match the tiles.
+The claim button now carries `bg-teal-field hover:bg-[#084b5c]
+active:bg-[#084b5c]`, the last two being the pressed step Home's own tiles use,
+because the variant's existing hover value (`--color-teal-foreground-hover`) IS
+`#0a5e73`, so a bare fill swap would have made the hover a no-op.
+
+The change is one class string at the call site rather than a new variant: Home's
+tiles are plain buttons carrying that same literal, so this reuses the existing
+token and the existing pressed value instead of adding vocabulary to a shared
+component. Withdraw keeps the secondary treatment (white, hairline) because
+Home's tiles have no secondary twin.
+
+**Verified on live production, signed in as `alex.ramirez@shiftko.test`,
+hash-matched (`index-CwROqxSB.js`, the asset name a rebuild at `7f8831e`
+produces), at 390x844.** All six claim buttons compute `rgb(10, 94, 115)`, the
+exact value Home's Add a Shift and Claim Shifts tiles compute, measured in the
+same session:
+
+| | before | after | Home's tile |
+|---|---|---|---|
+| fill | `rgb(14, 116, 144)` | `rgb(10, 94, 115)` | `rgb(10, 94, 115)` |
+| white text on that fill | 5.36:1 | 7.34:1 | 7.34:1 |
+| radius / height | 9px / 38px | 9px / 38px | 16px / 64px |
+
+Nothing else moved: the buttons are still 64.5 x 38 at x=289.5, the row titles
+sit at the same y (152, 324, 409), the past shift's button is still dimmed at 0.5
+opacity, and Withdraw is unchanged at 93.7 x 38 in white with its hairline. The
+fill swap also lifts the label's contrast from 5.36:1 to 7.34:1.
+
+**Files:** `src/pages/Pool.jsx`. Commit `7f8831e`.
+
 ## Open product decisions (carried over from `HANDOFF.md`, still relevant)
 
 - ~~Section 0.3, Offer-shift: mockup's 4-screen stepper vs. the live 1-tap
