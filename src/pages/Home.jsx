@@ -121,11 +121,16 @@ function TodayHero({ todaysShift, todaysEvent, credential }) {
 
   return (
     <div className="flex flex-col gap-2.5 rounded-card bg-white p-4 shadow-card-lift">
-      {/* No uppercase TODAY eyebrow: since 2026-09-17 the section header above
-          the card says it ("Evening shift today"), and the two 10px apart read as
-          the same label twice. The pills keep the top row to themselves, right
-          aligned, so nothing below them moved. */}
-      <div className="flex items-center justify-end">
+      {/* TODAY is back inside the card (2026-09-18, Jefle): the section header
+          above it now reads "Your shift", so the card carries the day and the
+          header carries nothing that is already here. This is the same span and
+          the same justify-between row commit 7eda391 removed when the header was
+          the thing saying "today"; the pills keep the right, so nothing below
+          them moved. */}
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-semibold tracking-[0.05em] text-ink-secondary uppercase">
+          Today
+        </span>
         <div className="flex min-w-0 items-center gap-[6px]">
           {titleLine && (
             <span className="inline-flex max-w-[180px] items-center truncate rounded-[8px] bg-press-state px-2 py-[3px] text-[11px] font-semibold text-ink-secondary">
@@ -489,16 +494,21 @@ function getGreeting() {
 // a real section header, so it gets SectionHeader's 18px/600 and the 10px gap
 // above the card that every other section already uses.
 //
-// getShiftPeriod returns 'Day' / 'Evening' / 'Night', so an evening shift reads
-// "Evening shift today" with no lowercasing and no article to get wrong.
+// "Your shift" since 2026-09-18 (Jefle, from the header options round): the
+// card below carries the day in its own TODAY eyebrow and the period in its own
+// chip, so the header naming either would be the same fact twice within 10px.
+// What is left for the header is whose it is, which is also the shape the app's
+// other section headers use ("My Upcoming", "Weekly Progress").
 //
 // A personal event says event rather than shift: the app dropped the Personal
 // tag from its rows, but the panel behind it is still Add Personal Event, so
 // calling an event a shift here would be the only place that lies.
+//
+// The no-shift day still says "No shift today" and still echoes the eyebrow, so
+// it is the one state the round left open.
 function getTodayHeader(item, isShift) {
   if (!item) return 'No shift today'
-  const period = getShiftPeriod(item.starts_at)
-  return `${period} ${isShift ? 'shift' : 'event'} today`
+  return isShift ? 'Your shift' : 'Your event'
 }
 
 function getSummaryRange() {
