@@ -2779,6 +2779,47 @@ the same y=324 as before, so nothing else in the row moved.
 
 **Files:** `src/pages/Pool.jsx`. Commit `15df81c`.
 
+## Schedule: the week label goes mixed case, bigger and ink (2026-09-18)
+
+The week group divider read `SEP 13 - 19` at 12px/500 in muted grey, an uppercase
+caption in the smallest type on the page. Jefle asked for `Sep 13-19`, bigger, in
+a dark font. It is now 14px/600 in `text-ink`, mixed case.
+
+Both halves had to change together: `getWeekGroupLabel` built the string with
+`.toUpperCase()`, so dropping only the `uppercase` class would have left the text
+uppercase. The tracking also moved from `tracking-wide` to the app's mixed-case
+`-0.01em` in the same edit, because 0.025em of loosening is what pairs with
+uppercase small labels.
+
+This is a deliberate departure from the design source, whose `.week-label` is
+`12px/600 uppercase #6E6E73` (ScheduleListLinearLight.dc.html). It is the one
+place that deviates, and the mockup's own labels are the relative "This Week"
+forms the app replaced with the date range, so the artifact had no mixed-case
+spec to copy.
+
+**Verified on live production, signed in as `alex.ramirez@shiftko.test`,
+hash-matched (`index-CPiiPqfQ.js`, the asset name a rebuild at `46e2473`
+produces), at 390x844.** All three rendered week labels (`Sep 6 - 12`,
+`Sep 13 - 19`, `Sep 20 - 26`) compute 14px at weight 600 in `rgb(29, 29, 31)` with
+no text transform:
+
+| | before | after |
+|---|---|---|
+| text | `SEP 13 - 19` | `Sep 13 - 19` |
+| size / weight | 12px / 500 | 14px / 600 |
+| colour | `rgb(110, 110, 115)` | `rgb(29, 29, 31)` |
+| label box | 64.7 x 18 | 70 x 21 |
+| its trailing rule | starts at x=94.7, 275.3 wide | starts at x=100, 270 wide |
+
+The rule's right edge stays on 370, the card's own edge, so the wider label eats
+into the rule instead of the layout. The label's own y does not move (128.5), and
+the rows under each label sit 3px lower because the label is 3px taller. The
+sticky pin is untouched by design: its offset is the pinned header's measured
+height rather than the label's, and the fade under the group is placed at the
+wrapper's `top-full`, so a taller label carries it down with it.
+
+**Files:** `src/pages/Schedule.jsx`. Commit `46e2473`.
+
 ## Open product decisions (carried over from `HANDOFF.md`, still relevant)
 
 - ~~Section 0.3, Offer-shift: mockup's 4-screen stepper vs. the live 1-tap
