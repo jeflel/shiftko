@@ -41,6 +41,11 @@
   /* The Home quick-action tile surface. Same value as the hover token above, but
      named for the surface so a field colour never reads as a state. */
   --color-teal-field: #0a5e73;
+  /* The pressed/hover step for anything filled with --color-teal-field. It was
+     a literal #084b5c in Home's tiles, Pool's claim button and the Today pill
+     before this became the app-wide fill, so it is a token now and the next
+     value is a one-line change. */
+  --color-teal-field-hover: #084b5c;
   --color-teal-tint: rgba(56, 189, 229, 0.15);
   /* Home's Get started card ground (2026-09-17): the 10% teal wash Jefle picked
      over a white card with a teal outline. Over the page ground #f9f9fb it

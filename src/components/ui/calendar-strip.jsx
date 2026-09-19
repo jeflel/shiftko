@@ -86,7 +86,7 @@ export function CalendarStrip({ selectedDateKey, onSelect, monthsAhead = 3 }) {
                       'flex h-9 w-9 items-center justify-center rounded-full text-sm',
                       isPast && 'text-hairline line-through',
                       !isPast && !isSelected && 'text-ink hover:bg-press-state',
-                      isSelected && 'bg-teal-foreground font-semibold text-white',
+                      isSelected && 'bg-teal-field font-semibold text-white',
                       isToday && !isSelected && 'font-semibold text-teal-foreground',
                     )}
                   >

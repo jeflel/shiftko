@@ -35,7 +35,7 @@ export function Stepper({ steps }) {
                 step.failed
                   ? 'border-status-denied-fg bg-status-denied-fg text-white'
                   : step.done
-                    ? 'border-teal-foreground bg-teal-foreground text-white'
+                    ? 'border-teal-field bg-teal-field text-white'
                     : step.current
                       ? 'border-teal-foreground bg-card-surface text-teal-foreground'
                       : 'border-hairline bg-card-surface text-ink-secondary',

@@ -252,7 +252,7 @@ export default function StaffRoster({ onBack }) {
                     className={cn(
                       'shrink-0 rounded-full border px-3.5 py-[7px] text-[13px] font-semibold tracking-[-0.01em]',
                       selectedUnit === unit
-                        ? 'border-teal-foreground bg-teal-foreground text-white'
+                        ? 'border-teal-field bg-teal-field text-white'
                         : 'border-hairline bg-card-surface text-ink-secondary',
                     )}
                   >

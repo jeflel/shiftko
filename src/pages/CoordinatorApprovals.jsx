@@ -405,7 +405,7 @@ export default function CoordinatorApprovals({ onBack }) {
                       onClick={() => handleApprove(group, claim)}
                       disabled={isActioning}
                       data-testid="schedule-manage-approve-claim"
-                      className="flex h-[38px] flex-1 items-center justify-center rounded-button bg-teal-foreground text-[13px] font-semibold text-white disabled:opacity-60"
+                      className="flex h-[38px] flex-1 items-center justify-center rounded-button bg-teal-field text-[13px] font-semibold text-white disabled:opacity-60"
                     >
                       Approve
                     </button>
@@ -469,7 +469,7 @@ export default function CoordinatorApprovals({ onBack }) {
                     onClick={() => handleApproveSwap(swap)}
                     disabled={isActioning}
                     data-testid="schedule-manage-approve-swap"
-                    className="flex h-[38px] flex-1 items-center justify-center rounded-button bg-teal-foreground text-[13px] font-semibold text-white disabled:opacity-60"
+                    className="flex h-[38px] flex-1 items-center justify-center rounded-button bg-teal-field text-[13px] font-semibold text-white disabled:opacity-60"
                   >
                     Approve
                   </button>

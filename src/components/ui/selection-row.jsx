@@ -13,7 +13,7 @@ function CheckCircle({ checked }) {
     <span
       className={cn(
         'flex size-[22px] shrink-0 items-center justify-center rounded-full border-[1.5px]',
-        checked ? 'border-teal-foreground bg-teal-foreground text-white' : 'border-hairline text-transparent',
+        checked ? 'border-teal-field bg-teal-field text-white' : 'border-hairline text-transparent',
       )}
     >
       <Check size={12} strokeWidth={2.5} />

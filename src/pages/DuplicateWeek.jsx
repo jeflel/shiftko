@@ -225,7 +225,7 @@ export default function DuplicateWeek({ onBack }) {
                 type="button"
                 onClick={handleConfirmCopy}
                 disabled={dupSaving}
-                className="h-[50px] flex-1 rounded-card bg-teal-foreground text-[15px] font-semibold tracking-[-0.01em] text-white hover:bg-teal-foreground-hover disabled:opacity-60"
+                className="h-[50px] flex-1 rounded-card bg-teal-field text-[15px] font-semibold tracking-[-0.01em] text-white hover:bg-teal-field-hover disabled:opacity-60"
               >
                 {dupSaving
                   ? 'Copying…'
@@ -255,7 +255,7 @@ export default function DuplicateWeek({ onBack }) {
               dupChecking ||
               dupSourceShifts.length === 0
             }
-            className="h-[50px] w-full rounded-card bg-teal-foreground text-[15px] font-semibold tracking-[-0.01em] text-white hover:bg-teal-foreground-hover disabled:opacity-60"
+            className="h-[50px] w-full rounded-card bg-teal-field text-[15px] font-semibold tracking-[-0.01em] text-white hover:bg-teal-field-hover disabled:opacity-60"
           >
             {dupChecking ? 'Checking…' : 'Duplicate Week'}
           </Button>

@@ -650,7 +650,7 @@ function MonthCalendarGrid({ calendarMonth, onChangeMonth, shiftsByDay, selected
               <span
                 className={cn(
                   'flex size-[26px] items-center justify-center rounded-full text-[13px] font-semibold',
-                  isToday ? 'bg-teal-foreground text-white' : 'text-ink',
+                  isToday ? 'bg-teal-field text-white' : 'text-ink',
                 )}
               >
                 {date.getDate()}
@@ -1671,7 +1671,7 @@ function AddMyShiftPanel({ userId, homeUnit, onClose, onSaved }) {
                 if (e.target.checked) handleSaveThisShift()
               }}
               disabled={savedPresets.length >= MAX_SAVED_SHIFT_PRESETS}
-              className="h-4 w-4 rounded border-hairline accent-teal-foreground"
+              className="h-4 w-4 rounded border-hairline accent-teal-field"
             />
             Save this shift for next time
           </label>

@@ -13,10 +13,10 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        primary: "bg-teal-foreground text-white hover:bg-teal-foreground-hover",
+        primary: "bg-teal-field text-white hover:bg-teal-field-hover",
         secondary: "bg-card-surface text-ink border border-hairline hover:bg-press-state",
         text: "bg-transparent text-ink-secondary text-sm font-semibold hover:text-ink",
-        default: "bg-teal-foreground text-white hover:bg-teal-foreground-hover",
+        default: "bg-teal-field text-white hover:bg-teal-field-hover",
         outline: "bg-card-surface text-ink border border-hairline hover:bg-press-state",
         ghost: "bg-transparent text-ink-secondary hover:bg-press-state",
         link: "bg-transparent text-teal-foreground underline-offset-4 hover:underline",

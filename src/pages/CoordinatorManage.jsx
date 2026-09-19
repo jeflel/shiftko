@@ -71,7 +71,7 @@ export default function CoordinatorManage({ onBack, onGoToPostShift, onGoToStaff
           type="button"
           onClick={onGoToPostShift}
           data-testid="manage-post-shift-cta"
-          className="flex h-[50px] w-full items-center justify-center gap-2 rounded-card bg-teal-foreground text-[15px] font-semibold tracking-[-0.01em] text-white hover:bg-teal-foreground-hover"
+          className="flex h-[50px] w-full items-center justify-center gap-2 rounded-card bg-teal-field text-[15px] font-semibold tracking-[-0.01em] text-white hover:bg-teal-field-hover"
         >
           Post a Shift
         </Button>

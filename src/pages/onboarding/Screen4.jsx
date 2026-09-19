@@ -68,7 +68,7 @@ export default function Screen4({ onBack, onContinue }) {
 
                 <span
                   className={`flex size-[22px] shrink-0 items-center justify-center rounded-full ${
-                    selected ? 'bg-teal-foreground' : 'border border-hairline'
+                    selected ? 'bg-teal-field' : 'border border-hairline'
                   }`}
                 >
                   {selected && <Check size={14} strokeWidth={2} className="text-white" />}

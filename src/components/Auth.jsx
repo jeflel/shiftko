@@ -277,7 +277,7 @@ export default function Auth({ initialView = 'signin' }) {
           type="submit"
           disabled={loading}
           data-testid="auth-submit"
-          className="mt-8 h-[54px] w-full rounded-button bg-teal-foreground text-[17px] font-semibold tracking-[-0.34px] text-white hover:bg-teal-foreground/90 disabled:opacity-60"
+          className="mt-8 h-[54px] w-full rounded-button bg-teal-field text-[17px] font-semibold tracking-[-0.34px] text-white hover:bg-teal-field-hover disabled:opacity-60"
         >
           {loading ? 'Signing in…' : 'Sign in'}
         </Button>

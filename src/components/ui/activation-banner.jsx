@@ -21,7 +21,7 @@ import { cn } from '@/lib/utils'
 // and both are load bearing:
 //   - the track's unfilled connectors and the pending dots cannot keep the
 //     neutral values. #ededf2 on the wash measures 1.03:1 and #e5e5ea 1.07:1,
-//     so both are effectively invisible; they use teal-foreground at 30% and 35%.
+//     so both are effectively invisible; they use teal-field at 30% and 35%.
 //   - the row's 11px grey subline measures 5.07:1 on a white plate and 4.48:1 on
 //     the raw wash, so the plate is what keeps the small text above the floor.
 //
@@ -72,7 +72,7 @@ function ActivationTrack({ done, currentIndex }) {
               <div
                 className={cn(
                   'mt-[13px] h-0.5 flex-1 rounded-[2px]',
-                  done[index - 1] ? 'bg-teal' : 'bg-teal-foreground/30',
+                  done[index - 1] ? 'bg-teal' : 'bg-teal-field/30',
                 )}
                 style={{ marginLeft: -DOT_INSET, marginRight: -DOT_INSET }}
               />
@@ -85,7 +85,7 @@ function ActivationTrack({ done, currentIndex }) {
                 className={cn(
                   'flex items-center justify-center rounded-full border-2 text-[11px] font-semibold',
                   isDone
-                    ? 'border-teal-foreground bg-teal-foreground text-white'
+                    ? 'border-teal-field bg-teal-field text-white'
                     : isCurrent
                       ? 'border-teal-foreground bg-card-surface text-teal-foreground shadow-[0_0_0_4px_var(--color-teal-tint)]'
                       : 'border-teal-foreground/35 bg-card-surface text-ink-secondary',
