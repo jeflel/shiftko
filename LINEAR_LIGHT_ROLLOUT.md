@@ -3192,10 +3192,20 @@ of the card's own `p-4`, so an empty card spent 36px above the icon and 36px bel
 subline for two lines of text. `className="py-2"` on the call site takes the stack's
 own padding to 8px; `cn` is `twMerge(clsx(...))`, so a caller's utility does win over
 the component's base class here, and the card's own 16px stays because that is the
-app's standard card padding. Card 408 x 162.5, so **408 x 138.5**, with 24px above the
-tile and 24px below the last line. Measured on the local build at the same 1280px
-window with the `shifts` query controlled, and the two neighbouring steps were measured
-the same way by setting the padding inline: 12px gives 146.5, 0px gives 130.5.
+app's standard card padding. Card 408 x 162.5, so **408 x 138.5**, with 24px of white
+above the tile and 24px below the last line, the empty state's own box starting 16px
+from the card's top and ending 16px from its bottom. Measured on the local build at the
+same 1280px window, and the neighbouring steps were measured the same way, by setting
+the padding inline: 12px gives 146.5, 0px gives 122.5 (an early note in this file said
+130.5 for that last one, which was arithmetic rather than a reading; 90.5 of content
+plus the card's own 32 is what it actually comes to).
+
+**Reaching the day-off state needs BOTH the `shifts` and the `personal_events` queries
+controlled.** The earlier paragraph in this section says "the `shifts` query alone",
+which held on 2026-09-19 while Alex had no personal event on the day. He has one now
+(Unit 1, 11:00 PM to 7:30 AM), and a personal event fills the same card through
+`todaysShift ?? todaysEvent`, so emptying only the shifts query left the card showing
+the event and no empty state at all.
 
 **Note for the next session:** while this landed, a parallel agent was changing the
 section header above this card to a long date ("Saturday, September 19") in the same
