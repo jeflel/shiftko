@@ -8,6 +8,12 @@ const dateFormatter = new Intl.DateTimeFormat(undefined, {
   year: 'numeric',
 })
 
+const longDateFormatter = new Intl.DateTimeFormat(undefined, {
+  weekday: 'long',
+  month: 'long',
+  day: 'numeric',
+})
+
 const shortDayFormatter = new Intl.DateTimeFormat(undefined, {
   weekday: 'short',
   month: 'short',
@@ -26,6 +32,14 @@ export function formatLocalDateKey(date) {
 
 export function formatShiftDate(startsAt) {
   return dateFormatter.format(new Date(startsAt))
+}
+
+// "Saturday, September 19" - the full date without the year. formatShiftDate
+// carries the year because it labels a specific past or future shift; this one
+// names the day the reader is standing in, where the year is never in question
+// and would cost a second line on a phone.
+export function formatLongDateNoYear(date) {
+  return longDateFormatter.format(new Date(date))
 }
 
 // "Mon, Sep 15" - used by the Swap cards, which pack date + time onto one

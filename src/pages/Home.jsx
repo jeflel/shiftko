@@ -32,6 +32,7 @@ import { PeriodTag } from '@/components/ui/period-tag'
 import { cn } from '@/lib/utils'
 import {
   formatLocalDateKey,
+  formatLongDateNoYear,
   formatShiftDayShort,
   formatShiftTimeRange,
   getShiftPeriod,
@@ -518,23 +519,21 @@ function getGreeting() {
 // a real section header, so it gets SectionHeader's 18px/600 and the 10px gap
 // above the card that every other section already uses.
 //
-// "Today's Shift" since 2026-09-18 (Jefle, third wording of the day). The header
-// owns the day again and the card no longer carries a TODAY eyebrow for it, so
-// the two say it once between them: the header names the day, and the card opens
-// with the unit pill and closes with the period chip, neither of which the header
-// repeats.
+// The header names the day as a date, "Saturday, September 19" (2026-09-19,
+// Jefle). It went "Today's Shift" on 2026-09-18 (with "Today's Event" for an
+// event and "Today" for a day off), and the three wordings are now one string
+// for every day: the card below already opens with the unit pill and closes
+// with the period chip, so a label that says what kind of day it is was telling
+// the reader something they can see. The date says something the card cannot.
 //
-// A personal event says event rather than shift: the app dropped the Personal
-// tag from its rows, but the panel behind it is still Add Personal Event, so
-// calling an event a shift here would be the only place that lies.
+// It is deliberately not "Today, September 19": the card is inside the Today
+// section either way, and a weekday is what a nurse schedules by. It carries no
+// year (see formatLongDateNoYear) so it stays on one line at 18px on a phone.
 //
-// The no-shift day says "Today" (2026-09-19, Jefle). It used to repeat the card's
-// own "No shift today" word for word, 10px above it, which was the one wording the
-// 2026-09-18 round left open. The header keeps owning the day and the card keeps
-// owning the fact, so the two now say it once between them.
-function getTodayHeader(item, isShift) {
-  if (!item) return 'Today'
-  return isShift ? "Today's Shift" : "Today's Event"
+// The item and isShift arguments are gone with the old wording; the header no
+// longer varies by what is on the day.
+function getTodayHeader() {
+  return formatLongDateNoYear(new Date())
 }
 
 function getSummaryRange() {
@@ -881,10 +880,9 @@ export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoTo
   ].sort((a, b) => new Date(a.item.starts_at) - new Date(b.item.starts_at))
   const latestNotification = notifications.find((n) => !n.read) ?? notifications[0] ?? null
   // Nurses only: this names the reader's own day, and the coordinator's body is a
-  // different screen whose first section is the coverage card.
-  const todayHeader = isCoordinator
-    ? null
-    : getTodayHeader(todaysShift ?? todaysEvent, Boolean(todaysShift))
+  // different screen whose first section is the coverage card. The date is the
+  // same string whether or not anything is on the day (2026-09-19).
+  const todayHeader = isCoordinator ? null : getTodayHeader()
   const hasUnreadNotifications = notifications.some((notification) => !notification.read)
 
   return (
