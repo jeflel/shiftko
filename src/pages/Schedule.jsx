@@ -873,7 +873,7 @@ function MyShiftsTab({ user, contentView }) {
       const nav = document.querySelector('nav[aria-label="Main navigation"]')
       if (!nav) return
       const navTop = nav.getBoundingClientRect().top
-      setJumpBottom(Math.round(document.documentElement.clientHeight - navTop) + 12)
+      setJumpBottom(Math.round(document.documentElement.clientHeight - navTop) + 20)
     }
 
     measureGap()
@@ -1167,13 +1167,13 @@ function MyShiftsTab({ user, contentView }) {
             tabIndex={showTodayJump ? 0 : -1}
             style={jumpBottom === null ? undefined : { bottom: `${jumpBottom}px` }}
             className={cn(
-              'fixed inset-x-0 bottom-[calc(84px+env(safe-area-inset-bottom))] z-20 mx-auto flex w-fit items-center gap-1.5 rounded-full border border-hairline bg-card-surface px-3.5 py-2 text-[13px] font-semibold tracking-[-0.01em] text-ink shadow-card-lift',
+              'fixed inset-x-0 bottom-[calc(92px+env(safe-area-inset-bottom))] z-20 mx-auto flex w-fit items-center gap-2 rounded-full border border-hairline bg-card-surface px-4 py-2.5 text-[14px] font-semibold tracking-[-0.01em] text-ink shadow-card-lift',
               '[transition:opacity_var(--motion-base)_ease-out,transform_var(--motion-base)_ease-out,background-color_var(--motion-fast)_ease-out]',
               'hover:bg-press-state active:bg-press-state focus-visible:ring-2 focus-visible:ring-teal/50 focus-visible:outline-none',
               showTodayJump ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-2 opacity-0',
             )}
           >
-            <CalendarDays size={14} strokeWidth={2} aria-hidden="true" />
+            <CalendarDays size={16} strokeWidth={2} aria-hidden="true" />
             Today
           </button>
         </>
