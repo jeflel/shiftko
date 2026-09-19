@@ -2820,6 +2820,59 @@ wrapper's `top-full`, so a taller label carries it down with it.
 
 **Files:** `src/pages/Schedule.jsx`. Commit `46e2473`.
 
+## Schedule header: words for List/Calendar, and the swap button takes the teal tint (2026-09-18)
+
+The header's view switch was two 30x26 icon cells in a 32px track, glyphs only,
+with no label anywhere on the screen: choosing between the list and the month
+grid meant knowing what a list glyph and a calendar glyph mean before tapping.
+It is now the words `List` and `Calendar` in a 122x36 control. The swap status
+button beside it dropped its 1px hairline and white fill for the app's own teal
+icon tint.
+
+The new control keeps the sub-tab control's geometry (12px track radius, 3px
+inset, 9px segments, 30px cells, 12px text) but its active segment stays WHITE
+instead of filled teal. Teal already marks the one primary choice on this header
+(the My Shifts / Team Schedule segment, 16px below), and the teal-tint swap
+button sits in the same row, so a third teal surface 16px apart would have left
+nothing reading as the primary choice.
+
+| | before | after |
+|---|---|---|
+| view switch | 70x32, two 30x26 glyph cells | 122x36, the words List and Calendar |
+| active segment | 26px cell, white fill, 15px ink glyph | 30px cell, white fill, 12px/600 ink label |
+| its label | `aria-label="List view"` only | the word itself; aria-label dropped |
+| swap button | 36x36, 1px `#e5e5ea` edge, white fill, `rgb(110,110,115)` glyph | 36x36, no border, tinted fill, `rgb(14,116,144)` glyph |
+
+Both header copies now render one shared `ScheduleContentViewToggle` instead of
+duplicating the markup: the nurse header in `ScheduleTab` (with the swap button
+beside it) and the coordinator's standalone header in `TeamScheduleTab` (which
+has no swap button, and now has 130px of slack where the nurse header has 75).
+`data-testid` and `aria-pressed` keep the names `testing/flows.json` drives.
+
+**Verified on live production, signed in as `alex.ramirez@shiftko.test` (nurse
+header, with the swap button) and `jefleangelo@gmail.com` (coordinator header
+copy, no swap button), hash-matched: the live page serves
+`/assets/index-CX7myDQY.js` and `/assets/index-WOt4dziz.css`, the exact names a
+rebuild at `42bb33b` produces.** Measured on the real header:
+
+| | before (code) | after (live) |
+|---|---|---|
+| track | 32px tall, `p-[3px]` | 122 x 36, `bg rgb(237,237,242)`, radius 12px |
+| List cell | 30 x 26, white, 15px icon | 41.1 x 30, `bg rgb(255,255,255)`, 12px/600 `rgb(29,29,31)` |
+| Calendar cell | 30 x 26, transparent | 70.9 x 30, 12px/500 `rgb(110,110,115)` |
+| swap button | `border 1px rgb(229,229,234)`, `bg rgb(255,255,255)` | `border 0px`, `bg rgba(56,189,229,0.15)`, glyph `rgb(14,116,144)`, radius 9px |
+
+The teal tint composites to `#dcf0f8` over the page ground, putting the teal
+glyph at 4.56:1. The row still has room: at a 390px phone width the content box
+is 350px, the title is 109.1px and the control cluster is 36 + 8 + 122 = 166px,
+so 74.9px of slack is left over. Tapping Calendar mounts the month grid (30 day
+cells) and tapping List returns the rows, with no console errors in either
+direction, on both accounts.
+
+**Files:** `src/pages/Schedule.jsx` (the new component, the swap button's class
+string, and the import line, since `List` and `Calendar` are no longer used).
+Commit `42bb33b`.
+
 ## Open product decisions (carried over from `HANDOFF.md`, still relevant)
 
 - ~~Section 0.3, Offer-shift: mockup's 4-screen stepper vs. the live 1-tap
