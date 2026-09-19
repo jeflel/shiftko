@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { ArrowLeftRight, Check, ChevronLeft, ChevronRight, X } from 'lucide-react'
+import { ArrowLeftRight, CalendarDays, Check, ChevronLeft, ChevronRight, X } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { hasSavedTabScroll } from '../lib/tab-scroll'
 import ShiftDetail from './ShiftDetail'
@@ -765,6 +765,28 @@ function TeamMonthCalendarView({ calendarMonth, onChangeMonth, shiftsByDay, sele
   )
 }
 
+// Scrolls a week marker so its own label parks under the pinned Schedule header.
+// Shared by the first-load landing and the Today button rather than written
+// twice: the header is pinned, so `scrollIntoView({ block: 'start' })` alone
+// parks the "Sep 13 - 19" label behind it, and the header's height is measured
+// rather than hardcoded so the offset follows it if its contents change.
+function scrollWeekMarkerUnderHeader(marker) {
+  if (!marker) return
+
+  const scroller = marker.closest('.app-content')
+  if (!scroller) {
+    marker.scrollIntoView({ behavior: 'auto', block: 'start' })
+    return
+  }
+
+  const pinnedHeader = document.querySelector('[data-testid="schedule-sticky-header"]')
+  const pinnedHeight = pinnedHeader?.getBoundingClientRect().height ?? 0
+  const scrollerTop = scroller.getBoundingClientRect().top
+  const targetTop = marker.getBoundingClientRect().top - scrollerTop + scroller.scrollTop
+
+  scroller.scrollTop = targetTop - pinnedHeight
+}
+
 // contentView (list/calendar) is owned by ScheduleTab and passed down, not
 // local state here — so the persistent header up there can drive it and the
 // loading/error returns below only ever replace this tab's own body, never
@@ -801,6 +823,13 @@ function MyShiftsTab({ user, contentView }) {
   // the header is never covered.
   const [weekLabelTop, setWeekLabelTop] = useState(null)
 
+  // The Today pill: shown when the week containing today has scrolled out of
+  // view in either direction, so one tap puts it back under the pinned header.
+  // The observer watches that week's own marker element, so it flips once on the
+  // way out and once on the way back, and never re-fires on a re-render, a tab
+  // switch or a scroll frame, which is the failure mode MOTION.md calls out.
+  const [showTodayJump, setShowTodayJump] = useState(false)
+
   useEffect(() => {
     const pinnedHeader = document.querySelector('[data-testid="schedule-sticky-header"]')
     const pinnedHeight = pinnedHeader?.getBoundingClientRect().height ?? 0
@@ -809,6 +838,27 @@ function MyShiftsTab({ user, contentView }) {
     // label stays in normal flow rather than parking at top 0 over the header.
     if (pinnedHeight > 0) setWeekLabelTop(pinnedHeight)
   }, [])
+
+  useEffect(() => {
+    // Only the list view has week markers. The calendar renders none, so there is
+    // no target to watch there and the pill stays out of the way.
+    const marker = contentView === 'list' ? weekMarkerRefs.current[0] : null
+    if (!marker) {
+      setShowTodayJump(false)
+      return
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => setShowTodayJump(!entry.isIntersecting),
+      { threshold: 0 },
+    )
+    observer.observe(marker)
+    return () => observer.disconnect()
+  }, [loading, contentView])
+
+  function jumpToToday() {
+    scrollWeekMarkerUnderHeader(weekMarkerRefs.current[0])
+  }
 
   useEffect(() => {
     let cancelled = false
@@ -903,10 +953,9 @@ function MyShiftsTab({ user, contentView }) {
   // user does not start 8 weeks back. Returns after that are handled by the
   // offset App remembers for this tab, so re-centering here would fight it: once
   // 'schedule' has a saved offset, the user gets back what they were looking at.
-  // The Schedule header is pinned, so the scroll target is pulled down by that
-  // header's measured height: scrollIntoView({ block: 'start' }) on its own parks
-  // the "SEP 7 - 13" label behind the pinned header. Measured, never hardcoded, so
-  // the offset follows the header if its contents change.
+  // The scroll itself is scrollWeekMarkerUnderHeader, which pulls the landing
+  // down by the pinned header's measured height so the week label is not parked
+  // behind it.
   useEffect(() => {
     if (loading || hasScrolledInitiallyRef.current) return
     if (hasSavedTabScroll('schedule')) return
@@ -914,20 +963,7 @@ function MyShiftsTab({ user, contentView }) {
     if (!target) return
     hasScrolledInitiallyRef.current = true
 
-    const scroller = target.closest('.app-content')
-    if (!scroller) {
-      target.scrollIntoView({ behavior: 'auto', block: 'start' })
-      return
-    }
-
-    // The pinned header sits above the target, so without this the week label
-    // lands tucked behind it.
-    const pinnedHeader = document.querySelector('[data-testid="schedule-sticky-header"]')
-    const pinnedHeight = pinnedHeader?.getBoundingClientRect().height ?? 0
-    const scrollerTop = scroller.getBoundingClientRect().top
-    const targetTop = target.getBoundingClientRect().top - scrollerTop + scroller.scrollTop
-
-    scroller.scrollTop = targetTop - pinnedHeight
+    scrollWeekMarkerUnderHeader(target)
   }, [loading])
 
   if (selectedShift) {
@@ -1092,6 +1128,32 @@ function MyShiftsTab({ user, contentView }) {
               )
             })}
           </div>
+
+          {/* Returns to today's week once it has scrolled out of view. Fixed above
+              the bottom nav, so it adds nothing to the scrolling surface and takes
+              no part in the list's layout. Opacity and an 8px translate only, on
+              the motion scale's Base duration with ease-out, plus the authored
+              150ms press feedback: MOTION.md forbids animating layout size or
+              position on a scroll path, and the global reduced-motion rule
+              collapses all of it to an instant state change. The hidden state is
+              inert, so a keyboard user never lands on a button they cannot see. */}
+          <button
+            type="button"
+            onClick={jumpToToday}
+            data-testid="schedule-jump-today"
+            aria-label="Jump to today's shift"
+            aria-hidden={showTodayJump ? undefined : true}
+            tabIndex={showTodayJump ? 0 : -1}
+            className={cn(
+              'fixed inset-x-0 bottom-[calc(84px+env(safe-area-inset-bottom))] z-20 mx-auto flex w-fit items-center gap-1.5 rounded-full border border-hairline bg-card-surface px-3.5 py-2 text-[13px] font-semibold tracking-[-0.01em] text-ink shadow-card-lift',
+              '[transition:opacity_var(--motion-base)_ease-out,transform_var(--motion-base)_ease-out,background-color_var(--motion-fast)_ease-out]',
+              'hover:bg-press-state active:bg-press-state focus-visible:ring-2 focus-visible:ring-teal/50 focus-visible:outline-none',
+              showTodayJump ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-2 opacity-0',
+            )}
+          >
+            <CalendarDays size={14} strokeWidth={2} aria-hidden="true" />
+            Today
+          </button>
         </>
       )}
 
