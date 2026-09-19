@@ -607,7 +607,12 @@ export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoTo
       const personalEventsQuery = isCoordinator
         ? Promise.resolve({ data: [], error: null })
         : fetchMyPersonalEvents(user.id, {
-            start: new Date(),
+            // One day of slack at the bottom edge, the same shape as the
+            // coordinator's query above: a personal event that started at 23:00
+            // yesterday is still running and belongs on today's card, and this
+            // window started at now, so the row never arrived for isOnDay to
+            // find (2026-09-19).
+            start: new Date(Date.now() - 24 * 60 * 60 * 1000),
             end: new Date(Date.now() + 56 * 24 * 60 * 60 * 1000),
           })
             .then((data) => ({ data, error: null }))
