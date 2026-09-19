@@ -3174,6 +3174,18 @@ query controlled:**
 | title | 15px/600, left aligned | 14px/600, centred |
 | subline | 13px, left aligned | 13px, centred |
 
+**Verified on live production, signed in as `alex.ramirez@shiftko.test`, hash-matched
+(`index-BqJWoNZR.js`, read out of the served document rather than fetched with curl),
+at the same 1280px window:** header `Today`, card 408 x 162.5 with one child,
+`flex flex-col items-center text-center gap-2 py-5`, the tile 40px at inset 184 from
+either side with `rgb(237, 237, 242)` behind a `rgb(110, 110, 115)` glyph, and both
+lines centred (14px/600 over 13px/400). The served bundle also carries the change in
+its own source, `title:\`No shift today\`,subline:\`Enjoy the day off\`,layout:\`stack\`,size:\`inline\`,tone:\`neutral\``,
+which is the check to reach for when a sibling agent's in-flight file makes a clean
+local build impossible. The day-off state is again the one with the `shifts` query
+controlled by the `window.fetch` interception returning `[]`, so its numbers are a
+controlled-query reading; Alex's real day holds a running overnight shift.
+
 **Still open, one prop away:** with the tile gone the glyph sits straight on the white
 card, which is what the design source's own Day off rows do (muted `#6E6E73` text, no
 tile at all) if the grey disc ever reads as a second surface. A warm stone fill is the
