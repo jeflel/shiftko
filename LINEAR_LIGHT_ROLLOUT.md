@@ -3438,6 +3438,15 @@ so the empty card cannot become a button that leads nowhere.
   SNF | Unit 1 · CNA` and the real `Request swap` / `Offer shift` buttons, because ShiftDetail
   re-reads that row by id. No row was written to the database.
 - Files: `src/pages/Home.jsx` only.
+- **Production pass, same day, after the deploy went green** (`index-DgLdQdOc.js`, byte-identical to
+  a local rebuild of `06f626b`): the clock had rolled to Sunday Sep 20, on which Alex has nothing,
+  so the REAL card rendered as a `DIV` with no testid on the deployed build, the day-off case
+  confirmed on live data. With the nurse shifts response controlled so the real row `4e2ae65d` is
+  running now (real start 2026-07-18 06:00), the deployed card rendered as the BUTTON
+  `home-today-card` at 408 x 149.5 reading `Unit 1 · CNA | Day | 12:45 PM – 8:45 PM | 1h 0m in ·
+  7h 0m left | Sun, Sep 20`, and the click opened `Shift Detail` with `Sun, Sep 20 | Day |
+  Assigned | 12:45 PM – 8:45 PM | BURLINGAME SNF | Unit 1 · CNA` plus the real `Request swap` and
+  `Offer shift` buttons. Nothing was written to the database.
 
 ## Open product decisions (carried over from `HANDOFF.md`, still relevant)
 
