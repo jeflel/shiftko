@@ -110,7 +110,11 @@ function compactContext(context) {
 // DESIGN.md's Today Hero + Shift Progress spec (Main.dc.html), reskinned per
 // MainHorizontalTiles.dc.html (home-linear-light): pulled up over the
 // gradient hero, deep-teal time readout, colored period tag.
-function TodayHero({ todaysShift, todaysEvent, credential }) {
+//
+// It is a BUTTON as of 2026-09-19: the card leads to its own detail screen, the
+// shift's or the event's. `onOpen` is what makes it one, and the caller leaves it
+// off on a day off, so the empty card keeps rendering as a plain div.
+function TodayHero({ todaysShift, todaysEvent, credential, onOpen }) {
   // A personal event fills the same card as a shift, so a nurse adding their
   // own events for beta gets the same layout rather than a second-class row.
   // A shift wins when both land on the same day.
@@ -121,8 +125,10 @@ function TodayHero({ todaysShift, todaysEvent, credential }) {
     ? todaysEvent.unit || todaysEvent.name || ''
     : [todaysShift?.unit, credential].filter(Boolean).join(' · ')
 
-  return (
-    <div className="flex flex-col gap-2.5 rounded-card bg-white p-4 shadow-card-lift">
+  const cardClass = 'flex flex-col gap-2.5 rounded-card bg-white p-4 shadow-card-lift'
+
+  const body = (
+    <>
       {/* The unit pill leads the top row and the period chip closes it
           (2026-09-18, Jefle): the day moved back up into the section header
           ("Today's Shift"), so the card opens with what the shift is rather than
@@ -182,7 +188,33 @@ function TodayHero({ todaysShift, todaysEvent, credential }) {
           className="py-2"
         />
       )}
-    </div>
+    </>
+  )
+
+  // The card opens today's own detail screen (2026-09-19, his ask: "the main
+  // today's shift card on the homepage should be clickable, and it should lead to
+  // its own shift detail screen"). A shift opens ShiftDetail and a personal event
+  // opens PersonalEventDetail, which renders the same screen, so either way the
+  // card leads to the item's own detail. `onOpen` is omitted when there is no
+  // item, so a day off keeps a plain div rather than a button that leads nowhere.
+  // No chevron: the change is additive, so the card looks exactly as it did and
+  // only gains the press state and the focus ring the rows below it already use.
+  if (!onOpen) {
+    return <div className={cardClass}>{body}</div>
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      data-testid="home-today-card"
+      className={cn(
+        cardClass,
+        'w-full text-left transition-colors active:bg-press-state focus-visible:ring-2 focus-visible:ring-teal/50 focus-visible:outline-none',
+      )}
+    >
+      {body}
+    </button>
   )
 }
 
@@ -933,6 +965,13 @@ export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoTo
                     todaysShift={todaysShift}
                     todaysEvent={todaysEvent}
                     credential={credential}
+                    onOpen={
+                      todaysShift
+                        ? () => setSelectedShift(todaysShift)
+                        : todaysEvent
+                          ? () => setSelectedPersonalEvent(todaysEvent)
+                          : undefined
+                    }
                   />
                 </section>
 

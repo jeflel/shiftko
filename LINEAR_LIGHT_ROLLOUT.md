@@ -3409,6 +3409,36 @@ Tue, Sep 22     [Evening] [Assigned]
   by this change, since it never had the tile or the label to begin with.
 - Files: `src/components/ui/hero-card.jsx` only.
 
+## Home: today's shift card opens its own detail screen (2026-09-19)
+
+"the main today's shift card on the homepage should be clickable, and it should lead to its own
+shift detail screen."
+
+`TodayHero` takes an `onOpen` and renders as a `<button data-testid="home-today-card">` when it has
+one, else the `div` it has always been. The caller decides the destination by which item fills the
+card (`todaysShift ?? todaysEvent`): a shift opens `ShiftDetail`, a personal event opens
+`PersonalEventDetail`, which is the same screen. On a day off the caller passes no `onOpen` at all,
+so the empty card cannot become a button that leads nowhere.
+
+- **The geometry is untouched.** Live before (a `DIV`) and local after (a `BUTTON`) both measure
+  408 x 149.5 at `(436, 117)` with identical text, because the class string moved into a constant
+  and the button adds only `w-full text-left`.
+- **No chevron.** The change is deliberately additive: the card looks exactly as it did and gains
+  the press state and focus ring the rows below it already use
+  (`transition-colors active:bg-press-state focus-visible:ring-2 focus-visible:ring-teal/50`).
+  A chevron would need a slot in a top row that already pairs the unit pill with the period chip
+  and two tags are one ask away from crowded on this card.
+- **Verified on the real click, live-ish:** Alex's in-progress item TODAY is his personal event
+  (Fri Sep 18 23:00 to Sat 19 07:30), not a shift, so the real card opens `PersonalEventDetail`
+  (`Edit Event` / `Delete Event`, pill reads `Unit 1` with no credential, the event branch).
+- **The shift branch was reached with one controlled query**, rewriting the nurse shifts response
+  so the real row `4e2ae65d` (Unit 1, real start 2026-07-18 06:00) started an hour ago and ends in
+  seven: the card then read `Unit 1 · CNA | Day | 4:52 AM – 12:52 PM | Sat, Sep 19`, and the click
+  opened `Shift Detail` with hero `Sat, Sep 19 | Day | Assigned | 4:52 AM – 12:52 PM | BURLINGAME
+  SNF | Unit 1 · CNA` and the real `Request swap` / `Offer shift` buttons, because ShiftDetail
+  re-reads that row by id. No row was written to the database.
+- Files: `src/pages/Home.jsx` only.
+
 ## Open product decisions (carried over from `HANDOFF.md`, still relevant)
 
 - ~~Section 0.3, Offer-shift: mockup's 4-screen stepper vs. the live 1-tap
