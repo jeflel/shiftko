@@ -1,13 +1,13 @@
 import { useState } from 'react'
-import { ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import FlowTopBar from './FlowTopBar'
 
 const fieldClassName =
   'h-[54px] rounded-button border-hairline bg-white px-4 text-[17px] tracking-[-0.34px] text-ink placeholder:text-ink-secondary focus-visible:border-ink focus-visible:ring-0 focus-visible:outline-none'
 
-export default function Screen2({ onBack, onContinue }) {
+export default function Screen2({ step = 1, total = 4, onBack, onContinue }) {
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
 
@@ -18,20 +18,7 @@ export default function Screen2({ onBack, onContinue }) {
 
   return (
     <main className="mx-auto w-full max-w-md px-6 pt-[70px] pb-10">
-      <div className="-ml-2 flex items-center gap-4">
-        <button
-          type="button"
-          onClick={onBack}
-          aria-label="Go back"
-          data-testid="screen2-back"
-          className="flex h-8 w-8 shrink-0 items-center justify-center"
-        >
-          <ArrowLeft size={20} strokeWidth={2} className="text-ink-secondary" />
-        </button>
-        <div className="h-[10px] w-[150px] rounded-full bg-track-neutral">
-          <div className="h-full w-[30px] rounded-full bg-teal" />
-        </div>
-      </div>
+      <FlowTopBar step={step} total={total} onBack={onBack} backTestId="screen2-back" />
 
       <h1 className="mt-10 text-[30px] font-semibold tracking-[-0.6px] text-ink">
         What's your name?

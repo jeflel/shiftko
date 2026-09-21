@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { ArrowLeft, Check } from 'lucide-react'
+import { Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import FlowTopBar from './FlowTopBar'
 
 const ROLES = [
   { value: 'nurse', label: 'Nurse', description: 'I view and claim shifts' },
@@ -35,7 +36,7 @@ function CoordinatorIcon({ selected }) {
   )
 }
 
-export default function Screen3({ firstName = '', onBack, onContinue }) {
+export default function Screen3({ step = 2, total = 4, firstName = '', onBack, onContinue }) {
   const [role, setRole] = useState('nurse')
 
   function handleSubmit(event) {
@@ -45,20 +46,7 @@ export default function Screen3({ firstName = '', onBack, onContinue }) {
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-md flex-col px-6 pt-[70px] pb-11">
-      <div className="-ml-2 flex items-center gap-4">
-        <button
-          type="button"
-          onClick={onBack}
-          aria-label="Go back"
-          data-testid="screen3-back"
-          className="flex h-8 w-8 shrink-0 items-center justify-center"
-        >
-          <ArrowLeft size={20} strokeWidth={2} className="text-ink-secondary" />
-        </button>
-        <div className="h-[10px] w-[150px] rounded-full bg-track-neutral">
-          <div className="h-full w-[60px] rounded-full bg-teal" />
-        </div>
-      </div>
+      <FlowTopBar step={step} total={total} onBack={onBack} backTestId="screen3-back" />
 
       <h1 className="mt-10 text-[30px] font-semibold tracking-[-0.6px] text-ink">
         What's your role{firstName ? `, ${firstName}` : ''}?

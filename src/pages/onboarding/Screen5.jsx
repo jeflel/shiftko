@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { ArrowLeft, Frown, Meh } from 'lucide-react'
+import { Frown, Meh } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import FlowTopBar from './FlowTopBar'
 
 const PAIN_POINTS = [
   { label: 'Shifts posted by phone call', icon: Meh },
@@ -9,7 +10,7 @@ const PAIN_POINTS = [
   { label: 'Hard to swap shifts', icon: Frown },
 ]
 
-export default function Screen5({ onBack, onContinue }) {
+export default function Screen5({ step = 4, total = 4, onBack, onContinue }) {
   const [selected, setSelected] = useState([])
 
   function toggle(option) {
@@ -25,20 +26,7 @@ export default function Screen5({ onBack, onContinue }) {
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-md flex-col px-6 pt-[70px] pb-11">
-      <div className="-ml-2 flex items-center gap-4">
-        <button
-          type="button"
-          onClick={onBack}
-          aria-label="Go back"
-          data-testid="screen5-back"
-          className="flex h-8 w-8 shrink-0 items-center justify-center"
-        >
-          <ArrowLeft size={20} strokeWidth={2} className="text-ink-secondary" />
-        </button>
-        <div className="h-[10px] w-[150px] rounded-full bg-track-neutral">
-          <div className="h-full w-[150px] rounded-full bg-teal" />
-        </div>
-      </div>
+      <FlowTopBar step={step} total={total} onBack={onBack} backTestId="screen5-back" />
 
       <h1 className="mt-10 text-[30px] leading-[1.2] font-semibold tracking-[-0.6px] text-ink">
         What's your biggest

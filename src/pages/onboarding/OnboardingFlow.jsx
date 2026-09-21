@@ -2,8 +2,7 @@ import { useState } from 'react'
 import Screen0 from './Screen0'
 import Screen2 from './Screen2'
 import Screen3 from './Screen3'
-import Screen4 from './Screen4'
-import ScreenCredential from './ScreenCredential'
+import ScreenJob from './ScreenJob'
 import Screen5 from './Screen5'
 import Screen6 from './Screen6'
 import { supabase } from '@/lib/supabase'
@@ -16,6 +15,16 @@ import { supabase } from '@/lib/supabase'
 // into `requested_role` and stays a nurse until the existing coordinator
 // confirms it in the staff roster, because `is_coordinator()` grants full access
 // to every shift, claim and notification in the facility.
+//
+// BAR_TOTAL is the number of steps that draw a progress bar. The invite screen
+// sits before the flow and the final celebration has no bar, so neither counts.
+// Keep it equal to the number of bar-bearing steps below: FlowTopBar derives its
+// fill from step/BAR_TOTAL, so bumping this is the only edit a new step needs on
+// the bar's side. It is 4 today (name, role, job, pain points); the v2 flow takes
+// it to 6 once the periods, shifts and alerts screens land, and the pain-points
+// screen goes away.
+const BAR_TOTAL = 4
+
 export default function OnboardingFlow({ user, onComplete }) {
   const [step, setStep] = useState(0)
   const [firstName, setFirstName] = useState('')
@@ -36,13 +45,10 @@ export default function OnboardingFlow({ user, onComplete }) {
     setStep(4)
   }
 
-  function handleUnit(selectedUnit) {
-    setUnit(selectedUnit)
-    setStep(4.5)
-  }
-
-  function handleCredential(selectedCredential) {
+  // Credential and unit arrive together now that they share a screen.
+  function handleJob({ credential: selectedCredential, unit: selectedUnit }) {
     setCredential(selectedCredential)
+    setUnit(selectedUnit)
     setStep(5)
   }
 
@@ -79,15 +85,34 @@ export default function OnboardingFlow({ user, onComplete }) {
   return (
     <>
       {step === 0 && <Screen0 onGetStarted={() => setStep(2)} onSignIn={() => setStep(2)} />}
-      {step === 2 && <Screen2 onBack={() => setStep(0)} onContinue={handleName} />}
+      {step === 2 && (
+        <Screen2 step={1} total={BAR_TOTAL} onBack={() => setStep(0)} onContinue={handleName} />
+      )}
       {step === 3 && (
-        <Screen3 firstName={firstName} onBack={() => setStep(2)} onContinue={handleRole} />
+        <Screen3
+          step={2}
+          total={BAR_TOTAL}
+          firstName={firstName}
+          onBack={() => setStep(2)}
+          onContinue={handleRole}
+        />
       )}
-      {step === 4 && <Screen4 onBack={() => setStep(3)} onContinue={handleUnit} />}
-      {step === 4.5 && (
-        <ScreenCredential onBack={() => setStep(4)} onContinue={handleCredential} />
+      {step === 4 && (
+        <ScreenJob
+          step={3}
+          total={BAR_TOTAL}
+          onBack={() => setStep(3)}
+          onContinue={handleJob}
+        />
       )}
-      {step === 5 && <Screen5 onBack={() => setStep(4.5)} onContinue={handlePainPoints} />}
+      {step === 5 && (
+        <Screen5
+          step={4}
+          total={BAR_TOTAL}
+          onBack={() => setStep(4)}
+          onContinue={handlePainPoints}
+        />
+      )}
       {step === 6 && (
         <Screen6 firstName={firstName} saving={saving} onFinish={handleFinish} />
       )}
