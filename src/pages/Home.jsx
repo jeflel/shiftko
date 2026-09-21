@@ -1066,13 +1066,24 @@ export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoTo
                       ))}
                     </div>
                   ) : (
-                    <div className="rounded-card bg-white shadow-card-lift">
-                      <EmptyState
-                        icon={CalendarDays}
-                        title="Nothing on the horizon"
-                        subline="Shifts you pick up will show here"
-                        layout="row"
-                      />
+                    /* Same card chrome as the populated list above, with one
+                       row's own px-4 py-3.5 on a child (2026-09-20). EmptyState's
+                       row form carries no padding of its own, so with neither the
+                       card nor a wrapper padded, the 36px tile sat flush against
+                       the card's left edge (measured inset 0) inside a 48px card,
+                       against ~97px for a one-row populated card. The padding goes
+                       on the child rather than the card so both branches keep the
+                       same class string, which is what PersonalEventDetail's list
+                       does. */
+                    <div className="rounded-card bg-white py-1.5 shadow-card-lift">
+                      <div className="px-4 py-3.5">
+                        <EmptyState
+                          icon={CalendarDays}
+                          title="Nothing on the horizon"
+                          subline="Shifts you pick up will show here"
+                          layout="row"
+                        />
+                      </div>
                     </div>
                   )}
                 </section>
