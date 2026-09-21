@@ -13,6 +13,7 @@ import CoordinatorApprovals from './pages/CoordinatorApprovals'
 import CoordinatorManage from './pages/CoordinatorManage'
 import StaffRoster from './pages/StaffRoster'
 import DuplicateWeek from './pages/DuplicateWeek'
+import OnboardingFlow from './pages/onboarding/OnboardingFlow'
 import Screen0 from './pages/onboarding/Screen0'
 
 function App() {
