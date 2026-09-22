@@ -3603,6 +3603,38 @@ rather than a wash). A grey ring around a teal disc is the other knob.
 object-cover` over the disc, so a nurse with a picture sees no change at all,
 which is also why this is not visible on an account that has one.
 
+## Home: the greeting is Hello, name (2026-09-22)
+
+Jefle: the time-aware greeting "is too long, can we just do 'Hello, Alex'". `getGreeting`
+in `Home.jsx` returns one fixed word now; the helper survives only because the caller
+composes it with the name (`{getGreeting()}{nurseFirstName ? `, ${nurseFirstName}` : ''}`),
+and with no first name the row reads `Hello` on its own. Commit `6919d95`.
+
+Measured with a `Range` on the text node, never the `<p>` (the paragraph is `flex-1
+truncate`, so its box is the track, not the string), at 320/390/430px:
+
+| string | width |
+|---|---|
+| `Hello, Alex` | **70.5px** |
+| `Hello, Alexandra` | 108.8px |
+| `Good morning, Alex` | 132.3px |
+| `Good evening, Alex` | 129.3px |
+| `Good afternoon, Alex` (the longest old one) | 142.1px |
+
+So the row's own string is 50% narrower than the worst case it replaces, and it is still
+one line at 22.5px of line height with the row at 78px. Nothing truncates at any of the
+three widths, and the bell keeps its 328px left edge at 390px.
+
+**The mockup's own header avatar is not teal, and that is worth knowing before copying
+it.** `CoordinatorHome.dc.html`'s `.icon-btn.avatar-btn` is a 36px, 9px-radius control at
+`rgba(255,255,255,.22)` with WHITE initials, i.e. glass on the teal gradient the mockup's
+header sits on, and Home has no gradient any more (removed 2026-09-17). The teal pair the
+mockups DO use for a tinted tile is `background: rgba(56, 189, 230, 0.15); color: #0E7490`
+(`.stat-tile-icon`, `.quick-icon`), which is exactly `--color-teal-tint` +
+`--color-teal-foreground` and is what the avatar's initials fallback ships as (2026-09-22,
+same day). Note the mockup's blue channel is 230 against the app token's 229, a 1/255
+difference, so the pair is the same colour.
+
 ## Open product decisions (carried over from `HANDOFF.md`, still relevant)
 
 - ~~Section 0.3, Offer-shift: mockup's 4-screen stepper vs. the live 1-tap
