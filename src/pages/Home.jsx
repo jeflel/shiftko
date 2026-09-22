@@ -759,7 +759,10 @@ export default function Home({ user, role, homeUnit: homeUnitFromApp, onGoToMana
     return () => {
       cancelled = true
     }
-  }, [user.id, isCoordinator, refreshKey])
+    // `cached` is declared because the effect reads it (the loading decision
+    // above). It comes from a lazy useState initialiser, so it is fixed for the
+    // life of the mount and cannot re-run this effect.
+  }, [user.id, isCoordinator, refreshKey, cached])
 
   useEffect(() => {
     if (isCoordinator) {
