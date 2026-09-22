@@ -3696,6 +3696,24 @@ with the profile read delayed 400 ms so a query gated behind it is unmistakable 
 timeline. That proves request shape, ordering and paint timing, and it does NOT prove
 the app against real data or a real phone network.
 
+**Follow-up the same day: the cache painted, then the page went white.** Jefle:
+"it does load instantly then turns white then loads again whenever i go click the
+homepage again from a different page". The cache did its job and then the mount fetch
+undid it: `fetchHomeData` opened with `setLoading(true)`, and both content branches are
+gated on `!loading`, so the page blanked until that fetch landed. Sampling the Today
+card every animation frame from the tap, with the responses delayed: painted at 49ms,
+**blank at 57ms**, painted again at 233ms with all 16 dev requests back. Fixed in
+`55d9860` by only raising the loading state when there is nothing to paint (`if (!cached)
+setLoading(true)`), and `b666216` declares `cached` in the effect's deps because the
+decision reads it. After: painted at 46 to 54ms with 0 requests back and **zero
+content-to-blank transitions**, over every route back (`schedule`, `pool`, `more`, and a
+second pass). The first load, which has nothing cached, is unchanged and still shows
+nothing until the data lands (content at 919ms in the same run).
+
+The general rule this is one instance of: **a paint cache and a `loading` flag that the
+fetch re-raises are a flash waiting to happen, and a one-shot "when did it first paint"
+probe cannot see it.** Measure the SEQUENCE of states, not the first transition.
+
 ## Open product decisions (carried over from `HANDOFF.md`, still relevant)
 
 - ~~Section 0.3, Offer-shift: mockup's 4-screen stepper vs. the live 1-tap
