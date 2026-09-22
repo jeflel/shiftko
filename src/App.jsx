@@ -22,6 +22,15 @@ function App() {
   const [role, setRole] = useState(null)
   const [workspaceId, setWorkspaceId] = useState(null)
   const [fullName, setFullName] = useState(null)
+  // Home's own unit, carried here so the header's open-shift count does not have
+  // to wait for Home's own profile query (2026-09-22). Home's "N open shifts"
+  // query filters on `home_unit`, and it used to read that value out of the
+  // profile row IT fetches on mount, so the count could not start until that
+  // row landed: a second network wave on every return to Home. This function
+  // already reads the same row for role, so the value is free here and is
+  // handed down as a prop. Home still refreshes it from its own query, which is
+  // what keeps a unit changed in the Staff tab from going stale.
+  const [homeUnit, setHomeUnit] = useState(null)
   const [onboardingCompleted, setOnboardingCompleted] = useState(true)
   const [justJoinedWorkspace, setJustJoinedWorkspace] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -120,7 +129,7 @@ function App() {
   async function fetchRole(userId) {
     const { data, error } = await supabase
       .from('profiles')
-      .select('role, workspace_id, full_name, onboarding_completed')
+      .select('role, workspace_id, full_name, onboarding_completed, home_unit')
       .eq('id', userId)
       .single()
 
@@ -129,6 +138,7 @@ function App() {
       setWorkspaceId(data.workspace_id)
       setFullName(data.full_name)
       setOnboardingCompleted(data.onboarding_completed)
+      setHomeUnit(data.home_unit ?? null)
     }
     setLoading(false)
   }
@@ -234,6 +244,7 @@ function App() {
           <Home
             user={session.user}
             role={role}
+            homeUnit={homeUnit}
             onGoToManage={handleGoToManage}
             onGoToPostShift={handleGoToPostShift}
             onGoToApprovals={handleGoToApprovals}

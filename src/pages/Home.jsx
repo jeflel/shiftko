@@ -580,11 +580,18 @@ function getSummaryRange() {
 }
 
 
-export default function Home({ user, role, onGoToManage, onGoToPostShift, onGoToApprovals, onGoToPool, onGoToSchedule, onOpenProfile }) {
+export default function Home({ user, role, homeUnit: homeUnitFromApp, onGoToManage, onGoToPostShift, onGoToApprovals, onGoToPool, onGoToSchedule, onOpenProfile }) {
   const [fullName, setFullName] = useState(null)
   const [credential, setCredential] = useState(null)
   const [avatarPath, setAvatarPath] = useState(null)
-  const [homeUnit, setHomeUnit] = useState(null)
+  // Seeded from App's profile read (2026-09-22) and refreshed by Home's own
+  // query below. The seed is what lets the open-shift count start in the same
+  // network wave as everything else: that query filters on this value, so while
+  // it was only ever set here from Home's own profile row it had to wait for
+  // that row. If the two disagree (a unit changed in the Staff tab since App
+  // loaded) the effect re-runs with the fresh value, one extra count query in a
+  // case that is rare and self-correcting.
+  const [homeUnit, setHomeUnit] = useState(homeUnitFromApp ?? null)
   const [shifts, setShifts] = useState([])
   const [notifications, setNotifications] = useState([])
   const [openCount, setOpenCount] = useState(0)
