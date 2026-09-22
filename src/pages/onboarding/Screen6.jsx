@@ -28,7 +28,7 @@ export default function Screen6({ firstName = '', saving = false, error = null, 
   }
 
   return (
-    <main className="relative mx-auto flex min-h-screen w-full max-w-md flex-col overflow-hidden bg-gradient-to-b from-[#ddf6fb] to-white to-[52.354%] px-6 pt-[160px] pb-11">
+    <main className="relative mx-auto flex h-[100svh] w-full max-w-md flex-col overflow-hidden bg-gradient-to-b from-[#ddf6fb] to-white to-[52.354%] px-6 pt-[140px] pb-[max(24px,env(safe-area-inset-bottom))]">
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-x-0 top-0 h-[400px] w-full bg-gradient-to-b from-[#32A8CA] to-transparent"

@@ -29,7 +29,7 @@ export default function ScreenPeriods({ step = 4, total = 6, onBack, onContinue 
   }
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-md flex-col px-6 pt-[70px] pb-11">
+    <main className="mx-auto flex h-[100svh] w-full max-w-md flex-col overflow-y-auto px-6 pt-4 pb-[max(24px,env(safe-area-inset-bottom))]">
       <FlowTopBar step={step} total={total} onBack={onBack} backTestId="screenperiods-back" />
 
       <h1 className="mt-10 text-[30px] leading-[1.2] font-semibold tracking-[-0.6px] text-ink">

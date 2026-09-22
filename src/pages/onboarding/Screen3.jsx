@@ -45,7 +45,7 @@ export default function Screen3({ step = 2, total = 4, firstName = '', onBack, o
   }
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-md flex-col px-6 pt-[70px] pb-11">
+    <main className="mx-auto flex h-[100svh] w-full max-w-md flex-col overflow-y-auto px-6 pt-4 pb-[max(24px,env(safe-area-inset-bottom))]">
       <FlowTopBar step={step} total={total} onBack={onBack} backTestId="screen3-back" />
 
       <h1 className="mt-10 text-[30px] font-semibold tracking-[-0.6px] text-ink">
@@ -116,7 +116,7 @@ export default function Screen3({ step = 2, total = 4, firstName = '', onBack, o
           </p>
         )}
 
-        <Button type="submit" data-testid="screen3-continue" className="mt-auto h-[54px] w-full translate-y-[23px]">
+        <Button type="submit" data-testid="screen3-continue" className="mt-auto h-[54px] w-full">
           Continue
         </Button>
       </form>

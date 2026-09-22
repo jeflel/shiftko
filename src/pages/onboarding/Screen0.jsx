@@ -4,8 +4,8 @@ import heroImage from '@/assets/onboarding-hero.png'
 
 export default function Screen0({ onGetStarted, onSignIn }) {
   return (
-    <main className="relative mx-auto flex min-h-screen w-full max-w-md flex-col overflow-hidden bg-white">
-      <div className="relative aspect-[402/550] w-full overflow-hidden bg-[#81a7af]">
+    <main className="relative mx-auto flex h-[100svh] w-full max-w-md flex-col overflow-hidden bg-white">
+      <div className="relative min-h-0 w-full flex-1 overflow-hidden bg-[#81a7af]">
         <img
           src={heroImage}
           alt="Shiftko schedule shown on a phone"
