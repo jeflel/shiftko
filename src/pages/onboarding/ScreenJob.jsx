@@ -42,10 +42,13 @@ export default function ScreenJob({
   const [credential, setCredential] = useState('RN')
   const [unit, setUnit] = useState(defaultUnit)
 
-  function handleSubmit(event) {
+  // Awaited: OnboardingFlow writes credential and home_unit before advancing,
+  // because the open-shifts screen reads through a policy that filters on the
+  // profile's own home_unit.
+  async function handleSubmit(event) {
     event.preventDefault()
     if (!unit) return
-    onContinue({ credential, unit })
+    await onContinue({ credential, unit })
   }
 
   return (
