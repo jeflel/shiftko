@@ -40,6 +40,7 @@ export default function OnboardingFlow({ user, onComplete }) {
   const [periods, setPeriods] = useState([])
   const [alertsOn, setAlertsOn] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState(null)
 
   // Returns whether the write landed, so a caller that depends on the row being
   // current (the open-shifts screen) can wait for it. A failure is logged and the
@@ -91,6 +92,7 @@ export default function OnboardingFlow({ user, onComplete }) {
   async function handleFinish() {
     if (saving) return
     setSaving(true)
+    setSaveError(null)
 
     const ok = await saveFields({
       full_name: `${firstName} ${lastName}`.trim(),
@@ -105,7 +107,12 @@ export default function OnboardingFlow({ user, onComplete }) {
 
     if (!ok) {
       // Leave onboarding_completed false so the flow runs again rather than
-      // dropping the user into an app with an empty profile.
+      // dropping the user into an app with an empty profile. The failure has to
+      // be SHOWN, though: this used to just stop, so the button said "Saving...",
+      // reverted to "Let's Go", and the nurse was stranded on the last screen
+      // with no explanation and no way forward. The raw Postgres error is in the
+      // console from saveFields; a nurse gets a sentence she can act on.
+      setSaveError("We couldn't save your profile. Check your connection and try again.")
       setSaving(false)
       return
     }
@@ -159,7 +166,12 @@ export default function OnboardingFlow({ user, onComplete }) {
         />
       )}
       {step === 8 && (
-        <Screen6 firstName={firstName} saving={saving} onFinish={handleFinish} />
+        <Screen6
+          firstName={firstName}
+          saving={saving}
+          error={saveError}
+          onFinish={handleFinish}
+        />
       )}
     </>
   )

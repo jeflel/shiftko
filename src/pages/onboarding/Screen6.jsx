@@ -11,7 +11,7 @@ const Lottie = LottieImport.default || LottieImport
 const INVITE_CODE = 'BURLINGAME'
 const MASCOT_SPEED = 0.7
 
-export default function Screen6({ firstName = '', saving = false, onFinish }) {
+export default function Screen6({ firstName = '', saving = false, error = null, onFinish }) {
   const mascotRef = useRef(null)
 
   async function handleShare() {
@@ -79,6 +79,16 @@ export default function Screen6({ firstName = '', saving = false, onFinish }) {
           <Share size={22} strokeWidth={1.83} />
         </button>
       </div>
+
+      {error && (
+        <p
+          role="alert"
+          data-testid="screen6-error"
+          className="mt-4 text-center text-[15px] tracking-[-0.3px] text-red-700"
+        >
+          {error}
+        </p>
+      )}
 
       <Button
         type="button"
