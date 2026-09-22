@@ -3635,6 +3635,67 @@ mockups DO use for a tinted tile is `background: rgba(56, 189, 230, 0.15); color
 same day). Note the mockup's blue channel is 230 against the app token's 229, a 1/255
 difference, so the pair is the same colour.
 
+## Home: returning to the tab paints from cache (2026-09-22)
+
+Jefle: "when i switch back to the homepage, it takes a lil bit to load, i remember
+back then it would be instant". It was never instant, and the shape of the cost is the
+answer: `App.jsx` renders Home behind `activeTab === 'home'`, so leaving the tab
+UNMOUNTS it and coming back remounts it and replays every request. That conditional is
+as old as the bottom nav (`db218ac`), and there was never a cache. What had grown is
+the work a mount does: 8 REST requests for a nurse, up from 4 when the screens were
+ported (personal events `9ceb816`, the activation checklist's three `cb6db06`, the
+avatar column `421de39`), and one of them was gated behind another.
+
+Two commits: `6422d7f` (the waterfall) and `607e05e` (the cache).
+
+**The waterfall.** Home's "N open shifts" count filters on `home_unit` and read that
+value out of the profile row Home fetches on mount, so it always waited a full round
+trip before it could start. App's `fetchRole` already reads that same row for `role`,
+so it selects `home_unit` too and passes it down, and Home seeds its own state from it.
+Home still refreshes the value from its own query, which is what keeps a unit changed
+in the Staff tab from going stale (one extra count query in that rare case, then
+correct).
+
+**The cache.** New `src/lib/home-cache.js`, module scope, the same shape as
+`tab-scroll.js`: it lives for the tab session, dies on a page load, and is a PAINT
+cache only. The mount fetch still runs every time and replaces every value it holds,
+so a cached value can be one round trip stale at most. Home seeds its state from it
+through a lazy `useState` initialiser, and `loading` starts false when there is
+something to paint. Keyed by user AND role, because the coordinator branch fetches a
+different shifts window and no notifications or personal events, so one key would paint
+a coordinator's coverage picture into a nurse's screen for a round trip. Only the
+success path writes, so a failed read cannot replace a good payload with nulls. A
+dismissed activation checklist writes through, because a dismissal does not refetch and
+without that the retired card would flash back on the next visit. Sign out clears it.
+
+**Verified** in headless Chrome against the dev server with the REST layer stubbed
+(no credentials, no production rows read or written; script kept with the skill at
+`~/.hermes/skills/productivity/shiftko-linear-light-rollout/scripts/verify-home-return.py`,
+also at `/tmp/verify-home-return.py` while it is fresh), three runs per state, medians:
+
+| | return to Home | first load (nothing cached) | open-shift count dispatch |
+|---|---|---|---|
+| before (home_unit withheld) | 46.3 ms | 975 ms | **181 ms** after Home's first request |
+| now | **47 ms** | **917 ms** | **0.1 ms** after Home's first request |
+
+The number that matters is the second column pair: on the way back the Today card is on
+screen **47 ms** after the tap with **0 of the 16 requests back yet**, i.e. painted from
+cache, where a first load has to wait for the data. The waterfall number is the clean
+one for `6422d7f`: 0.1 ms against 181 ms, three runs each and a spread of 0.1 to 0.2
+against 178 to 183. The first-load column is real but noisier, since it also carries dev
+server variance.
+
+**Read the request counts as DEV counts.** `main.jsx` wraps the app in `StrictMode`, so
+every effect runs twice in development and each query fires twice: 16 on a return here
+against 8 in production. The production number is the one that matters for the phone.
+
+Method note, since this is the first change here verified without a signed-in session:
+Playwright (headless, `channel="chrome"`) drives the real dev server with its own
+`localStorage` session stub and fulfils every `/rest/v1/` request from a Python dict,
+with the profile read delayed 400 ms so a query gated behind it is unmistakable in the
+timeline. That proves request shape, ordering and paint timing, and it does NOT prove
+the app against real data or a real phone network.
+
 ## Open product decisions (carried over from `HANDOFF.md`, still relevant)
 
 - ~~Section 0.3, Offer-shift: mockup's 4-screen stepper vs. the live 1-tap
