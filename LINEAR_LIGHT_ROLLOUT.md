@@ -871,7 +871,10 @@ language, plus a short title and an optional subline, in `section` and
 
 Applied so far to the nurse Home only (`26ef4b4`, refined in `aeff41b`):
 
-- no shift today: a `MoonStar` tile, "No shift today" / "Enjoy the day off"
+- no shift today: a `MoonStar` tile, "No shift today" / "Enjoy the day off".
+  **Superseded 2026-09-22:** the card is an illustration card now, see the
+  "Home: the day-off card becomes an illustration card" section near the end of
+  this file.
 - empty Upcoming list: a `CalendarDays` tile, "Nothing on the horizon" /
   "Shifts you pick up will show here". The section previously hid itself
   entirely when there were no items, so it now always renders.
@@ -885,6 +888,12 @@ The moon tile uses the night shift period tint (`period-night-bg` `#F5DFFA` on
 `period-night-fg` `#5132AE`) rather than the teal chip, since a moon in the
 same lavender as the night shift tag is the app's own vocabulary rather than a
 generic grey placeholder.
+
+**The night tint was reversed on 2026-09-19** (Jefle: the tile "is kind of
+similar to night shift pill, which is easy to mistake"), first to the centred
+`stack` layout with `tone="neutral"`, and the whole tile was then replaced by
+an illustration card on 2026-09-22. The history below is kept for the reasoning,
+not as a description of the live card.
 
 Verified live, signed in as a real nurse, on a day they genuinely had no shift:
 the today card is 106px (was 189px), the tile is 36x36 at `rgb(245,223,250)`
@@ -1119,7 +1128,9 @@ after, not from the click log.
 
 Every empty state in the app now uses `EmptyState` from
 `src/components/ui/empty-state.jsx`. Home's today card and its empty Upcoming
-list were already on it; this pass covers the other nine.
+list were already on it; this pass covers the other nine. **The today card left
+the component on 2026-09-22** (it is an illustration card now), so the row below
+is the component's last state there.
 
 | screen | title | icon, tone, size |
 | --- | --- | --- |
@@ -3447,6 +3458,65 @@ so the empty card cannot become a button that leads nowhere.
   7h 0m left | Sun, Sep 20`, and the click opened `Shift Detail` with `Sun, Sep 20 | Day |
   Assigned | 12:45 PM – 8:45 PM | BURLINGAME SNF | Unit 1 · CNA` plus the real `Request swap` and
   `Offer shift` buttons. Nothing was written to the database.
+
+## Home: the day-off card becomes an illustration card (2026-09-22)
+
+Jefle supplied a hand-drawn doodle and asked for the `No shift today` card to use
+it: the drawing filling the card, the same two lines centred over it, the moon
+tile gone. Commits `9c2d742` (the card and the first drawing), `0ad3f12` (he
+picked the second drawing), `7e00800` (text raised 12px), `0f29ddc` (lowered to
+6px), `8924b68` (more padding around the drawing), `8428d50` (card height back to
+the earlier 194.5px). The last four are him tuning it by looking at it on his
+phone; the numbers are taste calls, not derived values.
+
+**The card.** `TodayHero` returns an early illustration card for a day off, so
+the moon tile and its `EmptyState` are gone from this card and `MoonStar` is no
+longer imported in `Home.jsx` (it was its only use, and it is absent from the
+deployed bundle). The card is `relative overflow-hidden rounded-card bg-white
+shadow-card-lift` with a `block w-full` image and an `absolute inset-0` text
+block, which means it carries no `p-4` and cannot share `cardClass` with the
+populated card. It stays a plain div, because a day off has nothing to open.
+Below the early return `item` is provably non-null, so the `{item && ...}` guard
+on the top row and the `item ? ... : ...` ternary were unwrapped. The populated
+card's own markup is otherwise untouched and was re-measured at 408 x 149.5 with
+real data.
+
+**The asset** is `src/assets/no-shift-today.webp`, built from a 1448x1086 source
+PNG: crop to the drawing's ink bounding box (`mean(gray) < 245`), paste it onto
+a white canvas with a margin, then downscale to 816px wide (2x a 408px card).
+WebP rather than PNG because the same crop as PNG was 236 KB against 6.8 KB. The
+margin is **120px on the sides and 99px top and bottom**, and that asymmetry is
+deliberate: the margin is baked into the artwork, so the card's height IS the
+asset's aspect ratio, and 120px all round made the card 206px tall, which he did
+not want. At 120/99 the card is **194.5px**, the drawing is **83.7%** of the
+card's width, and the drawing sits **33.0px** from the left and right edges and
+**27.5px** from the top and bottom. Those are no longer exactly even margins;
+that is the cost of holding the card's height down.
+
+**The text** is `No shift today` at 14px/600 in `text-ink` and `Enjoy the day
+off` at 13px in `text-ink-secondary`, centred horizontally and **6px above the
+card's centre line** (`-translate-y-1.5`). Centred, the subline's descenders sat
+close to the drawing's ground line, so he asked for 12px first and then 6px.
+
+**Verified on production** (`8428d50`'s deploy, asset
+`no-shift-today-B9zJsQh6.webp`): card 408 x 194.5, image 408 x 194.5, both lines
+0.0px off the card's horizontal centre, the overlay exactly -6.0px off the
+vertical centre (`translate: 0px -6px`), 0 `svg` left in the card, 0 console
+errors, nothing clipped. The day-off branch was reached by controlling the
+`shifts` and `personal_events` GETs to return `[]`, because Alex works an evening
+shift today. The four seeded nurses with nothing scheduled today are
+maria.santos@, derek.okafor@, james.reyes@ and linda.tran@ (`@relay-test.com`).
+
+Two things that make this cheap to iterate: the crop is reproducible, so swapping
+the artwork or re-cutting the margin is an asset-only change with no code edit
+(the source images are in the Hermes composer cache,
+`~/Library/Application Support/Hermes/composer-images/`), and the whole thing is
+six small commits, so a revert is one command rather than an unpick.
+
+**Supersedes** the 2026-09-15 "Empty states" section's no-shift entry (the
+`MoonStar` tile, `layout="row"`, the night tint, the 106px card) and the
+2026-09-19 centring pass. The reasoning in those sections still holds for any
+empty state that sits beside period chips.
 
 ## Open product decisions (carried over from `HANDOFF.md`, still relevant)
 
