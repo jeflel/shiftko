@@ -13,8 +13,8 @@ import {
   SquarePlus,
   CalendarDays,
   CalendarOff,
-  MoonStar,
 } from 'lucide-react'
+import noShiftToday from '@/assets/no-shift-today.webp'
 import { supabase } from '../lib/supabase'
 import ShiftDetail from './ShiftDetail'
 import PersonalEventDetail from './PersonalEventDetail'
@@ -113,7 +113,7 @@ function compactContext(context) {
 //
 // It is a BUTTON as of 2026-09-19: the card leads to its own detail screen, the
 // shift's or the event's. `onOpen` is what makes it one, and the caller leaves it
-// off on a day off, so the empty card keeps rendering as a plain div.
+// off when there is nothing to open.
 function TodayHero({ todaysShift, todaysEvent, credential, onOpen }) {
   // A personal event fills the same card as a shift, so a nurse adding their
   // own events for beta gets the same layout rather than a second-class row.
@@ -124,6 +124,33 @@ function TodayHero({ todaysShift, todaysEvent, credential, onOpen }) {
   const titleLine = isEvent
     ? todaysEvent.unit || todaysEvent.name || ''
     : [todaysShift?.unit, credential].filter(Boolean).join(' · ')
+
+  // The day-off card is an ILLUSTRATION card (2026-09-22, Jefle's experiment):
+  // a hand-drawn doodle fills the card edge to edge and the two lines sit centred
+  // in the artwork's own empty middle band, in place of the moon tile. The asset
+  // ships pre-cropped to the artwork's bounding box plus the same 80px margin on
+  // all four sides, so its content reads with even margins inside the card. Two
+  // consequences worth knowing before touching it: the card's height is the
+  // artwork's aspect (190.5px at a 408px card, against 162.5px for the moon
+  // tile), and it is a plain div rather than a button, because a day off has
+  // nothing to open.
+  //
+  // Superseded by this card, kept so they are not re-proposed: the centred
+  // EmptyState stack with `size="inline"` (the row form only moved the group
+  // sideways and `size="section"` ballooned the card to 189px), and the tile's
+  // `tone="night"` (that purple is the Night period chip's own colour, so the
+  // empty card read as a night shift; `neutral` replaced it).
+  if (!item) {
+    return (
+      <div className="relative overflow-hidden rounded-card bg-white shadow-card-lift">
+        <img src={noShiftToday} alt="" aria-hidden="true" className="block w-full select-none" />
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-0.5 px-4 text-center">
+          <p className="text-[14px] font-semibold text-ink">No shift today</p>
+          <p className="text-[13px] text-ink-secondary">Enjoy the day off</p>
+        </div>
+      </div>
+    )
+  }
 
   const cardClass = 'flex flex-col gap-2.5 rounded-card bg-white p-4 shadow-card-lift'
 
@@ -136,58 +163,26 @@ function TodayHero({ todaysShift, todaysEvent, credential, onOpen }) {
           pill keeps its own class string, its 180px truncation cap and the 6px
           cluster gap it had; only the row's two ends changed.
 
-          The whole row is skipped when there is no item (2026-09-19, Jefle). It
-          is the shift's own chrome, and with no shift the title line degrades to
-          the credential alone, so an empty card used to open with a stray "CNA"
-          chip 16px from its left edge over nothing. */}
-      {item && (
-        <div className="flex items-center justify-between">
-          <div className="flex min-w-0 items-center gap-[6px]">
-            {titleLine && (
-              <span className="inline-flex max-w-[180px] items-center truncate rounded-[8px] bg-press-state px-2 py-[3px] text-[11px] font-semibold text-ink-secondary">
-                {titleLine}
-              </span>
-            )}
-          </div>
-          {period && <PeriodTag period={period} />}
+          The whole row is skipped when there is no item: it is the shift's own
+          chrome, and with no shift the title line degrades to the credential
+          alone, so an empty card used to open with a stray "CNA" chip 16px from
+          its left edge over nothing. Since 2026-09-22 the day-off card returns
+          above this body instead, so `item` is always here. */}
+      <div className="flex items-center justify-between">
+        <div className="flex min-w-0 items-center gap-[6px]">
+          {titleLine && (
+            <span className="inline-flex max-w-[180px] items-center truncate rounded-[8px] bg-press-state px-2 py-[3px] text-[11px] font-semibold text-ink-secondary">
+              {titleLine}
+            </span>
+          )}
         </div>
-      )}
+        {period && <PeriodTag period={period} />}
+      </div>
 
-      {item ? (
-        <>
-          <p className="text-[25px] font-semibold tracking-[-0.02em] text-status-deep">
-            {formatShiftTimeRange(item.starts_at, item.ends_at)}
-          </p>
-          <ShiftProgress item={item} />
-        </>
-      ) : (
-        /* Centred layout, and a neutral tile (2026-09-19, Jefle's second pass on
-           this card). The row form with justify-center only moved the group
-           sideways: its text stayed left aligned inside itself, so the card did
-           not read as centred. The stack form centres the icon, the title and the
-           subline as one column, text-centre and all, and size="inline" keeps the
-           card from ballooning the way the size="section" stack does.
-           The tile is neutral grey rather than the night tint it shipped with this
-           morning: that purple is the Night period chip's own colour, so an empty
-           card carried a tile that read as a night shift. Teal is not the
-           alternative because it is the app's most used accent, and the other
-           period tints all have the same problem as the night one. `neutral` is
-           EmptyState's own quiet tile and eight other screens already use it.
-           py-2 overrides the component's own py-5 (cn is tailwind-merge, so the
-           className wins): the stack carries 20px on top of the card's own p-4,
-           which made this card 162.5 tall for two lines of text. The card's 16px
-           is the app's standard padding, the extra 20px was the value for a whole
-           empty SECTION and is redundant inside a card. */
-        <EmptyState
-          icon={MoonStar}
-          title="No shift today"
-          subline="Enjoy the day off"
-          layout="stack"
-          size="inline"
-          tone="neutral"
-          className="py-2"
-        />
-      )}
+      <p className="text-[25px] font-semibold tracking-[-0.02em] text-status-deep">
+        {formatShiftTimeRange(item.starts_at, item.ends_at)}
+      </p>
+      <ShiftProgress item={item} />
     </>
   )
 
@@ -196,7 +191,8 @@ function TodayHero({ todaysShift, todaysEvent, credential, onOpen }) {
   // its own shift detail screen"). A shift opens ShiftDetail and a personal event
   // opens PersonalEventDetail, which renders the same screen, so either way the
   // card leads to the item's own detail. `onOpen` is omitted when there is no
-  // item, so a day off keeps a plain div rather than a button that leads nowhere.
+  // item; the day-off card returns above, so this is the fallback for a caller
+  // that hands over an item with nothing to open.
   // No chevron: the change is additive, so the card looks exactly as it did and
   // only gains the press state and the focus ring the rows below it already use.
   if (!onOpen) {
