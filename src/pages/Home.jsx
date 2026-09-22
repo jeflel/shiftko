@@ -140,11 +140,15 @@ function TodayHero({ todaysShift, todaysEvent, credential, onOpen }) {
   // sideways and `size="section"` ballooned the card to 189px), and the tile's
   // `tone="night"` (that purple is the Night period chip's own colour, so the
   // empty card read as a night shift; `neutral` replaced it).
+  //
+  // The text block is raised 12px off the card's centre line (`-translate-y-3`,
+  // Jefle's ask): centred, the subline's descenders sat close to the drawing's
+  // ground line, and the artwork's clear band runs above the card's middle.
   if (!item) {
     return (
       <div className="relative overflow-hidden rounded-card bg-white shadow-card-lift">
         <img src={noShiftToday} alt="" aria-hidden="true" className="block w-full select-none" />
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-0.5 px-4 text-center">
+        <div className="absolute inset-0 flex -translate-y-3 flex-col items-center justify-center gap-0.5 px-4 text-center">
           <p className="text-[14px] font-semibold text-ink">No shift today</p>
           <p className="text-[13px] text-ink-secondary">Enjoy the day off</p>
         </div>
