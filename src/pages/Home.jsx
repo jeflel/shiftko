@@ -27,6 +27,7 @@ import { dismissActivation, fetchActivation } from '@/lib/activation'
 import { avatarPublicUrl } from '@/lib/avatar'
 import { HomeBellControl, HomeProfileControl } from '@/components/ui/home-header-actions'
 import { fetchMyPersonalEvents } from '@/lib/personalEvents'
+import { readHomeCache, writeHomeCache } from '@/lib/home-cache'
 import { Wordmark } from '@/components/ui/wordmark'
 import { PeriodTag } from '@/components/ui/period-tag'
 import { cn } from '@/lib/utils'
@@ -581,33 +582,45 @@ function getSummaryRange() {
 
 
 export default function Home({ user, role, homeUnit: homeUnitFromApp, onGoToManage, onGoToPostShift, onGoToApprovals, onGoToPool, onGoToSchedule, onOpenProfile }) {
-  const [fullName, setFullName] = useState(null)
-  const [credential, setCredential] = useState(null)
-  const [avatarPath, setAvatarPath] = useState(null)
+  // The last payload for this user, read ONCE per mount (lazy initialiser, so
+  // the read happens on the first render only). It seeds the state below, which
+  // is what makes a return to Home paint its header and cards in the same frame
+  // instead of holding `loading` until the slowest of eight requests lands. The
+  // fetch further down always runs and replaces every value it holds, so this
+  // can only ever be one round trip stale. `isCoordinator` is derived below, so
+  // the read asks the same question here rather than reordering the function.
+  const [cached] = useState(() => readHomeCache(user.id, role === 'coordinator'))
+  const [fullName, setFullName] = useState(cached?.fullName ?? null)
+  const [credential, setCredential] = useState(cached?.credential ?? null)
+  const [avatarPath, setAvatarPath] = useState(cached?.avatarPath ?? null)
   // Seeded from App's profile read (2026-09-22) and refreshed by Home's own
   // query below. The seed is what lets the open-shift count start in the same
   // network wave as everything else: that query filters on this value, so while
   // it was only ever set here from Home's own profile row it had to wait for
   // that row. If the two disagree (a unit changed in the Staff tab since App
   // loaded) the effect re-runs with the fresh value, one extra count query in a
-  // case that is rare and self-correcting.
-  const [homeUnit, setHomeUnit] = useState(homeUnitFromApp ?? null)
-  const [shifts, setShifts] = useState([])
-  const [notifications, setNotifications] = useState([])
+  // case that is rare and self-correcting. The cache is checked first of the
+  // three because it is the newest of them: it was written by this screen, not
+  // by App's session read.
+  const [homeUnit, setHomeUnit] = useState(cached?.homeUnit ?? homeUnitFromApp ?? null)
+  const [shifts, setShifts] = useState(cached?.shifts ?? [])
+  const [notifications, setNotifications] = useState(cached?.notifications ?? [])
   const [openCount, setOpenCount] = useState(0)
   const [pendingApprovalsCount, setPendingApprovalsCount] = useState(0)
   const [weekOffset, setWeekOffset] = useState(0)
-  const [loading, setLoading] = useState(true)
+  // No cache means this really is the first paint for this user, and the page
+  // should hold its content until the data lands.
+  const [loading, setLoading] = useState(!cached)
   const [error, setError] = useState(null)
   const [selectedShift, setSelectedShift] = useState(null)
-  const [personalEvents, setPersonalEvents] = useState([])
+  const [personalEvents, setPersonalEvents] = useState(cached?.personalEvents ?? [])
   const [selectedPersonalEvent, setSelectedPersonalEvent] = useState(null)
   const [editingPersonalEvent, setEditingPersonalEvent] = useState(null)
   const [refreshKey, setRefreshKey] = useState(0)
   const [offerUpdateShiftId, setOfferUpdateShiftId] = useState(null)
   const [showNotifications, setShowNotifications] = useState(false)
   const [showAddPersonalEvent, setShowAddPersonalEvent] = useState(false)
-  const [activation, setActivation] = useState(null)
+  const [activation, setActivation] = useState(cached?.activation ?? null)
 
   const isCoordinator = role === 'coordinator'
 
@@ -705,14 +718,32 @@ export default function Home({ user, role, homeUnit: homeUnitFromApp, onGoToMana
         return
       }
 
-      setFullName(profileResult.data?.full_name ?? null)
-      setCredential(profileResult.data?.credential ?? null)
-      setAvatarPath(profileResult.data?.avatar_url ?? null)
-      setHomeUnit(profileResult.data?.home_unit ?? null)
-      setShifts(shiftsResult.data ?? [])
-      setNotifications(notificationsResult.error ? [] : (notificationsResult.data ?? []))
-      setPersonalEvents(personalEventsResult.data ?? [])
+      const nextProfile = profileResult.data
+      const nextShifts = shiftsResult.data ?? []
+      const nextNotifications = notificationsResult.error ? [] : (notificationsResult.data ?? [])
+      const nextPersonalEvents = personalEventsResult.data ?? []
+
+      setFullName(nextProfile?.full_name ?? null)
+      setCredential(nextProfile?.credential ?? null)
+      setAvatarPath(nextProfile?.avatar_url ?? null)
+      setHomeUnit(nextProfile?.home_unit ?? null)
+      setShifts(nextShifts)
+      setNotifications(nextNotifications)
+      setPersonalEvents(nextPersonalEvents)
       setLoading(false)
+
+      // Only the success path writes: a failed read must not replace a good
+      // cached payload with nulls, or the next return to Home would paint an
+      // empty header and then correct itself.
+      writeHomeCache(user.id, isCoordinator, {
+        fullName: nextProfile?.full_name ?? null,
+        credential: nextProfile?.credential ?? null,
+        avatarPath: nextProfile?.avatar_url ?? null,
+        homeUnit: nextProfile?.home_unit ?? null,
+        shifts: nextShifts,
+        notifications: nextNotifications,
+        personalEvents: nextPersonalEvents,
+      })
     }
 
     fetchHomeData()
@@ -781,7 +812,13 @@ export default function Home({ user, role, homeUnit: homeUnitFromApp, onGoToMana
 
     async function loadActivation() {
       const next = await fetchActivation(user.id)
-      if (!cancelled) setActivation(next)
+      if (!cancelled) {
+        setActivation(next)
+        // Its own three requests (two counts and the dismissed flag) are part
+        // of Home's first paint too, so the checklist is cached alongside the
+        // main payload rather than popping in on every return to the tab.
+        writeHomeCache(user.id, isCoordinator, { activation: next })
+      }
     }
 
     loadActivation()
@@ -797,13 +834,19 @@ export default function Home({ user, role, homeUnit: homeUnitFromApp, onGoToMana
   // a hidden checklist that quietly returns on the next load.
   async function handleDismissActivation() {
     const previous = activation
-    setActivation((current) => (current ? { ...current, mode: 'notification' } : current))
+    const dismissed = activation ? { ...activation, mode: 'notification' } : activation
+    setActivation(dismissed)
+    // Written here as well as at the fetch (2026-09-22): a dismissal does not
+    // refetch, so without this the cache would still hold the checklist and the
+    // next return to Home would flash a card the nurse already retired.
+    if (dismissed) writeHomeCache(user.id, isCoordinator, { activation: dismissed })
 
     try {
       await dismissActivation(user.id)
     } catch (err) {
       console.error('activation dismissal failed', err)
       setActivation(previous)
+      if (previous) writeHomeCache(user.id, isCoordinator, { activation: previous })
     }
   }
 
