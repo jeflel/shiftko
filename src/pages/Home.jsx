@@ -628,7 +628,15 @@ export default function Home({ user, role, homeUnit: homeUnitFromApp, onGoToMana
     let cancelled = false
 
     async function fetchHomeData() {
-      setLoading(true)
+      // Only blank the page when there is nothing to paint (2026-09-22). With a
+      // cache seeded, `loading` starts false and the first render is already the
+      // real page, so flipping it back to true here blanks the screen and it
+      // comes back when this fetch lands: content, then white, then content
+      // again, measured at 49ms painted, 57ms blank, 233ms painted on the
+      // return-to-Home pass. `cached` is what the state above was seeded from
+      // and is fixed for the life of the mount, so it is exactly the question
+      // "did this mount have something to show before it started fetching".
+      if (!cached) setLoading(true)
       setError(null)
 
       const shiftsQuery = isCoordinator
