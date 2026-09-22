@@ -538,10 +538,11 @@ function WeeklyProgress({ shifts, weekOffset, onChangeWeekOffset }) {
 }
 
 function getGreeting() {
-  const hour = new Date().getHours()
-  if (hour < 12) return 'Good morning'
-  if (hour < 17) return 'Good afternoon'
-  return 'Good evening'
+  // One word for every hour (2026-09-22, Jefle: the time-aware line "is too long").
+  // It was Good morning / afternoon / evening by the clock; "Hello" is a fixed
+  // string, so the helper stays only because the caller composes it with the name
+  // (`Hello, Alex`), and the row still truncates rather than wraps.
+  return 'Hello'
 }
 
 // The header's second line (2026-09-17). One short sentence about today, because
