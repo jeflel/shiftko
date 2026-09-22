@@ -65,7 +65,7 @@ export default function ScreenOpenShifts({ step = 5, total = 6, unit = '', onBac
   const count = shifts.length
 
   return (
-    <main className="mx-auto flex h-[100svh] w-full max-w-md flex-col overflow-y-auto px-6 pt-4 pb-[max(24px,env(safe-area-inset-bottom))]">
+    <main className="mx-auto flex h-[100svh] w-full max-w-md flex-col overflow-y-auto px-6 pt-[max(16px,env(safe-area-inset-top))] pb-[max(24px,env(safe-area-inset-bottom))]">
       <FlowTopBar step={step} total={total} onBack={onBack} backTestId="screenopenshifts-back" />
 
       <h1 className="mt-10 text-[30px] leading-[1.2] font-semibold tracking-[-0.6px] text-ink">

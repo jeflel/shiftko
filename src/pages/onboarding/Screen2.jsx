@@ -17,7 +17,7 @@ export default function Screen2({ step = 1, total = 4, onBack, onContinue }) {
   }
 
   return (
-    <main className="mx-auto flex h-[100svh] w-full max-w-md flex-col overflow-y-auto px-6 pt-4 pb-[max(24px,env(safe-area-inset-bottom))]">
+    <main className="mx-auto flex h-[100svh] w-full max-w-md flex-col overflow-y-auto px-6 pt-[max(16px,env(safe-area-inset-top))] pb-[max(24px,env(safe-area-inset-bottom))]">
       <FlowTopBar step={step} total={total} onBack={onBack} backTestId="screen2-back" />
 
       <h1 className="mt-4 text-[30px] font-semibold tracking-[-0.6px] text-ink">
