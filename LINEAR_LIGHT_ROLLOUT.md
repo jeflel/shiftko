@@ -3568,6 +3568,41 @@ Harness: `scripts/header-controls-harness.html` (untracked local helper, links
 the built CSS and repeats both controls' class strings, prints every number above
 through `window.__m()`).
 
+## Home: the profile control's initials go teal (2026-09-22)
+
+Jefle, right after the bell: "for the avatar icon, can we use our teal theme there
+too for the empty avatar one, instead of it just being gray". One class string, in
+the CALLER (`HomeProfileControl`'s `className` on `<Avatar>`), so the shared
+`Avatar` default is untouched: `bg-teal-tint text-teal-foreground` join
+`outline-1 outline-offset-2 outline-avatar-ring shadow-card-lift`. Commit `9cc3d7e`.
+
+**Why the caller and not the component.** `Avatar` is the app's one shared
+initials fallback, with exactly two callers (`HomeProfileControl` and Profile's
+56px identity circle), and `bg-press-state` `#f2f2f7` with a `text-ink-secondary`
+glyph is the app's person-row grey. Home's header is the one place the app carries
+a brand colour, so the tone is opt-in: Profile's identity circle keeps its grey,
+and the seven hand-rolled initials circles that never used the component at all
+(`ShiftDetail`, `PersonalEventDetail`, `ClaimStatusDetail`, `OfferShiftStatus`,
+`StaffRoster` x2, `SwapPickShift`) are untouched. Widening it to every initials
+circle is one class string in `Avatar` plus those seven sites, and is a separate
+call.
+
+**Numbers.** The tint is an alpha colour, so the disc is whatever it composites
+over: `rgba(56,189,229,.15)` lands at **#dcf0f8** on the page ground and #e1f5fb
+on a white card, which is a 1.12:1 step off the page (the grey it replaced was
+1.06:1, so it is a wash either way, not a filled chip). The glyph is
+`--color-teal-foreground` `#0e7490` at **4.56:1** on that disc against **4.54:1**
+for the grey pair it replaces, so legibility is unchanged rather than traded. The
+outline is still `--color-avatar-ring` `#a1a1a6`, which goes 2.45:1 to **2.19:1**
+against the new disc. The other teal pairs, if this reads too faint on a phone:
+`bg-teal-wash` (10%, #e6f3f9, glyph 4.73:1) one stop softer, or `bg-teal-field`
+`#0a5e73` with a white glyph (7.34:1, and 6.98:1 off the page, a real brand dot
+rather than a wash). A grey ring around a teal disc is the other knob.
+
+**Only the fallback is visible.** With a photo the `img` is `size-full
+object-cover` over the disc, so a nurse with a picture sees no change at all,
+which is also why this is not visible on an account that has one.
+
 ## Open product decisions (carried over from `HANDOFF.md`, still relevant)
 
 - ~~Section 0.3, Offer-shift: mockup's 4-screen stepper vs. the live 1-tap
