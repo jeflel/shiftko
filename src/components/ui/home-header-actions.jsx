@@ -62,6 +62,19 @@ import { Avatar } from '@/components/ui/avatar'
 // `shadow-card-lift` is the same `0 5px 15px rgba(53,87,97,.12)` every card on Home
 // uses, deliberately not a new shadow value.
 //
+// The initials fallback is TEAL now (2026-09-22, his ask: "can we use our teal theme
+// there too for the empty avatar one, instead of it just being gray"). It was the
+// shared avatar's own `bg-press-state` `#f2f2f7` disc with a `text-ink-secondary`
+// glyph, which is the grey the app uses for a person row; Home's header is the one
+// place the app puts a brand colour, so it takes `bg-teal-tint` + `text-teal-foreground`
+// (the same pair as Home's quick-action tiles and Pool's claim button). TWO KNOBS, both
+// in the caller's `className`, so the shared `Avatar` default is untouched and Profile's
+// 56px identity circle keeps its grey: `bg-teal-tint` is the disc (rgba(56,189,229,.15),
+// which composites to #dcf0f8 over the page ground) and `text-teal-foreground` is the
+// glyph. Only the fallback is visible at all: with a photo the img covers the disc, so a
+// nurse with a picture sees no change. The outline stays `--color-avatar-ring` grey at
+// 2.45:1, which is now the second knob if a grey ring around a teal disc reads wrong.
+//
 // The bell no longer owns the notifications panel. It used to fetch its own
 // notifications and return the panel in place of itself, which worked while it
 // rendered as a full-width bar; as a 36px control inside the greeting row that
@@ -81,7 +94,7 @@ export function HomeProfileControl({ name, avatarUrl, onOpenProfile }) {
         name={name}
         src={avatarUrl}
         size="sm"
-        className="outline-1 outline-offset-2 outline-avatar-ring shadow-card-lift"
+        className="bg-teal-tint text-teal-foreground outline-1 outline-offset-2 outline-avatar-ring shadow-card-lift"
       />
     </button>
   )
