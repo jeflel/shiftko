@@ -3518,6 +3518,56 @@ six small commits, so a revert is one command rather than an unpick.
 2026-09-19 centring pass. The reasoning in those sections still holds for any
 empty state that sits beside period chips.
 
+## Home: the bell control becomes a 42px circle (2026-09-22)
+
+Jefle: "the bell icon is inconsistent with the profile icon", then "can you try to
+make the icon bell a circle too, and make it 42x42". One class string in
+`src/components/ui/home-header-actions.jsx`: `size-9 rounded-control` to
+`size-[42px] rounded-full`. The glyph is untouched, still a 20px `Bell` at
+`strokeWidth` 1.75, so its clearance inside the control goes 8px to 11px; `size`
+on the `Bell` is the knob if it now reads small in the bigger circle.
+
+**42 is a visual match, not a box match, and the two controls get there two
+different ways.** The profile control's box is still 36px (`Avatar size="sm"` is
+`size-9`); its edge is `outline-1` at `outline-offset-2`, painted OUTSIDE the
+box, so its visible outer diameter is 36 + 2*(2+1) = **42px**. The bell's border
+is painted INSIDE a border-box, so 42px of box IS 42px of visible circle. Both
+read 42px now. The other way to match, which was not the ask: leave the bell at
+36px and give it the profile's detached ring, which would also have kept the row
+at 72px.
+
+**Measured** against the app's own built stylesheet
+(`dist/assets/index-D1_GxYIj.css`) with the component's class strings copied into
+a throwaway harness at 320, 390 and 430px: bell box 42 x 42, `border-radius`
+33554432px (Chromium's `rounded-full` value, a true circle), 1px `#d8d8dd`
+border, `box-sizing: border-box`; profile box 36 x 36 with a 1px `#a1a1a6`
+outline at 2px offset. Row height 72 to **78px** (16px `pt-4` + 42 + 20px
+`pb-5`), the greeting is not clipped at any of the three widths and nothing
+overflows horizontally.
+
+**The unread dot did not need moving.** It stays `top-[6px] right-[6px]`, and the
+short version of the check is that the two shorter sides of that move are the
+ones that clip. Its containing block is the button's padding box, so inside the
+1px border the 8px disc spans local x 27..35 and y 7..15; its centre is 14.14px
+from the circle's centre and its furthest corner is 19.8px against a 21px radius,
+so it has **1.2px of rim clearance** and the white `ring-2` halo stays inside the
+circle. The 36px square it replaced left 5.3px at the same offsets.
+
+**The edge weight is still the difference between the two controls, and that is
+the next knob, not a bug.** The diameters match but the rims do not: the bell's
+is `--color-control-edge` `#d8d8dd` at **1.19:1** on the page ground, the
+profile's is `--color-avatar-ring` `#a1a1a6` at **2.45:1**, and the profile also
+carries `shadow-card-lift`. A vision read of the render at equal diameter called
+the avatar the bigger of the two, which is the same "a faint rim reads smaller"
+effect the earlier control passes hit. Three single-knob options if it still
+reads off: `border-avatar-ring` on the bell, the profile's detached
+`outline-1 outline-offset-2 outline-avatar-ring` on a 36px box (which also puts
+the row back to 72px), or `shadow-card-lift`.
+
+Harness: `scripts/header-controls-harness.html` (untracked local helper, links
+the built CSS and repeats both controls' class strings, prints every number above
+through `window.__m()`).
+
 ## Open product decisions (carried over from `HANDOFF.md`, still relevant)
 
 - ~~Section 0.3, Offer-shift: mockup's 4-screen stepper vs. the live 1-tap
