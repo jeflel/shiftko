@@ -822,10 +822,12 @@ export default function Home({ user, role, homeUnit: homeUnitFromApp, onGoToMana
     return () => {
       cancelled = true
     }
-    // `cached` is declared because the effect reads it (the loading decision
-    // above). It comes from a lazy useState initialiser, so it is fixed for the
-    // life of the mount and cannot re-run this effect.
-  }, [user.id, isCoordinator, refreshKey, cached])
+    // `cached` and `paintKey` are declared because the effect reads both: the
+    // loading decision uses `cached` and the success path writes through
+    // `paintKey`. Both are fixed for the life of the mount (a lazy initialiser
+    // and a string built from the user and role), so neither can re-run this
+    // effect.
+  }, [user.id, isCoordinator, refreshKey, cached, paintKey])
 
   useEffect(() => {
     if (isCoordinator) {
@@ -900,7 +902,7 @@ export default function Home({ user, role, homeUnit: homeUnitFromApp, onGoToMana
     return () => {
       cancelled = true
     }
-  }, [user.id, isCoordinator, refreshKey])
+  }, [user.id, isCoordinator, refreshKey, paintKey])
 
   // Retires the checklist for good. Both exits write this: "Skip for now" while
   // it is unfinished, and "Got it" on the finished card. Optimistic so the tap
