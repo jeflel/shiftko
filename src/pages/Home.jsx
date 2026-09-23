@@ -150,7 +150,22 @@ function TodayHero({ todaysShift, todaysEvent, credential, onOpen }) {
   if (!item) {
     return (
       <div className="relative overflow-hidden rounded-card bg-white shadow-card-lift">
-        <img src={noShiftToday} alt="" aria-hidden="true" className="block w-full select-none" />
+        {/* width/height carry the asset's real pixel size (2026-09-22), which is
+            what makes the browser reserve the artwork's box BEFORE it loads. The
+            class string is unchanged and `w-full` still sets the used width, so
+            the pair is only there for the aspect ratio: without it the img is 0px
+            tall until the webp's header arrives, the day-off card sits at 37px,
+            and then it grows to its real height and pushes My Upcoming down by
+            166.8px at 390px wide (measured: section 37px at 897.6ms, 203.8px at
+            909.1ms, Upcoming 223 -> 634.5). */}
+        <img
+          src={noShiftToday}
+          alt=""
+          aria-hidden="true"
+          width={816}
+          height={389}
+          className="block w-full select-none"
+        />
         <div className="absolute inset-0 flex -translate-y-1.5 flex-col items-center justify-center gap-0.5 px-4 text-center">
           <p className="text-[14px] font-semibold text-ink">No shift today</p>
           <p className="text-[13px] text-ink-secondary">Enjoy the day off</p>
