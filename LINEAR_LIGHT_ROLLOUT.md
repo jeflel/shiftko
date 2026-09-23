@@ -3804,6 +3804,33 @@ sign-in time rather than a fresh read per mount, so a credential changed in Prof
 Schedule after a reload rather than immediately. And the coordinator's Manage and Staff Roster
 screens were out of scope, so they still draw their own loading text.
 
+## Home: the bell takes the toggle's grey and loses its outline (2026-09-22)
+
+Jefle: "do you see the list vs calendar button colors, like the gray unselected background,
+can we use that color for the bell icon on the homepage for the icon background color, then
+lets remove the outline and make the bell icon color appropriately darker". Commit `b2b50c9`.
+
+The disc is `SegmentedControl`'s own track grey (`bg-track-neutral` `#ededf2`), the 1px
+`border-control-edge` is gone, and the glyph went from `text-ink-secondary` `#6e6e73` to
+`text-ink` `#1d1d1f`. Measured against the built stylesheet at 390px: box still 42 x 42,
+`border: 0px`, glyph clearance still 11px, row still 78px, nothing overflows. Contrast: the
+glyph is **14.42:1** on the disc, against 5.07:1 for the grey on white it replaces, and
+`#6e6e73` on the new disc would have been 4.35:1.
+
+**Two consequences inside the same control, both fixed here.** The unread dot's offsets went
+6px to 7px, because with no border those measure from the border box, so the dot sat 1px
+further out with its halo across the rim (furthest corner 21.21px against a 21px radius; at
+7px it is 19.8px, the 1.2px of clearance it had with the border on). And its halo is
+`ring-track-neutral` instead of `ring-white`, since a white ring on a grey disc reads as a
+light notch.
+
+**Worth knowing before the next value:** `bg-track-neutral` on the page ground is 1.11:1
+(the white disc it replaced was 1.05:1), so the disc is a wash rather than a shape and the
+GLYPH is what defines the control now. That is the trade he asked for, and
+`--color-divider-finished` `#d8d8dd` (1.35:1) is the next grey up if the circle should read
+as a circle. The profile control beside it still carries its own darker ring at 2.45:1, so
+the two controls now differ in exactly that way: one has an edge, one does not.
+
 ## Open product decisions (carried over from `HANDOFF.md`, still relevant)
 
 - ~~Section 0.3, Offer-shift: mockup's 4-screen stepper vs. the live 1-tap
