@@ -236,6 +236,49 @@ function TodayHero({ todaysShift, todaysEvent, credential, onOpen }) {
   )
 }
 
+// The Today card's placeholder, shown only on a COLD load (2026-09-22, Jefle: the
+// card "doesn't show until like some milliseconds after... kinda like there's
+// already a white card in where its usually placed").
+//
+// It only ever renders while `loading` is true, which after the cache work means
+// "this user has nothing cached yet", i.e. the first Home of a session: a return
+// to the tab paints the real card from the cache and never gets here. So the
+// branch it stands in for is unknowable when it draws, and it carries the
+// POPULATED card's height, 149.5px measured at 390px wide, because that is the
+// card a nurse opening the app is most often waiting for. On a day off the real
+// card is the taller illustration (about 190px) and there is still a move, of
+// that difference; a skeleton cannot be two heights at once and the taller one
+// would over-reserve on every shift day.
+//
+// `min-h-[149.5px]` is the whole reason it works: the card's real height is set
+// by three lines of content, so the skeleton carries the height explicitly
+// instead of trying to reproduce the type metrics with grey blocks. The blocks
+// are `bg-track-neutral`, the app's existing track token, which is the same
+// colour as the real progress bar's own track, and they are deliberately still:
+// the app has no skeleton vocabulary and a shimmer would be a new motion idea.
+function TodayCardSkeleton() {
+  return (
+    <div
+      aria-hidden="true"
+      data-testid="home-today-skeleton"
+      className="flex min-h-[149.5px] flex-col gap-2.5 rounded-card bg-white p-4 shadow-card-lift"
+    >
+      <div className="flex items-center justify-between">
+        <div className="h-[21px] w-[86px] rounded-[8px] bg-track-neutral" />
+        <div className="h-[21px] w-[62px] rounded-[8px] bg-track-neutral" />
+      </div>
+      <div className="h-[29px] w-[150px] rounded-md bg-track-neutral" />
+      <div className="mt-1 flex flex-col gap-1.5">
+        <div className="h-1.5 w-full rounded-full bg-track-neutral" />
+        <div className="flex items-center justify-between">
+          <div className="h-[13px] w-[54px] rounded bg-track-neutral" />
+          <div className="h-[13px] w-[54px] rounded bg-track-neutral" />
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // Per the design, the shift's unit/credential moved up into the hero's top
 // row; the progress row's right-hand column now shows the shift date.
 function ShiftProgress({ item }) {
@@ -1025,6 +1068,18 @@ export default function Home({ user, role, homeUnit: homeUnitFromApp, onGoToMana
           </div>
 
           <div className="flex flex-1 flex-col gap-5 pt-0 pb-10">
+            {/* The Today slot while the first load is in flight (2026-09-22): the
+                header and a placeholder card, so the page's shape is already
+                there when the data lands and the sections below it do not move.
+                Only ever seen on a cold load: with a cache, `loading` starts
+                false and the real card is painted instead. */}
+            {loading && !isCoordinator && (
+              <section className="flex flex-col gap-2.5" data-testid="home-today">
+                <SectionHeader title={todayHeader} />
+                <TodayCardSkeleton />
+              </section>
+            )}
+
             {!loading && !error && isCoordinator && (
               <CoordinatorHomeContent
                 shifts={shifts}
