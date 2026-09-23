@@ -4,10 +4,25 @@ import { Avatar } from '@/components/ui/avatar'
 // Home's two header controls: the profile control to the left of the greeting
 // and the notification bell at the right gutter.
 //
-// The bell is a white circle (`rounded-full`) at 42x42 (`size-[42px]`) with a 1px
-// `--color-control-edge` border and a muted `text-ink-secondary` glyph. It was a
-// 36px rounded SQUARE (`size-9 rounded-control`, 9px radius) until 2026-09-22,
-// when Jefle asked for a circle at 42x42 to match the profile control beside it.
+// The bell is a filled circle at 42x42 (`size-[42px] rounded-full`): the
+// SegmentedControl track's own grey (`bg-track-neutral` #ededf2), no border, and
+// an `text-ink` glyph (2026-09-22, Jefle: "use that color for the bell icon...
+// then lets remove the outline and make the bell icon color appropriately
+// darker"). Two things to know about that pair before changing it:
+//   - `bg-track-neutral` on the page ground is 1.06:1, so the disc is a wash
+//     rather than a shape; with the 1px border gone the GLYPH is what defines the
+//     control. That is the trade he asked for, and `--color-divider-finished`
+//     #d8d8dd (1.30:1) is the next grey up if the circle should read as a circle.
+//   - the glyph went from `text-ink-secondary` #6e6e73 to `text-ink` #111111,
+//     which is 4.30:1 to 14.9:1 on that disc. #6e6e73 is what the unselected
+//     segments of that same toggle use, so the middle option is to match them.
+// The unread dot's halo follows the disc (`ring-track-neutral` instead of
+// `ring-white`), because a white ring on a grey disc reads as a light notch.
+//
+// Before that it was a white circle with a 1px `--color-control-edge` border and
+// a muted `text-ink-secondary` glyph, and before THAT a 36px rounded SQUARE
+// (`size-9 rounded-control`, 9px radius) until 2026-09-22, when Jefle asked for a
+// circle at 42x42 to match the profile control beside it.
 // The two numbers are the whole story and they are different knobs:
 //   - `rounded-full` is the shape. The 9px radius was the only rounded-rect left
 //     in a row whose other control is a face.
@@ -30,15 +45,15 @@ import { Avatar } from '@/components/ui/avatar'
 // `::before` ring they used to carry. That rule (`.home-glass-ring` in
 // `src/tailwind.css`) is deleted with the gradient.
 //
-// The unread dot stays `top-[6px] right-[6px]`, and it was measured against the
-// circle's curve rather than moved, because the two shorter sides of that move are
-// the ones that clip. The dot's containing block is the button's PADDING box, so
-// inside a 1px border it spans local x 27..35 and y 7..15; its centre is 14.14px
-// from the circle's centre and the corner furthest from that centre is 19.8px,
-// against a 21px radius, so it has 1.2px of rim clearance and its white `ring-2`
-// halo stays inside the circle. The 36px square control it replaced left 5.3px of
-// clearance at the same 6px offsets, so the corner of the box was closer to the
-// rim than the circle ever gets.
+// The unread dot is `top-[7px] right-[7px]`, and both numbers are measured against
+// the circle's curve, because the two shorter sides of that move are the ones that
+// clip. The dot's containing block is the button's padding box, which is now the
+// whole 42px because the control has no border: at 6px the 8px disc spanned local
+// x 28..36 and y 6..14, its corner furthest from the centre reached 21.21px against
+// a 21px radius, and its halo crossed the rim. At 7px it spans x 27..35 and y 7..15,
+// that corner is 19.8px, and it has 1.2px of clearance, which is what it had with
+// the border on. `ring-track-neutral` rather than `ring-white` because the halo has
+// to separate the dot from the disc it sits on, and that disc is grey now.
 //
 // The profile control is a plain 36px circle instead (2026-09-18): it is the
 // nurse's own face or her initials, and a face inside a bordered square would
@@ -107,11 +122,17 @@ export function HomeBellControl({ hasUnread, onOpen }) {
       onClick={onOpen}
       aria-label="Notifications"
       data-testid="home-bell-control"
-      className="relative flex size-[42px] shrink-0 items-center justify-center rounded-full border border-control-edge bg-white text-ink-secondary"
+      className="relative flex size-[42px] shrink-0 items-center justify-center rounded-full bg-track-neutral text-ink"
     >
       <Bell size={20} strokeWidth={1.75} />
+      {/* The unread dot is `top-[7px] right-[7px]`, not 6px: the control has no
+          border now, so those offsets measure from the border box and the dot sat
+          1px further out, with its halo across the rim (furthest corner 21.21px
+          against a 21px radius). At 7px it has the 1.2px of clearance it had with
+          the border on. A JSX comment cannot be the first child of a `&&` group,
+          which is a build error rather than a lint one, so it lives out here. */}
       {hasUnread && (
-        <span className="absolute top-[6px] right-[6px] size-2 rounded-full bg-urgency-red ring-2 ring-white" />
+        <span className="absolute top-[7px] right-[7px] size-2 rounded-full bg-urgency-red ring-2 ring-track-neutral" />
       )}
     </button>
   )
