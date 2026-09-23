@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { supabase } from './lib/supabase'
 import { getTabScroll, saveTabScroll } from './lib/tab-scroll'
-import { clearHomeCache } from './lib/home-cache'
+import { clearPaintCache } from './lib/paint-cache'
 import Auth from './components/Auth'
 import BottomNav from './components/BottomNav'
 import Home from './pages/Home'
@@ -67,11 +67,11 @@ function App() {
       if (currentSession) {
         fetchRole(currentSession.user.id)
       } else {
-        // Signing out drops Home's cached payload (home-cache.js). The cache is
-        // keyed by user, so this is hygiene rather than correctness: nothing
-        // should hold one nurse's name, unit and shifts in memory for whatever
-        // session loads next.
-        clearHomeCache()
+        // Signing out drops every screen's cached payload (paint-cache.js).
+        // The keys separate users, so this is hygiene rather than correctness:
+        // nothing should hold one nurse's name, unit and shifts in memory for
+        // whatever session loads next.
+        clearPaintCache()
       }
     })
 

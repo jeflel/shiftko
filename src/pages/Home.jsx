@@ -27,7 +27,7 @@ import { dismissActivation, fetchActivation } from '@/lib/activation'
 import { avatarPublicUrl } from '@/lib/avatar'
 import { HomeBellControl, HomeProfileControl } from '@/components/ui/home-header-actions'
 import { fetchMyPersonalEvents } from '@/lib/personalEvents'
-import { readHomeCache, writeHomeCache } from '@/lib/home-cache'
+import { paintCacheKey, readPaintCache, writePaintCache } from '@/lib/paint-cache'
 import { Wordmark } from '@/components/ui/wordmark'
 import { PeriodTag } from '@/components/ui/period-tag'
 import { cn } from '@/lib/utils'
@@ -647,7 +647,12 @@ export default function Home({ user, role, homeUnit: homeUnitFromApp, onGoToMana
   // fetch further down always runs and replaces every value it holds, so this
   // can only ever be one round trip stale. `isCoordinator` is derived below, so
   // the read asks the same question here rather than reordering the function.
-  const [cached] = useState(() => readHomeCache(user.id, role === 'coordinator'))
+  // One key for this screen, built once: the role is part of it because the
+  // coordinator and nurse branches fetch different shift windows and different
+  // sections, so sharing an entry would paint one role's rows into the other's
+  // screen for a round trip.
+  const paintKey = paintCacheKey('home', user.id, role === 'coordinator' ? 'coordinator' : 'nurse')
+  const [cached] = useState(() => readPaintCache(paintKey))
   const [fullName, setFullName] = useState(cached?.fullName ?? null)
   const [credential, setCredential] = useState(cached?.credential ?? null)
   const [avatarPath, setAvatarPath] = useState(cached?.avatarPath ?? null)
@@ -801,7 +806,7 @@ export default function Home({ user, role, homeUnit: homeUnitFromApp, onGoToMana
       // Only the success path writes: a failed read must not replace a good
       // cached payload with nulls, or the next return to Home would paint an
       // empty header and then correct itself.
-      writeHomeCache(user.id, isCoordinator, {
+      writePaintCache(paintKey, {
         fullName: nextProfile?.full_name ?? null,
         credential: nextProfile?.credential ?? null,
         avatarPath: nextProfile?.avatar_url ?? null,
@@ -886,7 +891,7 @@ export default function Home({ user, role, homeUnit: homeUnitFromApp, onGoToMana
         // Its own three requests (two counts and the dismissed flag) are part
         // of Home's first paint too, so the checklist is cached alongside the
         // main payload rather than popping in on every return to the tab.
-        writeHomeCache(user.id, isCoordinator, { activation: next })
+        writePaintCache(paintKey, { activation: next })
       }
     }
 
@@ -908,14 +913,14 @@ export default function Home({ user, role, homeUnit: homeUnitFromApp, onGoToMana
     // Written here as well as at the fetch (2026-09-22): a dismissal does not
     // refetch, so without this the cache would still hold the checklist and the
     // next return to Home would flash a card the nurse already retired.
-    if (dismissed) writeHomeCache(user.id, isCoordinator, { activation: dismissed })
+    if (dismissed) writePaintCache(paintKey, { activation: dismissed })
 
     try {
       await dismissActivation(user.id)
     } catch (err) {
       console.error('activation dismissal failed', err)
       setActivation(previous)
-      if (previous) writeHomeCache(user.id, isCoordinator, { activation: previous })
+      if (previous) writePaintCache(paintKey, { activation: previous })
     }
   }
 
