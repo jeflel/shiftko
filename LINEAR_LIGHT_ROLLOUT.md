@@ -3831,6 +3831,35 @@ GLYPH is what defines the control now. That is the trade he asked for, and
 as a circle. The profile control beside it still carries its own darker ring at 2.45:1, so
 the two controls now differ in exactly that way: one has an edge, one does not.
 
+## Schedule: the Add a shift button goes, and the Day off text lightens (2026-09-22)
+
+Jefle: "for the schedule page, can we completely remove the add shift button? it can stay on
+the homepage as is but we dont need it on the schedule pages for now. also for the 'Day off'
+we can make them a little lighter gray. i like it right now tho but just need a little lighter."
+Commits `8ed1836`, `b777db7`.
+
+**The button.** `MyShiftsTab`'s `+ Add a shift` slot is gone from the list body and from the
+loading state (which had hoisted it so the list would not drop ~60px when the data landed), and
+its `showAddPanel` state with it. The panel it mounted, `AddMyShiftPanel`, is kept and now
+unreferenced, so a nurse's self-scheduling has NO entry point in the UI until it comes back:
+Home's quick-action tile opens `PersonalEventPanel`, which is a different thing (a personal
+event, not a shift). The component carries an `oxlint-disable-next-line no-unused-vars` with a
+note, and the `homeUnit` it needs stays threaded through `MyShiftsTab` for the same reason, so
+restoring it is one slot plus one state hook. The tree's `no-unused-vars` count is unchanged at
+1 (the pre-existing unused `formatShiftDate` import). Verified on production, signed in as the
+nurse: `[data-testid="schedule-add-shift"]` 1 to 0, Home's
+`[data-testid="home-quick-add-shift"]` still there at 200 x 64.
+
+**The grey.** One new token, `--color-day-off-ink` `#808085`, used by both Day off labels on the
+page: the My Shifts row (14px/500) and the calendar day panel (13px in a bordered box). It was
+`ink-secondary` `#6e6e73`, which is also every real row's meta line, so an empty day read at the
+same weight as a populated one. Measured on the deployed bundle, signed in as the nurse:
+`rgb(128, 128, 133)` on the Day off label while the meta line beside it stays
+`rgb(110, 110, 115)`. On the white card that is 3.93:1 against 5.07:1, so it now sits a step
+under the meta line instead of matching it, and under the 4.5:1 AA floor for 14px text. The next
+rungs, for the next value: `#8e8e93` 3.26:1, `#96969b` 2.94:1, `--color-chevron-muted` `#c7c7cc`
+1.60:1. One knob, one line.
+
 ## Open product decisions (carried over from `HANDOFF.md`, still relevant)
 
 - ~~Section 0.3, Offer-shift: mockup's 4-screen stepper vs. the live 1-tap
@@ -3841,6 +3870,11 @@ the two controls now differ in exactly that way: one has an edge, one does not.
   coordinator-gated per the mockups, `shift_swaps` table + RLS built and
   live. See the Status section's Swaps entry above for the full decisions
   log.
+- Nurse self-scheduling has no entry point since 2026-09-22: the `+ Add a shift`
+  button left Schedule by request and Home's quick-action tile opens the
+  personal-event panel instead, so `AddMyShiftPanel` is unreferenced code. Either
+  re-mount it (one slot plus its state hook, the panel and its `homeUnit` wiring
+  are still there) or re-home it, or delete it.
 - Departments/multi-tenancy detail is needed for the Staff
   Roster/Departments flow and for richer (per-unit) coverage-gap detail.
 
