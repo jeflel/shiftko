@@ -299,6 +299,7 @@ function App() {
         {activeTab === 'pool' && (
           <Pool
             user={session.user}
+            homeUnit={homeUnit}
             onGoToSchedule={handleGoToSchedule}
           />
         )}

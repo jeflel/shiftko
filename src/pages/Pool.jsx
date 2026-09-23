@@ -6,6 +6,8 @@ import { PeriodTag } from '@/components/ui/period-tag'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
 import { SHIFT_LIST_BORDERLESS_CLASSNAME, ShiftListDivider } from '@/components/ui/shift-list'
+import { ShiftListSkeleton } from '@/components/ui/list-skeleton'
+import { paintCacheKey, readPaintCache, writePaintCache } from '@/lib/paint-cache'
 import ClaimStatusList from './ClaimStatusList'
 import ShiftDetail from './ShiftDetail'
 import { formatShiftTimeRange, getShiftPeriod } from '../lib/shiftFormat'
@@ -41,7 +43,7 @@ function ShiftCard({ date, title, subtitle, period, trailing, onOpen }) {
   )
 
   return (
-    <div className="flex w-full items-center gap-3 px-4 py-3.5">
+    <div data-testid="pool-shift-row" className="flex w-full items-center gap-3 px-4 py-3.5">
       {onOpen ? (
         <button
           type="button"
@@ -59,11 +61,14 @@ function ShiftCard({ date, title, subtitle, period, trailing, onOpen }) {
   )
 }
 
-export default function Pool({ user, onGoToSchedule }) {
-  const [shifts, setShifts] = useState([])
-  const [claims, setClaims] = useState([])
-  const [homeUnit, setHomeUnit] = useState(undefined)
-  const [loading, setLoading] = useState(true)
+export default function Pool({ user, homeUnit, onGoToSchedule }) {
+  // The last payload for this tab, read once per mount, so coming back to Pool
+  // paints from it instead of holding the screen until three reads land.
+  const paintKey = paintCacheKey('pool', user.id)
+  const [cached] = useState(() => readPaintCache(paintKey))
+  const [shifts, setShifts] = useState(cached?.shifts ?? [])
+  const [claims, setClaims] = useState(cached?.claims ?? [])
+  const [loading, setLoading] = useState(!cached)
   const [error, setError] = useState(null)
   const [claimingId, setClaimingId] = useState(null)
   const [withdrawingId, setWithdrawingId] = useState(null)
@@ -72,32 +77,29 @@ export default function Pool({ user, onGoToSchedule }) {
   const [selectedShift, setSelectedShift] = useState(null)
   const [refreshKey, setRefreshKey] = useState(0)
 
+  // One request instead of three (2026-09-22). The home unit comes from App's
+  // profile read, which removed the FIRST round trip, and the claims now ride
+  // along with the shifts as an embedded resource, which removed the third. The
+  // two remaining requests used to run in series, so the count went from three
+  // sequential round trips to one.
+  //
+  // Two things about the embed, both verified against the real database before
+  // it was written: the relationship is shifts -> shift_claims on
+  // `shift_claims_shift_id_fkey` (a one-to-many, so the value is a list), and
+  // RLS's "nurses read claims on their unit" policy is what scopes it, which is
+  // exactly the set this screen wants.
+  //
+  // The claims are deliberately NOT filtered to `pending` in the request:
+  // filtering an embedded resource in PostgREST turns the embed into an inner
+  // join, which would drop every shift that has no matching claim from the list.
+  // They are filtered here instead.
   useEffect(() => {
     let cancelled = false
+    const unit = homeUnit ?? null
 
     async function fetchOpenShifts() {
-      setLoading(true)
+      if (!cached) setLoading(true)
       setError(null)
-
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('home_unit')
-        .eq('id', user.id)
-        .single()
-
-      if (cancelled) return
-
-      if (profileError) {
-        setError(profileError.message)
-        setHomeUnit(null)
-        setShifts([])
-        setClaims([])
-        setLoading(false)
-        return
-      }
-
-      const unit = profile?.home_unit ?? null
-      setHomeUnit(unit)
 
       if (!unit) {
         setShifts([])
@@ -106,10 +108,10 @@ export default function Pool({ user, onGoToSchedule }) {
         return
       }
 
-      const { data: shiftsData, error: shiftsError } = await supabase
+      const { data, error: shiftsError } = await supabase
         .from('shifts')
         .select(
-          'id, unit, starts_at, ends_at, status, is_offered, nurse_id, profiles!nurse_id ( full_name )',
+          'id, unit, starts_at, ends_at, status, is_offered, nurse_id, profiles!nurse_id ( full_name ), shift_claims ( id, shift_id, nurse_id, status )',
         )
         .eq('unit', unit)
         .or('status.eq.open,and(is_offered.eq.true,status.eq.scheduled)')
@@ -125,39 +127,20 @@ export default function Pool({ user, onGoToSchedule }) {
         return
       }
 
-      const shiftIds = (shiftsData ?? []).map((s) => s.id)
+      const nextShifts = data ?? []
+      const nextClaims = nextShifts.flatMap((shift) =>
+        (shift.shift_claims ?? []).filter((claim) => claim.status === 'pending'),
+      )
 
-      if (shiftIds.length === 0) {
-        setShifts([])
-        setClaims([])
-        setLoading(false)
-        return
-      }
-
-      const { data: claimsData, error: claimsError } = await supabase
-        .from('shift_claims')
-        .select('id, shift_id, nurse_id, status')
-        .in('shift_id', shiftIds)
-        .eq('status', 'pending')
-
-      if (cancelled) return
-
-      if (claimsError) {
-        setError(claimsError.message)
-        setShifts([])
-        setClaims([])
-        setLoading(false)
-        return
-      }
-
-      setShifts(shiftsData ?? [])
-      setClaims(claimsData ?? [])
+      setShifts(nextShifts)
+      setClaims(nextClaims)
       setLoading(false)
+      writePaintCache(paintKey, { shifts: nextShifts, claims: nextClaims })
     }
 
     fetchOpenShifts()
     return () => { cancelled = true }
-  }, [user.id, refreshKey])
+  }, [user.id, refreshKey, homeUnit, cached, paintKey])
 
   async function handleClaim(shift) {
     setUnavailableId(null)
@@ -247,7 +230,12 @@ export default function Pool({ user, onGoToSchedule }) {
         </button>
       </div>
 
-      {loading && <p className="mb-6 text-sm text-ink-secondary">Loading open shifts…</p>}
+      {loading && (
+        <div className="flex flex-col gap-4" aria-hidden="true">
+          <span className="h-[19px] w-[220px] rounded bg-track-neutral" />
+          <ShiftListSkeleton rows={3} variant="borderless" trailing />
+        </div>
+      )}
       {!loading && error && (
         <p className="mb-6 text-sm text-red-700">Could not load open shifts: {error}</p>
       )}
