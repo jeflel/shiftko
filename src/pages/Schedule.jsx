@@ -886,6 +886,11 @@ function MyShiftsTab({ user, contentView, credential: credentialFromApp, homeUni
   // which is the same row this tab used to fetch for itself; the cache is
   // checked first because it was written by this screen and so is newer.
   const credential = cached?.credential ?? credentialFromApp ?? null
+  // Kept threaded for AddMyShiftPanel below: the panel lost its only entry
+  // point when the "+ Add a shift" button left this page (2026-09-22), and the
+  // unit is the one prop it cannot re-derive, so re-mounting it stays a one
+  // line change rather than a re-thread through App.
+  // oxlint-disable-next-line no-unused-vars
   const homeUnit = cached?.homeUnit ?? homeUnitFromApp ?? null
   const [loading, setLoading] = useState(!cached)
   // Personal events are a second read whose rows join the same list, so the
@@ -897,7 +902,6 @@ function MyShiftsTab({ user, contentView, credential: credentialFromApp, homeUni
   const [selectedPersonalEvent, setSelectedPersonalEvent] = useState(null)
   const [editingPersonalEvent, setEditingPersonalEvent] = useState(null)
   const [refreshKey, setRefreshKey] = useState(0)
-  const [showAddPanel, setShowAddPanel] = useState(false)
   const [calendarMonth, setCalendarMonth] = useState(() => {
     const d = new Date()
     d.setDate(1)
@@ -1107,39 +1111,18 @@ function MyShiftsTab({ user, contentView, credential: credentialFromApp, homeUni
     )
   }
 
-  const addShiftSlot = showAddPanel ? (
-    <AddMyShiftPanel
-      userId={user.id}
-      homeUnit={homeUnit}
-      onClose={() => setShowAddPanel(false)}
-      onSaved={() => {
-        setShowAddPanel(false)
-        setRefreshKey((k) => k + 1)
-      }}
-    />
-  ) : (
-    <Button
-      type="button"
-      variant="secondary"
-      onClick={() => setShowAddPanel(true)}
-      data-testid="schedule-add-shift"
-      className="w-full"
-    >
-      + Add a shift
-    </Button>
-  )
+  // The "+ Add a shift" button that used to open AddMyShiftPanel is gone from
+  // this page (Jefle, 2026-09-22: "we dont need it on the schedule pages for
+  // now"; Home's quick-action tile stays as the way to log a shift). The panel
+  // is still defined below, so re-mounting it is one slot plus one state hook.
 
-  // The tab's own shape while the first load is in flight. The Add a shift slot
-  // is not data, so it is the real control in both states (which is also the
-  // reason it is hoisted out of the body below rather than duplicated here: with
-  // it missing, the list would drop ~60px when the data landed).
+  // The tab's own shape while the first load is in flight. It is the list
+  // placeholder alone now: the Add a shift slot used to sit above it so the
+  // list would not drop ~60px when the data landed, and the button was removed
+  // from this page on 2026-09-22 (Jefle), leaving Home's quick-action tile as
+  // the one place a nurse logs her own shift.
   if (loading || eventsLoading) {
-    return (
-      <>
-        {addShiftSlot}
-        <ShiftListSkeleton rows={7} variant="card" label="week" />
-      </>
-    )
+    return <ShiftListSkeleton rows={7} variant="card" label="week" />
   }
   if (error) return <p className="text-sm text-red-700">Could not load shifts: {error}</p>
 
@@ -1167,8 +1150,6 @@ function MyShiftsTab({ user, contentView, credential: credentialFromApp, homeUni
         />
       ) : (
         <>
-          {addShiftSlot}
-
           <div className="flex flex-col gap-5">
             {weekOffsets.map((offset) => {
               const days = getWeekDaysForOffset(offset)
@@ -1620,6 +1601,12 @@ function TeamScheduleTab({ user, onChangeView, contentView: contentViewProp }) {
 // coordinator approval since beta has none). Reuses the same
 // CalendarStrip / SHIFT_PRESETS / saved-preset pieces as PostShift.jsx's
 // coordinator form.
+//
+// Deliberately kept while unreferenced: the "+ Add a shift" button that mounted
+// it was removed from MyShiftsTab on 2026-09-22 (Jefle: not needed on the
+// schedule pages for now, Home's quick-action tile stays), so bringing the
+// feature back is one slot plus its showAddPanel state hook.
+// oxlint-disable-next-line no-unused-vars
 function AddMyShiftPanel({ userId, homeUnit, onClose, onSaved }) {
   const [date, setDate] = useState('')
   const [shiftType, setShiftType] = useState('day')
