@@ -3747,6 +3747,63 @@ because that is what a nurse opening the app is usually waiting for. Both are on
 follow-ups if the pop still bothers him: match the illustration instead (and over-reserve on
 every shift day), or give the activation slot a placeholder.
 
+## Schedule and Pool: placeholders, a paint cache, and the waterfall gone (2026-09-22)
+
+Jefle: "can we also make a skeleton loader for the schedule page and the pool page? let's try
+to make it load faster too by using the applicable methods we used on the homepage". Three
+commits: `b54d42f` (the shared skeleton), `e682457` (Schedule), `50d73cd` (Pool).
+
+**What each screen was doing.** Both Schedule tabs drew one line of grey text and then the
+whole list: `if (loading) return <p>Loading shifts…</p>` and the team tab's version of it.
+Below that text the page was simply empty, the same "no shape" problem Home had. My Shifts
+fired 3 parallel reads (shifts, personal events, and a profile row for `credential` +
+`home_unit`) and the `loading` flag only tracked the first, so events landed after the
+placeholder would have cleared. Pool was worse: 3 SEQUENTIAL reads (profile for `home_unit`
+-> shifts on that unit -> pending claims for those shift ids), a three-deep waterfall.
+
+**The skeleton.** New `src/components/ui/list-skeleton.jsx`, one component reused by all
+three surfaces, and it mirrors the app's OWN row geometry rather than inventing a skeleton
+vocabulary: the same container class string, the same 32px date column with its 2px margins,
+the same 1px rule, the same three-line body, the same dividers. Two variants because the app
+genuinely has two row paddings, and `min-h` carries the heights (93.5px for Schedule's
+`py-4.5` row, 84px for Pool's `py-3.5` one) rather than trying to reproduce text metrics with
+grey blocks. My Shifts gets its week label and 7 rows, which is what the real week IS (one row
+per day, day-off rows included, so a week block is always 7); Team Schedule gets 3 day groups;
+Pool gets its count line and 3 rows with Claim pills.
+
+**Verified** at 390px with the frame sampler, cold load in one page then a return:
+
+| | placeholder | real rows | requests | content-to-blank |
+|---|---|---|---|---|
+| Schedule, cold | 7 rows @ **93.5px** from the first frame, 0/4 back | 3 shift rows @ **93.5px** at 250ms | 2 (was 3) | 0 |
+| Schedule, return | - | painted at **76.7ms**, 0/4 back | 2 | 0 |
+| Pool, cold | 3 rows @ **84px** at 40ms, 0/2 back | 3 rows @ **84px** at 197ms | **1** (was 3 sequential) | 0 |
+| Pool, return | - | painted at **53.2ms**, 0/2 back | 1 | 0 |
+
+The row heights matching exactly is the whole point: the placeholder and the real row are the
+same box, so nothing moves when the data lands.
+
+**The speed work, method by method.** The paint cache generalises (`paint-cache.js`, keyed
+`<screen>:<userId>` plus the dimension that changes the data, so Home keys on role and
+Schedule on tab). The duplicate profile read is gone: App's session read already carried
+`home_unit`, now `credential` too, so My Shifts dropped one of its three reads and Pool lost
+the first of its three round trips. And Pool's remaining pair collapsed into one request by
+embedding the claims in the shifts select.
+
+**The embed was verified against the real database before it was written**, which is the part
+worth repeating: `shift_claims_shift_id_fkey` is what makes `shifts -> shift_claims`
+embeddable, RLS's "nurses read claims on their unit" policy is what scopes the embedded rows
+(confirmed by simulating the nurse's `auth.uid()` in SQL), and a real GET returned the claims
+as a list on 2 of 400 sampled shifts with the keys the screen reads. One trap found before it
+bit: filtering an embedded resource (`shift_claims.status=eq.pending`) turns the embed into an
+inner join in PostgREST, which would have dropped every shift with no claims from Pool's list.
+The filter is client-side instead.
+
+**Not done, deliberately.** The `credential` and `home_unit` values are now a snapshot of
+sign-in time rather than a fresh read per mount, so a credential changed in Profile shows on
+Schedule after a reload rather than immediately. And the coordinator's Manage and Staff Roster
+screens were out of scope, so they still draw their own loading text.
+
 ## Open product decisions (carried over from `HANDOFF.md`, still relevant)
 
 - ~~Section 0.3, Offer-shift: mockup's 4-screen stepper vs. the live 1-tap
