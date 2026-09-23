@@ -3714,6 +3714,39 @@ The general rule this is one instance of: **a paint cache and a `loading` flag t
 fetch re-raises are a flash waiting to happen, and a one-shot "when did it first paint"
 probe cannot see it.** Measure the SEQUENCE of states, not the first transition.
 
+## Home: the Today slot gets a skeleton (2026-09-22)
+
+Jefle: "the main shift card doesn't show until like some milliseconds after, how about
+having a skeleton version of the card already preloaded... kinda like there's already a
+white card in where its usually placed". Sampling geometry every frame first said what the
+problem actually was: Home's whole nurse body is gated on `!loading`, so below the greeting
+row the page was EMPTY for the length of the fetch and every section then landed in one
+frame. There was no internal jump to fix, the page had no shape.
+
+**`TodayCardSkeleton`** (in `Home.jsx`, next to `TodayHero`) renders only while `loading` is
+true, which after the cache work means the first Home of a session: a return paints the real
+card from the cache and never reaches it. It carries the populated card's height explicitly
+(`min-h-[149.5px]`, measured at 390px) instead of reproducing three lines of type with grey
+blocks, and its blocks are `bg-track-neutral`, the same token as the real progress bar's
+track. Static, no shimmer: a shimmer would be a new motion idea and the app has no skeleton
+vocabulary. The section header comes with it, so the Today slot is complete from the app
+shell's first frame. Commit `3cd3944`, on top of `c5fb776` (below).
+
+**Measured** with the frame sampler (`scripts/measure-home-today-shift.py`), cold load with
+a shift today, 390px wide: skeleton 149.5px in a 186.5px slot from the first frame, real
+card 149.5px in the SAME 186.5px slot, and the My Upcoming header at 617.2px in both, a
+**0.0px move**. Cached return: card at 56.9ms, 0.0px move.
+
+**Two movers are left, and neither is the card.** (1) The activation card: `home-get-started`
+is 224.7px and lands a frame after the main data, which moves My Upcoming by exactly 244.7px
+on a cold load, in both branches. It only shows for a nurse with an active checklist, and it
+has three modes with different heights, so reserving it is its own decision. (2) On a DAY OFF
+the real card is the taller illustration (203.8px slot against the skeleton's 186.5), so the
+slot still grows 54.3px. A skeleton cannot be two heights at once; it matches the shift card
+because that is what a nurse opening the app is usually waiting for. Both are one-knob
+follow-ups if the pop still bothers him: match the illustration instead (and over-reserve on
+every shift day), or give the activation slot a placeholder.
+
 ## Open product decisions (carried over from `HANDOFF.md`, still relevant)
 
 - ~~Section 0.3, Offer-shift: mockup's 4-screen stepper vs. the live 1-tap
