@@ -32,6 +32,11 @@ function App() {
   // handed down as a prop. Home still refreshes it from its own query, which is
   // what keeps a unit changed in the Staff tab from going stale.
   const [homeUnit, setHomeUnit] = useState(null)
+  // Schedule's My Shifts tab shows the credential on each row and Pool filters
+  // by the unit, and this function already reads that profile row, so both come
+  // from here instead of a second read on the screen (2026-09-22). They are a
+  // snapshot of sign-in time, which is what the paint cache assumes anyway.
+  const [credential, setCredential] = useState(null)
   const [onboardingCompleted, setOnboardingCompleted] = useState(true)
   const [justJoinedWorkspace, setJustJoinedWorkspace] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -136,7 +141,7 @@ function App() {
   async function fetchRole(userId) {
     const { data, error } = await supabase
       .from('profiles')
-      .select('role, workspace_id, full_name, onboarding_completed, home_unit')
+      .select('role, workspace_id, full_name, onboarding_completed, home_unit, credential')
       .eq('id', userId)
       .single()
 
@@ -146,6 +151,7 @@ function App() {
       setFullName(data.full_name)
       setOnboardingCompleted(data.onboarding_completed)
       setHomeUnit(data.home_unit ?? null)
+      setCredential(data.credential ?? null)
     }
     setLoading(false)
   }
@@ -264,6 +270,8 @@ function App() {
           <Schedule
             user={session.user}
             role={role}
+            credential={credential}
+            homeUnit={homeUnit}
             initialTab={scheduleInitialTab}
           />
         )}

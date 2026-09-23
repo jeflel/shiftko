@@ -11,6 +11,8 @@ import { Button } from '@/components/ui/button'
 import { CalendarStrip } from '@/components/ui/calendar-strip'
 import { SegmentedControl } from '@/components/ui/segmented-control'
 import { SHIFT_LIST_BORDERLESS_CLASSNAME, ShiftListDivider } from '@/components/ui/shift-list'
+import { DayGroupsSkeleton, ShiftListSkeleton } from '@/components/ui/list-skeleton'
+import { paintCacheKey, readPaintCache, writePaintCache } from '@/lib/paint-cache'
 import { inputClassName, labelClassName } from '@/components/ui/field'
 import { SHIFT_PRESETS, buildShiftTimes } from '@/lib/shiftPresets'
 import { cn } from '@/lib/utils'
@@ -116,7 +118,7 @@ function ScheduleContentViewToggle({ value, onChange }) {
 // Schedule segmented control) so switching sub-tabs never remounts or hides
 // it — only MyShiftsTab/TeamScheduleTab's own body swaps and shows its own
 // loading state below, per the same fix as the header's scroll-position gap.
-function ScheduleTab({ user }) {
+function ScheduleTab({ user, credential, homeUnit }) {
   const [view, setView] = useState('mine')
   const [contentView, setContentView] = useState('list')
   const [showSwapStatus, setShowSwapStatus] = useState(false)
@@ -165,7 +167,12 @@ function ScheduleTab({ user }) {
       </div>
 
       {view === 'mine' ? (
-        <MyShiftsTab user={user} contentView={contentView} />
+        <MyShiftsTab
+          user={user}
+          contentView={contentView}
+          credential={credential}
+          homeUnit={homeUnit}
+        />
       ) : (
         <TeamScheduleTab user={user} onChangeView={setView} contentView={contentView} />
       )}
@@ -868,14 +875,25 @@ function flashTodayRow(row) {
 // local state here — so the persistent header up there can drive it and the
 // loading/error returns below only ever replace this tab's own body, never
 // the header, when switching to/from Team Schedule.
-function MyShiftsTab({ user, contentView }) {
-  const [shifts, setShifts] = useState([])
-  const [credential, setCredential] = useState(null)
-  const [homeUnit, setHomeUnit] = useState(null)
-  const [loading, setLoading] = useState(true)
+function MyShiftsTab({ user, contentView, credential: credentialFromApp, homeUnit: homeUnitFromApp }) {
+  // The last payload for this tab, read once per mount (lazy initialiser): a
+  // return to Schedule paints instead of holding the tab blank until two reads
+  // land. The fetches below always run and replace every value here.
+  const paintKey = paintCacheKey('schedule-mine', user.id)
+  const [cached] = useState(() => readPaintCache(paintKey))
+  const [shifts, setShifts] = useState(cached?.shifts ?? [])
+  // The credential and home unit come from App's profile read (2026-09-22),
+  // which is the same row this tab used to fetch for itself; the cache is
+  // checked first because it was written by this screen and so is newer.
+  const credential = cached?.credential ?? credentialFromApp ?? null
+  const homeUnit = cached?.homeUnit ?? homeUnitFromApp ?? null
+  const [loading, setLoading] = useState(!cached)
+  // Personal events are a second read whose rows join the same list, so the
+  // placeholder has to wait for both or rows appear after it clears.
+  const [eventsLoading, setEventsLoading] = useState(!cached)
   const [error, setError] = useState(null)
   const [selectedShift, setSelectedShift] = useState(null)
-  const [personalEvents, setPersonalEvents] = useState([])
+  const [personalEvents, setPersonalEvents] = useState(cached?.personalEvents ?? [])
   const [selectedPersonalEvent, setSelectedPersonalEvent] = useState(null)
   const [editingPersonalEvent, setEditingPersonalEvent] = useState(null)
   const [refreshKey, setRefreshKey] = useState(0)
@@ -983,7 +1001,10 @@ function MyShiftsTab({ user, contentView }) {
     end.setDate(end.getDate() + (MAX_WEEKS_FORWARD + 1) * 7)
 
     async function fetchMyShifts() {
-      setLoading(true)
+      // Only blank the tab when there is nothing to paint, the same rule Home
+      // learned: raising the loading state over a cached paint shows content,
+      // then nothing, then content again.
+      if (!cached) setLoading(true)
       setError(null)
 
       const { data, error: fetchError } = await supabase
@@ -1005,11 +1026,12 @@ function MyShiftsTab({ user, contentView }) {
 
       setShifts(data ?? [])
       setLoading(false)
+      writePaintCache(paintKey, { shifts: data ?? [] })
     }
 
     fetchMyShifts()
     return () => { cancelled = true }
-  }, [user.id, refreshKey])
+  }, [user.id, refreshKey, cached, paintKey])
 
   useEffect(() => {
     let cancelled = false
@@ -1022,35 +1044,20 @@ function MyShiftsTab({ user, contentView }) {
     async function fetchMyPersonalEventsForRange() {
       try {
         const data = await fetchMyPersonalEvents(user.id, { start, end })
-        if (!cancelled) setPersonalEvents(data)
+        if (!cancelled) {
+          setPersonalEvents(data)
+          writePaintCache(paintKey, { personalEvents: data })
+        }
       } catch {
         if (!cancelled) setPersonalEvents([])
+      } finally {
+        if (!cancelled) setEventsLoading(false)
       }
     }
 
     fetchMyPersonalEventsForRange()
     return () => { cancelled = true }
-  }, [user.id, refreshKey])
-
-  useEffect(() => {
-    let cancelled = false
-
-    async function fetchCredential() {
-      const { data } = await supabase
-        .from('profiles')
-        .select('credential, home_unit')
-        .eq('id', user.id)
-        .maybeSingle()
-
-      if (!cancelled) {
-        setCredential(data?.credential ?? null)
-        setHomeUnit(data?.home_unit ?? null)
-      }
-    }
-
-    fetchCredential()
-    return () => { cancelled = true }
-  }, [user.id])
+  }, [user.id, refreshKey, paintKey])
 
   const combinedItems = [
     ...shifts.map((shift) => ({ ...shift, _kind: 'shift' })),
@@ -1100,7 +1107,40 @@ function MyShiftsTab({ user, contentView }) {
     )
   }
 
-  if (loading) return <p className="text-sm text-ink-secondary">Loading shifts…</p>
+  const addShiftSlot = showAddPanel ? (
+    <AddMyShiftPanel
+      userId={user.id}
+      homeUnit={homeUnit}
+      onClose={() => setShowAddPanel(false)}
+      onSaved={() => {
+        setShowAddPanel(false)
+        setRefreshKey((k) => k + 1)
+      }}
+    />
+  ) : (
+    <Button
+      type="button"
+      variant="secondary"
+      onClick={() => setShowAddPanel(true)}
+      data-testid="schedule-add-shift"
+      className="w-full"
+    >
+      + Add a shift
+    </Button>
+  )
+
+  // The tab's own shape while the first load is in flight. The Add a shift slot
+  // is not data, so it is the real control in both states (which is also the
+  // reason it is hoisted out of the body below rather than duplicated here: with
+  // it missing, the list would drop ~60px when the data landed).
+  if (loading || eventsLoading) {
+    return (
+      <>
+        {addShiftSlot}
+        <ShiftListSkeleton rows={7} variant="card" label="week" />
+      </>
+    )
+  }
   if (error) return <p className="text-sm text-red-700">Could not load shifts: {error}</p>
 
   const selectedDayShifts = combinedByDay[selectedCalendarDateKey] ?? []
@@ -1127,27 +1167,7 @@ function MyShiftsTab({ user, contentView }) {
         />
       ) : (
         <>
-          {showAddPanel ? (
-            <AddMyShiftPanel
-              userId={user.id}
-              homeUnit={homeUnit}
-              onClose={() => setShowAddPanel(false)}
-              onSaved={() => {
-                setShowAddPanel(false)
-                setRefreshKey((k) => k + 1)
-              }}
-            />
-          ) : (
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => setShowAddPanel(true)}
-              data-testid="schedule-add-shift"
-              className="w-full"
-            >
-              + Add a shift
-            </Button>
-          )}
+          {addShiftSlot}
 
           <div className="flex flex-col gap-5">
             {weekOffsets.map((offset) => {
@@ -1343,9 +1363,14 @@ function MyShiftsTab({ user, contentView }) {
 // falls back to owning its own local list/calendar state and renders its own
 // (unsegmented) header for that toggle.
 function TeamScheduleTab({ user, onChangeView, contentView: contentViewProp }) {
-  const [shifts, setShifts] = useState([])
-  const [personalEvents, setPersonalEvents] = useState([])
-  const [loading, setLoading] = useState(true)
+  // Same paint cache as My Shifts, keyed by this tab (the two fetch different
+  // windows and different row shapes, so they must not share an entry).
+  const paintKey = paintCacheKey('schedule-team', user.id)
+  const [cached] = useState(() => readPaintCache(paintKey))
+  const [shifts, setShifts] = useState(cached?.shifts ?? [])
+  const [personalEvents, setPersonalEvents] = useState(cached?.personalEvents ?? [])
+  const [loading, setLoading] = useState(!cached)
+  const [eventsLoading, setEventsLoading] = useState(!cached)
   const [error, setError] = useState(null)
   const [localContentView, setLocalContentView] = useState('list')
   const isNested = Boolean(onChangeView)
@@ -1371,7 +1396,7 @@ function TeamScheduleTab({ user, onChangeView, contentView: contentViewProp }) {
     queryStart.setDate(queryStart.getDate() - 1)
 
     async function fetchTeamShifts() {
-      setLoading(true)
+      if (!cached) setLoading(true)
       setError(null)
 
       const { data, error: fetchError } = await supabase
@@ -1397,11 +1422,12 @@ function TeamScheduleTab({ user, onChangeView, contentView: contentViewProp }) {
       }
 
       setLoading(false)
+      if (!fetchError) writePaintCache(paintKey, { shifts: data ?? [] })
     }
 
     fetchTeamShifts()
     return () => { cancelled = true }
-  }, [refreshKey])
+  }, [refreshKey, cached, paintKey])
 
   useEffect(() => {
     let cancelled = false
@@ -1419,15 +1445,21 @@ function TeamScheduleTab({ user, onChangeView, contentView: contentViewProp }) {
         // Team Schedule only shows personal events that carry a unit — a
         // name-only event (no department) stays My-Shifts-only, per the
         // personal-events visibility rule.
-        if (!cancelled) setPersonalEvents(data.filter((event) => event.unit))
+        if (!cancelled) {
+          const withUnit = data.filter((event) => event.unit)
+          setPersonalEvents(withUnit)
+          writePaintCache(paintKey, { personalEvents: withUnit })
+        }
       } catch {
         if (!cancelled) setPersonalEvents([])
+      } finally {
+        if (!cancelled) setEventsLoading(false)
       }
     }
 
     fetchTeamPersonalEvents()
     return () => { cancelled = true }
-  }, [refreshKey])
+  }, [refreshKey, paintKey])
 
   const shiftsByDay = withOvernightCarry(
     groupByDayKey(shifts, (shift) => shift.starts_at),
@@ -1451,8 +1483,6 @@ function TeamScheduleTab({ user, onChangeView, contentView: contentViewProp }) {
   )
   const selectedDayItems = combinedByDay[selectedCalendarDateKey] ?? []
 
-  if (loading) return <p className="text-sm text-[#6B7280]">Loading team schedule…</p>
-  if (error) return <p className="text-sm text-red-700">Could not load team schedule: {error}</p>
 
   if (selectedShift) {
     return (
@@ -1467,10 +1497,17 @@ function TeamScheduleTab({ user, onChangeView, contentView: contentViewProp }) {
     )
   }
 
+  if (error) return <p className="text-sm text-red-700">Could not load team schedule: {error}</p>
+
   // Nested (nurse) case: the persistent header ScheduleTab already renders owns
   // the title, list/calendar toggle, and segmented control, so this is just the
   // body. Standalone (coordinator) case below renders its own header around it.
-  const bodyContent = contentView === 'calendar' ? (
+  // The placeholder replaces only the BODY, so the header (the nurse's from
+  // ScheduleTab, or the coordinator's own below) is already on screen when the
+  // data lands and nothing above the list moves.
+  const bodyContent = loading || eventsLoading ? (
+    <DayGroupsSkeleton groups={3} rowsPerGroup={2} />
+  ) : contentView === 'calendar' ? (
         <TeamMonthCalendarView
           calendarMonth={calendarMonth}
           onChangeMonth={(delta) => {
@@ -1836,7 +1873,7 @@ function AddMyShiftPanel({ userId, homeUnit, onClose, onSaved }) {
   )
 }
 
-export default function Schedule({ user, role, initialTab = 'schedule' }) {
+export default function Schedule({ user, role, credential, homeUnit, initialTab = 'schedule' }) {
   const isCoordinator = role === 'coordinator'
 
   const tabs = isCoordinator
@@ -1884,7 +1921,9 @@ export default function Schedule({ user, role, initialTab = 'schedule' }) {
       )}
 
       <div role="tabpanel">
-        {activeTab === 'schedule' && !isCoordinator && <ScheduleTab user={user} />}
+        {activeTab === 'schedule' && !isCoordinator && (
+          <ScheduleTab user={user} credential={credential} homeUnit={homeUnit} />
+        )}
         {activeTab === 'team' && isCoordinator && <TeamScheduleTab user={user} />}
       </div>
     </main>
