@@ -193,7 +193,7 @@ function MyDayOffRow({ date }) {
         <span className="text-[19px] leading-[1.15] font-semibold text-ink">{date.getDate()}</span>
       </div>
       <div className="min-h-9 w-px shrink-0 self-stretch bg-hairline" aria-hidden="true" />
-      <p className="text-[14px] font-medium text-ink-secondary">Day off</p>
+      <p className="text-[14px] font-medium text-day-off-ink">Day off</p>
     </div>
   )
 }
@@ -730,7 +730,7 @@ function MonthCalendarView({
       <div className="flex flex-col gap-2.5">
         <p className="text-[14px] font-bold text-ink">{dayDetailFormatter.format(selectedDate)}</p>
         {selectedDayShifts.length === 0 ? (
-          <div className="rounded-card border border-hairline px-4 py-4 text-center text-[13px] text-ink-secondary">
+          <div className="rounded-card border border-hairline px-4 py-4 text-center text-[13px] text-day-off-ink">
             Day off
           </div>
         ) : (

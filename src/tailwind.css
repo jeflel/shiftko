@@ -22,6 +22,13 @@
   --color-ink: #1d1d1f;
   --color-ink-secondary: #6e6e73;
   --color-ink-tertiary: #48484a;
+  /* The "Day off" label on Schedule's empty day rows (2026-09-22, Jefle: the
+     ink-secondary grey read too close to a real row's meta line, "just need a
+     little lighter"). It is the only text painted in this value, so it is a
+     single knob: #6e6e73 was 5.07:1 on the white card, this is 3.93:1. The
+     lighter rungs, if it wants another step: #8e8e93 3.26:1, #96969b 2.94:1,
+     --color-chevron-muted #c7c7cc 1.60:1. */
+  --color-day-off-ink: #808085;
   --color-hairline: #e5e5ea;
   /* The one rule drawn where a FINISHED (past, dimmed) Schedule row meets the
      next one: the row's own vertical rule and the horizontal shift-list divider
