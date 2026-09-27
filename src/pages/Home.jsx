@@ -599,8 +599,9 @@ function WeeklyProgress({ shifts, weekOffset, onChangeWeekOffset }) {
 function getGreeting() {
   // One word for every hour (2026-09-22, Jefle: the time-aware line "is too long").
   // It was Good morning / afternoon / evening by the clock; "Hello" is a fixed
-  // string, so the helper stays only because the caller composes it with the name
-  // (`Hello, Alex`), and the row still truncates rather than wraps.
+  // string, so the helper stays only because the caller adds the comma and puts the
+  // name on the line below it (2026-09-27: "Hello," over the reader's full name),
+  // and each line truncates rather than wrapping.
   return 'Hello'
 }
 
@@ -1015,7 +1016,11 @@ export default function Home({ user, role, homeUnit: homeUnitFromApp, onGoToMana
   }
 
   const today = new Date()
-  const nurseFirstName = fullName?.trim().split(' ')[0] ?? null
+  // The greeting's second line is the reader's FULL name (2026-09-27, Jefle: "let's
+  // spell out the full name so it'd be Alex Ramirez"), so both names come off one
+  // trim. An all-whitespace name falls to null rather than drawing an empty line.
+  const nurseFullName = fullName?.trim() || null
+  const nurseFirstName = nurseFullName?.split(' ')[0] ?? null
   // isOnDay, not "starts today": an overnight shift that began at 23:00 is
   // still today's shift after midnight, which is when this card used to lose
   // it, and the progress bar with it (2026-09-19).
@@ -1052,12 +1057,19 @@ export default function Home({ user, role, homeUnit: homeUnitFromApp, onGoToMana
         {/* No gradient and no bar on Home any more (2026-09-17, at Jefle's
             request): the page ground runs to the top edge and this row is the
             page's first line. The profile control sits on the left, the greeting
-            runs beside it in muted ink at 15px/400 (the lightest weight Geist
-            loads is 400), and the bell sits flush on the right gutter. pb-5 is
-            what leaves 20px between the row and the first section header, so the
-            top of the page keeps the same rhythm as the sections below it (the
-            sections container carries gap-5). Both controls are 36px, which is
-            what sets the row's height. */}
+            runs beside it, and the bell sits flush on the right gutter. The
+            greeting is TWO lines now (2026-09-27, Jefle: "i feel like having 2 text
+            is better"): "Hello," in muted ink at 15px/400 over the reader's full
+            name at 15px/600 in ink, both on leading-5, so the block is 40px against
+            20px as a single line. It still fits inside the 42px bell beside it,
+            which is what sets the row's height, so the row is unchanged at 78px and
+            nothing below it moves. Each line truncates on its own: the block is
+            min-w-0 flex-1, so a long name ellipsises instead of pushing the bell off
+            the gutter. The name comes from profiles.full_name; nurseFirstName (the
+            Request Activity card's greeting) is derived from the same trim. pb-5 is
+            what leaves 20px between the row and the first section header, so the top
+            of the page keeps the same rhythm as the sections below it (the sections
+            container carries gap-5). */}
         <div className="flex flex-1 flex-col px-5 pt-2">
           <div className="flex items-center gap-2.5 pt-4 pb-5">
             <HomeProfileControl
@@ -1065,9 +1077,14 @@ export default function Home({ user, role, homeUnit: homeUnitFromApp, onGoToMana
               avatarUrl={avatarPublicUrl(avatarPath)}
               onOpenProfile={onOpenProfile}
             />
-            <p className="min-w-0 flex-1 truncate text-[15px] tracking-[-0.01em] text-ink-secondary">
-              {getGreeting()}{nurseFirstName ? `, ${nurseFirstName}` : ''}
-            </p>
+            <div className="flex min-w-0 flex-1 flex-col text-[15px] leading-5 tracking-[-0.01em]">
+              <span className="truncate text-ink-secondary">
+                {getGreeting()}{nurseFullName ? ',' : ''}
+              </span>
+              {nurseFullName && (
+                <span className="truncate font-semibold text-ink">{nurseFullName}</span>
+              )}
+            </div>
             <HomeBellControl
               hasUnread={hasUnreadNotifications}
               onOpen={() => setShowNotifications(true)}
