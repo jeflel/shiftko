@@ -3860,6 +3860,58 @@ under the meta line instead of matching it, and under the 4.5:1 AA floor for 14p
 rungs, for the next value: `#8e8e93` 3.26:1, `#96969b` 2.94:1, `--color-chevron-muted` `#c7c7cc`
 1.60:1. One knob, one line.
 
+## Home: the bell goes back to a white disc with a 1px rim (2026-09-27)
+
+Jefle: "can we fix the gray notif bell icon on the homepage? the color isnt right, it doesnt
+feel right", about the grey disc the bell took on 2026-09-22. He picked the replacement out of a
+rendered five-way comparison (white + rim, the disc one grey step up, a soft grey glyph, teal,
+and the live grey). Commit `3f132b6`.
+
+The disc is `bg-white` with a 1px `border-control-edge` rim (`#d8d8dd`) and the glyph is
+unchanged at `text-ink` `#1d1d1f`. Why the grey did not hold is measurable: `bg-track-neutral`
+`#ededf2` is **1.11:1** on the page ground, so the circle was a wash rather than a shape and the
+eye read a near-black glyph sitting on a ghost of a ring. The rim is **1.35:1**, which is the
+token `tailwind.css` documents for exactly this role (a control's own rim on a white button), and
+the glyph is **14.42:1** on the grey it replaces against **16.83:1** on white.
+
+Measured live before: box 42 x 42, `bg rgb(237,237,242)`, `border 0px`, glyph `rgb(29,29,31)` with
+11px of clearance, row 78px. Measured live after: box 42 x 42 and `border-box`, `border 1px solid
+rgb(216,216,221)`, glyph clearance still 11px (the content box shrinks to 40px and the rim paints
+the other 1px), row still 78px. The rim was proven to PAINT rather than merely compute, by a
+scanline through the control's centre: ground `#f9f9fb`, 1px `#d8d8dd`, white, glyph strokes
+`#1d1d1f`, white, 1px `#d8d8dd`, ground.
+
+**The unread dot moved with it.** Its containing block is the button's padding box, which the
+border shrank 1px a side, so the offsets went back to `top-[6px] right-[6px]` and the halo back to
+`ring-white` (a white ring on a grey disc reads as a light notch). 6px with the border lands the
+dot 7px from the border box, which is exactly where it sat on the borderless disc: corner 19.8px
+from the centre against a 21px radius, 1.2px of clearance, unchanged. Leaving it at 7px would have
+moved the dot 1px further in. The dot is not rendered for the test nurse (no unread notification),
+so that geometry is proven against the built stylesheet rather than live.
+
+**Ladder for the next value**, all against the page ground: hairline `#e5e5ea` 1.19:1 (reads as no
+control at all), the shipped rim `#d8d8dd` 1.35:1, `--color-chevron-muted` `#c7c7cc` 1.60:1,
+`--color-avatar-ring` `#b4b4b9` 1.96:1. One token to tune if the rim reads too faint on a phone.
+
+## Home: the greeting is two lines, hello over the full name (2026-09-27)
+
+Jefle: "for the text next to the avatar icon can we also experiment having the 'Hello,' or
+'Welcome back,' on the top and the bottom text is the name? i feel like having 2 text is better",
+then picked option 5 of five rendered two-line variants and asked to "spell out the full name so
+it'd be Alex Ramirez". Commit `83138a8`.
+
+It was one line, `Hello, Alex`, at 15px/400 in `text-ink-secondary` with the first name only. It
+is a two-line flex column now: `Hello,` at 15px/400 `text-ink-secondary` over the reader's full
+name at 15px/600 `text-ink`, both on `leading-5`. Measured live: the block is 310 x 40px (two 20px
+line boxes), the name's own ink box is 92.66px wide in that track, neither line clips, and the row
+is unchanged at 78px with the first section header still starting at 86px, because the row's
+height is set by the 42px bell beside it and 40px fits inside it.
+
+Each line truncates on its own (`min-w-0 flex-1` on the block), so a long name ellipsises rather
+than pushing the bell off the gutter. The name is `profiles.full_name`; `nurseFirstName` (the
+Request Activity card's greeting) is derived from the same trim, and an all-whitespace name draws
+no second line.
+
 ## Open product decisions (carried over from `HANDOFF.md`, still relevant)
 
 - ~~Section 0.3, Offer-shift: mockup's 4-screen stepper vs. the live 1-tap
